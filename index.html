@@ -622,8 +622,8 @@
     <div class="grid">
       <main class="panel">
         <section class="main-task">
-          <div class="main-task-label">今やること</div>
-          <div class="main-task-title" id="currentTaskTitle">タスクを選んでください</div>
+          <div class="main-task-label">この25分でやること</div>
+          <div class="main-task-title" id="currentTaskTitle">今日のタスクはまだありません</div>
         </section>
 
         <div class="quote" id="quoteBox"></div>
@@ -631,7 +631,7 @@
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
           <div class="time" id="timeText">25:00</div>
-          <div class="small" id="timerHint">開始すると、選択中のタスクに集中時間が記録されます。</div>
+          <div class="small" id="timerHint">開始すると、上に表示されているタスクに集中時間が記録されます。別のタスクをやる場合は、タスク欄の「これをやる」を押してください。</div>
           <div class="timer-actions">
             <button id="startPauseBtn">開始</button>
             <button class="secondary" id="shortBreakBtn">5分休憩</button>
@@ -649,9 +649,9 @@
               <option value="retro">レトロ</option>
               <option value="soft">控えめ</option>
             </select>
-            <button class="ghost" id="saveSettingsBtn">保存</button>
+            <button class="ghost" id="saveSettingsBtn">時間を反映</button>
           </div>
-          <div class="small">左から：集中分数 / 短い休憩 / 長い休憩 / アラーム音</div>
+          <div class="small">左から：集中分数 / 短い休憩 / 長い休憩 / アラーム音。変更すると停止中のタイマーに反映されます。</div>
         </section>
 
 
@@ -1024,8 +1024,36 @@
       return state.sessions.filter(s => s.date === todayKey());
     }
 
+    function getSuggestedTask() {
+      const order = { high: 0, normal: 1, low: 2 };
+      const candidates = todayTasks()
+        .filter(t => !t.done)
+        .sort((a, b) => {
+          const p = order[a.priority] - order[b.priority];
+          if (p !== 0) return p;
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        });
+
+      return candidates[0] || null;
+    }
+
+    function ensureCurrentTask() {
+      const selected = state.tasks.find(t => t.id === state.currentTaskId && t.date === todayKey() && !t.done);
+      if (selected) return selected;
+
+      const suggested = getSuggestedTask();
+      if (suggested) {
+        state.currentTaskId = suggested.id;
+        saveState();
+        return suggested;
+      }
+
+      state.currentTaskId = null;
+      return null;
+    }
+
     function currentTask() {
-      return state.tasks.find(t => t.id === state.currentTaskId) || null;
+      return ensureCurrentTask();
     }
 
     function addTask() {
@@ -1180,7 +1208,7 @@
       }
 
       list.innerHTML = tasks.map(task => {
-        const selected = task.id === state.currentTaskId ? "選択中" : "選ぶ";
+        const selected = task.id === state.currentTaskId ? "今やる" : "これをやる";
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
         return `
@@ -1201,7 +1229,13 @@
 
     function renderCurrentTask() {
       const task = currentTask();
-      $("currentTaskTitle").textContent = task ? task.title : "タスクを選んでください";
+
+      if (task) {
+        const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "通常" : "軽め";
+        $("currentTaskTitle").textContent = `${task.title}（${priorityText}）`;
+      } else {
+        $("currentTaskTitle").textContent = "今日のタスクはまだありません";
+      }
     }
 
 
@@ -1482,7 +1516,7 @@
       $("focusMin").value = state.settings.focusMin;
       $("breakMin").value = state.settings.breakMin;
       $("longBreakMin").value = state.settings.longBreakMin;
-      $("alarmType").value = state.settings.alarmType || "urgent";
+      if ($("alarmType")) $("alarmType").value = state.settings.alarmType || "urgent";
     }
 
     function render() {
@@ -1502,13 +1536,20 @@
     }
 
     function startPauseTimer() {
+      if (!timer.running) {
+        readSettingsFromInputs();
+        if (timer.mode === "focus" && timer.secondsLeft <= 0) {
+          timer.secondsLeft = state.settings.focusMin * 60;
+        }
+      }
+
       if (timer.running) {
         pauseTimer();
         return;
       }
 
       if (timer.mode === "focus" && !currentTask()) {
-        alert("先にタスクを選んでください。");
+        alert("今日のタスクがまだありません。先にタスクを追加してください。");
         return;
       }
 
@@ -1576,14 +1617,40 @@
       renderTimer();
     }
 
-    function saveSettings() {
+    function readSettingsFromInputs() {
       state.settings.focusMin = clamp(Number($("focusMin").value), 1, 180);
       state.settings.breakMin = clamp(Number($("breakMin").value), 1, 60);
       state.settings.longBreakMin = clamp(Number($("longBreakMin").value), 1, 120);
-      state.settings.alarmType = $("alarmType").value || "urgent";
+
+      if ($("alarmType")) {
+        state.settings.alarmType = $("alarmType").value || "urgent";
+      }
+
       saveState();
-      resetTimer();
+    }
+
+    function applySettingsToTimer() {
+      if (timer.running) return;
+
+      if (timer.mode === "break") {
+        timer.secondsLeft = state.settings.breakMin * 60;
+      } else {
+        timer.mode = "focus";
+        timer.secondsLeft = state.settings.focusMin * 60;
+      }
+
+      renderTimer();
+    }
+
+    function saveSettings() {
+      readSettingsFromInputs();
+      applySettingsToTimer();
       render();
+    }
+
+    function autoApplySettings() {
+      readSettingsFromInputs();
+      applySettingsToTimer();
     }
 
 
@@ -1798,6 +1865,10 @@
     $("shortBreakBtn").addEventListener("click", () => setBreak(false));
     $("longBreakBtn").addEventListener("click", () => setBreak(true));
     $("saveSettingsBtn").addEventListener("click", saveSettings);
+    $("focusMin").addEventListener("change", autoApplySettings);
+    $("breakMin").addEventListener("change", autoApplySettings);
+    $("longBreakMin").addEventListener("change", autoApplySettings);
+    if ($("alarmType")) $("alarmType").addEventListener("change", autoApplySettings);
     $("stopAlarmBtn").addEventListener("click", stopAlarm);
     $("saveReviewBtn").addEventListener("click", saveReview);
     $("reviewRange").addEventListener("change", renderReviewDashboard);
