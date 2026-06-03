@@ -717,7 +717,7 @@
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
           <div class="time" id="timeText">25:00</div>
-          <div class="small" id="timerHint">開始すると、上に表示されているタスクに集中時間が記録されます。早く終わったら「今終わった」、足りなければ「＋5分」「＋10分」で調整できます。</div>
+          <div class="small" id="timerHint">開始すると、上に表示されているタスクに集中時間が記録されます。早く終わったら「今終わった」、足りなければ「＋5分」「＋10分」で調整できます。最小化中も、復帰時に実時間で残り時間を補正します。</div>
           <div class="timer-actions">
             <button id="startPauseBtn">開始</button>
             <button class="ok" id="finishNowBtn">今終わった</button>
@@ -932,6 +932,7 @@
       running: false,
       startedAt: null,
       accumulatedSeconds: 0,
+      endAt: null,
       intervalId: null
     };
 
@@ -1898,11 +1899,43 @@
       renderSettings();
     }
 
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ("wakeLock" in navigator && !wakeLock) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => {
+            wakeLock = null;
+          });
+        }
+      } catch {
+        wakeLock = null;
+      }
+    }
+
+    async function releaseWakeLock() {
+      try {
+        if (wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      } catch {
+        wakeLock = null;
+      }
+    }
+
     function startPauseTimer() {
       if (!timer.running) {
         readSettingsFromInputs();
+
         if (timer.mode === "focus" && timer.secondsLeft <= 0) {
           timer.secondsLeft = state.settings.focusMin * 60;
+        }
+
+        if (timer.mode === "focus" && !currentTask()) {
+          alert("今日のタスクがまだありません。先にタスクを追加してください。");
+          return;
         }
       }
 
@@ -1911,33 +1944,45 @@
         return;
       }
 
-      if (timer.mode === "focus" && !currentTask()) {
-        alert("今日のタスクがまだありません。先にタスクを追加してください。");
-        return;
-      }
-
       timer.running = true;
+      requestWakeLock();
       timer.startedAt = new Date();
-      timer.intervalId = setInterval(tick, 1000);
+      timer.endAt = Date.now() + timer.secondsLeft * 1000;
+      timer.intervalId = setInterval(tick, 500);
       renderTimer();
     }
 
     function pauseTimer() {
-      if (timer.running && timer.startedAt) {
-        timer.accumulatedSeconds += Math.max(0, Math.round((new Date() - new Date(timer.startedAt)) / 1000));
+      if (timer.running) {
+        updateSecondsLeftFromClock();
+
+        if (timer.startedAt) {
+          timer.accumulatedSeconds += Math.max(0, Math.round((new Date() - new Date(timer.startedAt)) / 1000));
+        }
       }
+
       timer.running = false;
+      releaseWakeLock();
       timer.startedAt = null;
+      timer.endAt = null;
       clearInterval(timer.intervalId);
       timer.intervalId = null;
       renderTimer();
     }
 
+    function updateSecondsLeftFromClock() {
+      if (!timer.running || !timer.endAt) return;
+      timer.secondsLeft = Math.max(0, Math.ceil((timer.endAt - Date.now()) / 1000));
+    }
+
     function tick() {
-      timer.secondsLeft--;
+      updateSecondsLeftFromClock();
+
       if (timer.secondsLeft <= 0) {
         finishTimer();
+        return;
       }
+
       renderTimer();
     }
 
@@ -1969,6 +2014,8 @@
     function finishTimer() {
       clearInterval(timer.intervalId);
       timer.running = false;
+      releaseWakeLock();
+      timer.endAt = null;
 
       if (timer.mode === "focus") {
         recordFocusSession(state.settings.focusMin, "completed");
@@ -2020,6 +2067,9 @@
       }
 
       timer.secondsLeft += minutes * 60;
+      if (timer.running && timer.endAt) {
+        timer.endAt += minutes * 60 * 1000;
+      }
       renderTimer();
     }
 
@@ -2029,6 +2079,7 @@
       timer.secondsLeft = state.settings.focusMin * 60;
       timer.startedAt = null;
       timer.accumulatedSeconds = 0;
+      timer.endAt = null;
       renderTimer();
     }
 
@@ -2036,6 +2087,7 @@
       pauseTimer();
       timer.mode = "break";
       timer.secondsLeft = (long ? state.settings.longBreakMin : state.settings.breakMin) * 60;
+      timer.endAt = null;
       renderTimer();
     }
 
@@ -2061,6 +2113,7 @@
         timer.secondsLeft = state.settings.focusMin * 60;
       }
 
+      timer.endAt = null;
       renderTimer();
     }
 
@@ -2275,6 +2328,18 @@
     window.stopRecurringTemplate = stopRecurringTemplate;
     window.editSessionMinutes = editSessionMinutes;
     window.deleteSession = deleteSession;
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && timer.running) {
+        tick();
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      if (timer.running) {
+        tick();
+      }
+    });
 
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
