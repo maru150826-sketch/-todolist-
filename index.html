@@ -717,9 +717,12 @@
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
           <div class="time" id="timeText">25:00</div>
-          <div class="small" id="timerHint">開始すると、上に表示されているタスクに集中時間が記録されます。別のタスクをやる場合は、タスク欄の「これをやる」を押してください。</div>
+          <div class="small" id="timerHint">開始すると、上に表示されているタスクに集中時間が記録されます。早く終わったら「今終わった」、足りなければ「＋5分」「＋10分」で調整できます。</div>
           <div class="timer-actions">
             <button id="startPauseBtn">開始</button>
+            <button class="ok" id="finishNowBtn">今終わった</button>
+            <button class="warn" id="addFiveBtn">＋5分</button>
+            <button class="warn" id="addTenBtn">＋10分</button>
             <button class="secondary" id="shortBreakBtn">5分休憩</button>
             <button class="secondary" id="longBreakBtn">15分休憩</button>
             <button class="ghost" id="resetTimerBtn">リセット</button>
@@ -928,6 +931,7 @@
       secondsLeft: state.settings.focusMin * 60,
       running: false,
       startedAt: null,
+      accumulatedSeconds: 0,
       intervalId: null
     };
 
@@ -1589,10 +1593,43 @@
 
       box.innerHTML = history.map(s => `
         <div class="history-item">
-          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong><br />
+          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
+          ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
+          <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">
+            <button class="ghost" onclick="editSessionMinutes('${s.id}')">時間編集</button>
+            <button class="danger" onclick="deleteSession('${s.id}')">記録削除</button>
+          </div>
         </div>
       `).join("");
+    }
+
+
+    function editSessionMinutes(sessionId) {
+      const session = state.sessions.find(s => s.id === sessionId);
+      if (!session) return;
+
+      const input = prompt("何分として記録しますか？", session.minutes);
+      if (input === null) return;
+
+      const minutes = clamp(Number(input), 1, 600);
+      session.minutes = minutes;
+      session.editedAt = new Date().toISOString();
+
+      saveState();
+      render();
+    }
+
+    function deleteSession(sessionId) {
+      const session = state.sessions.find(s => s.id === sessionId);
+      if (!session) return;
+
+      const ok = confirm(`「${session.taskTitle || "記録"}」の記録を削除しますか？`);
+      if (!ok) return;
+
+      state.sessions = state.sessions.filter(s => s.id !== sessionId);
+      saveState();
+      render();
     }
 
     function renderReview() {
@@ -1886,7 +1923,11 @@
     }
 
     function pauseTimer() {
+      if (timer.running && timer.startedAt) {
+        timer.accumulatedSeconds += Math.max(0, Math.round((new Date() - new Date(timer.startedAt)) / 1000));
+      }
       timer.running = false;
+      timer.startedAt = null;
       clearInterval(timer.intervalId);
       timer.intervalId = null;
       renderTimer();
@@ -1900,39 +1941,94 @@
       renderTimer();
     }
 
+    function recordFocusSession(minutes, reason = "completed") {
+      const task = currentTask();
+      const safeMinutes = clamp(Math.round(minutes), 1, 600);
+
+      state.sessions.push({
+        id: crypto.randomUUID(),
+        date: todayKey(),
+        taskId: task ? task.id : null,
+        taskTitle: task ? task.title : "未選択",
+        category: task ? task.category : "その他",
+        minutes: safeMinutes,
+        plannedMinutes: state.settings.focusMin,
+        reason,
+        endedAt: new Date().toISOString()
+      });
+
+      saveState();
+    }
+
+    function getElapsedFocusMinutes() {
+      if (!timer.startedAt) return state.settings.focusMin;
+      const currentSeconds = timer.startedAt ? Math.max(0, Math.round((new Date() - new Date(timer.startedAt)) / 1000)) : 0;
+      return Math.max(1, Math.round((timer.accumulatedSeconds + currentSeconds) / 60));
+    }
+
     function finishTimer() {
       clearInterval(timer.intervalId);
       timer.running = false;
 
       if (timer.mode === "focus") {
-        const task = currentTask();
-        const minutes = state.settings.focusMin;
-        state.sessions.push({
-          id: crypto.randomUUID(),
-          date: todayKey(),
-          taskId: task ? task.id : null,
-          taskTitle: task ? task.title : "未選択",
-          category: task ? task.category : "その他",
-          minutes,
-          endedAt: new Date().toISOString()
-        });
-        saveState();
-        showAlarm("集中終了", "1セット完了。休憩するか、次の25分に入ってください。");
+        recordFocusSession(state.settings.focusMin, "completed");
+        showAlarm("集中終了", "1セット完了。休憩するか、次のセットに入ってください。");
         timer.mode = "break";
         timer.secondsLeft = state.settings.breakMin * 60;
+        timer.startedAt = null;
+        timer.accumulatedSeconds = 0;
       } else {
         showAlarm("休憩終了", "戻れ。次のタスクに入る時間です。");
         timer.mode = "focus";
         timer.secondsLeft = state.settings.focusMin * 60;
+        timer.startedAt = null;
+        timer.accumulatedSeconds = 0;
       }
 
       render();
+    }
+
+    function finishNow() {
+      if (timer.mode !== "focus") {
+        alert("集中タイマー中だけ使えます。");
+        return;
+      }
+
+      if (!currentTask()) {
+        alert("今日のタスクがまだありません。先にタスクを追加してください。");
+        return;
+      }
+
+      const elapsed = timer.running ? getElapsedFocusMinutes() : Math.max(1, Math.round((state.settings.focusMin * 60 - timer.secondsLeft) / 60));
+      const ok = confirm(`${elapsed}分として記録しますか？`);
+      if (!ok) return;
+
+      pauseTimer();
+      recordFocusSession(elapsed, "finished_early");
+      timer.mode = "break";
+      timer.secondsLeft = state.settings.breakMin * 60;
+      timer.startedAt = null;
+      timer.accumulatedSeconds = 0;
+      render();
+      showAlarm("記録完了", `${elapsed}分で記録しました。休憩に入れます。`);
+    }
+
+    function addTimerMinutes(minutes) {
+      if (timer.mode !== "focus") {
+        alert("集中タイマー中だけ延長できます。");
+        return;
+      }
+
+      timer.secondsLeft += minutes * 60;
+      renderTimer();
     }
 
     function resetTimer() {
       pauseTimer();
       timer.mode = "focus";
       timer.secondsLeft = state.settings.focusMin * 60;
+      timer.startedAt = null;
+      timer.accumulatedSeconds = 0;
       renderTimer();
     }
 
@@ -2177,6 +2273,8 @@
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
     window.stopRecurringTemplate = stopRecurringTemplate;
+    window.editSessionMinutes = editSessionMinutes;
+    window.deleteSession = deleteSession;
 
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
@@ -2193,6 +2291,9 @@
       if (e.key === "Enter") addTask();
     });
     $("startPauseBtn").addEventListener("click", startPauseTimer);
+    $("finishNowBtn").addEventListener("click", finishNow);
+    $("addFiveBtn").addEventListener("click", () => addTimerMinutes(5));
+    $("addTenBtn").addEventListener("click", () => addTimerMinutes(10));
     $("resetTimerBtn").addEventListener("click", resetTimer);
     $("shortBreakBtn").addEventListener("click", () => setBreak(false));
     $("longBreakBtn").addEventListener("click", () => setBreak(true));
