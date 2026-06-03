@@ -261,9 +261,95 @@
 
     .add-task {
       display: grid;
-      grid-template-columns: 1.4fr .7fr .65fr .75fr .8fr auto;
+      grid-template-columns: 1.25fr .65fr .6fr .7fr .7fr .75fr auto;
       gap: 8px;
       margin-bottom: 14px;
+    }
+
+    .task {
+      cursor: grab;
+    }
+
+    .task:active {
+      cursor: grabbing;
+    }
+
+    .task.dragging {
+      opacity: .45;
+      border-color: var(--accent);
+    }
+
+    .deadline {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.05);
+      color: #d1d5db;
+    }
+
+    .deadline.soon {
+      border-color: rgba(251,191,36,.45);
+      background: rgba(251,191,36,.12);
+      color: #fde68a;
+    }
+
+    .deadline.overdue {
+      border-color: rgba(251,113,133,.55);
+      background: rgba(251,113,133,.14);
+      color: #fecdd3;
+    }
+
+    .review-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .review-tabs button.active {
+      background: var(--accent);
+      color: #07111f;
+      border-color: transparent;
+    }
+
+    .weekly-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .week-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .week-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .week-title {
+      font-weight: 900;
+    }
+
+    .week-total {
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .week-note {
+      color: #d1d5db;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
     }
 
     .future-list {
@@ -709,6 +795,7 @@
               <option value="low">軽め</option>
             </select>
             <input type="date" id="taskDateInput" title="タスクの日付" />
+            <input type="date" id="deadlineInput" title="締切" />
             <select id="repeatInput" title="くり返し">
               <option value="none">1回だけ</option>
               <option value="daily">毎日</option>
@@ -769,6 +856,10 @@
         <section class="panel" style="margin-top:18px;">
           <h2>振り返り分析</h2>
           <div class="review-dashboard">
+            <div class="review-tabs">
+              <button class="ghost active" id="dailyReviewTab">日別レビュー</button>
+              <button class="ghost" id="weeklyReviewTab">週次レビュー</button>
+            </div>
             <div class="review-controls">
               <select id="reviewRange">
                 <option value="7">直近7日</option>
@@ -800,6 +891,7 @@
               </div>
             </div>
             <div class="history" id="reviewTimeline"></div>
+            <div class="weekly-list hidden" id="weeklyReviewList"></div>
           </div>
         </section>
       </aside>
@@ -871,6 +963,7 @@
         currentTaskId: null,
         sessions: [],
         reviews: {},
+        reviewMode: "daily",
         settings: {
           focusMin: 25,
           breakMin: 5,
@@ -919,6 +1012,52 @@
       return `${y}-${m}-${d}`;
     }
 
+
+    function deadlineLabel(deadline) {
+      if (!deadline) return "";
+      const today = parseDateKey(todayKey());
+      const d = parseDateKey(deadline);
+      const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+
+      if (diff < 0) return `締切超過 ${Math.abs(diff)}日`;
+      if (diff === 0) return "締切 今日";
+      if (diff === 1) return "締切 明日";
+      return `締切まで${diff}日`;
+    }
+
+    function deadlineClass(deadline) {
+      if (!deadline) return "";
+      const today = parseDateKey(todayKey());
+      const d = parseDateKey(deadline);
+      const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      if (diff < 0) return "overdue";
+      if (diff <= 2) return "soon";
+      return "";
+    }
+
+    function nextTaskOrder(dateKey) {
+      const sameDay = state.tasks.filter(t => t.date === dateKey);
+      const max = sameDay.reduce((m, t) => Math.max(m, Number.isFinite(t.order) ? t.order : 0), 0);
+      return max + 1;
+    }
+
+    function normalizeTaskOrders(dateKey = todayKey()) {
+      const tasks = state.tasks
+        .filter(t => t.date === dateKey)
+        .sort((a, b) => {
+          const ao = Number.isFinite(a.order) ? a.order : 999999;
+          const bo = Number.isFinite(b.order) ? b.order : 999999;
+          if (ao !== bo) return ao - bo;
+          const order = { high: 0, normal: 1, low: 2 };
+          const p = order[a.priority] - order[b.priority];
+          if (p !== 0) return p;
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        });
+
+      tasks.forEach((t, i) => t.order = i + 1);
+    }
+
+
     function shouldTemplateOccur(template, dateKey) {
       const start = template.startDate;
       if (dateKey < start) return false;
@@ -947,8 +1086,10 @@
         category: template.category,
         priority: template.priority,
         repeat: template.repeat,
+        deadline: template.deadline || null,
         done: false,
         date: dateKey,
+        order: nextTaskOrder(dateKey),
         createdAt: new Date().toISOString(),
         completedAt: null
       };
@@ -1025,13 +1166,13 @@
     }
 
     function getSuggestedTask() {
-      const order = { high: 0, normal: 1, low: 2 };
+      normalizeTaskOrders(todayKey());
       const candidates = todayTasks()
         .filter(t => !t.done)
         .sort((a, b) => {
-          const p = order[a.priority] - order[b.priority];
-          if (p !== 0) return p;
-          return new Date(a.createdAt) - new Date(b.createdAt);
+          const ao = Number.isFinite(a.order) ? a.order : 999999;
+          const bo = Number.isFinite(b.order) ? b.order : 999999;
+          return ao - bo;
         });
 
       return candidates[0] || null;
@@ -1061,6 +1202,7 @@
       if (!title) return;
 
       const selectedDate = $("taskDateInput").value || todayKey();
+      const deadline = $("deadlineInput").value || null;
       const repeat = $("repeatInput").value || "none";
 
       if (repeat !== "none") {
@@ -1070,6 +1212,7 @@
           category: $("categoryInput").value,
           priority: $("priorityInput").value,
           repeat,
+          deadline,
           startDate: selectedDate,
           active: true,
           createdAt: new Date().toISOString()
@@ -1091,8 +1234,10 @@
           category: $("categoryInput").value,
           priority: $("priorityInput").value,
           repeat: "none",
+          deadline,
           done: false,
           date: selectedDate,
+          order: nextTaskOrder(selectedDate),
           createdAt: new Date().toISOString(),
           completedAt: null
         };
@@ -1102,6 +1247,7 @@
       }
 
       $("taskInput").value = "";
+      $("deadlineInput").value = "";
       $("repeatInput").value = "none";
       saveState();
       render();
@@ -1151,8 +1297,10 @@
         category: inferredCategory,
         priority: inferredPriority,
         repeat: "none",
+        deadline: null,
         done: false,
         date: todayKey(),
+        order: nextTaskOrder(todayKey()),
         createdAt: new Date().toISOString(),
         completedAt: null
       };
@@ -1197,9 +1345,11 @@
 
     function renderTasks() {
       const list = $("taskList");
+      normalizeTaskOrders(todayKey());
       const tasks = todayTasks().sort((a, b) => {
-        const order = { high: 0, normal: 1, low: 2 };
-        return order[a.priority] - order[b.priority];
+        const ao = Number.isFinite(a.order) ? a.order : 999999;
+        const bo = Number.isFinite(b.order) ? b.order : 999999;
+        return ao - bo;
       });
 
       if (tasks.length === 0) {
@@ -1212,11 +1362,12 @@
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
         return `
-          <div class="task ${task.done ? "done" : ""}">
+          <div class="task ${task.done ? "done" : ""}" draggable="true" data-task-id="${task.id}">
             <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${task.id}')" />
             <div>
               <div class="task-title">${escapeHtml(task.title)}</div>
               <div class="task-meta">${escapeHtml(task.category)} / ${priorityText}${repeatText}</div>
+              ${task.deadline ? `<div class="deadline ${deadlineClass(task.deadline)}">${deadlineLabel(task.deadline)}</div>` : ""}
             </div>
             <div class="task-actions">
               <button class="${task.id === state.currentTaskId ? "ok" : "ghost"}" onclick="setCurrentTask('${task.id}')">${selected}</button>
@@ -1225,6 +1376,57 @@
           </div>
         `;
       }).join("");
+
+      attachTaskDragHandlers();
+    }
+
+    function attachTaskDragHandlers() {
+      const list = $("taskList");
+      if (!list) return;
+
+      let draggedId = null;
+
+      list.querySelectorAll(".task").forEach(item => {
+        item.addEventListener("dragstart", () => {
+          draggedId = item.dataset.taskId;
+          item.classList.add("dragging");
+        });
+
+        item.addEventListener("dragend", () => {
+          item.classList.remove("dragging");
+          draggedId = null;
+        });
+
+        item.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          const dragging = list.querySelector(".dragging");
+          if (!dragging || dragging === item) return;
+
+          const rect = item.getBoundingClientRect();
+          const after = e.clientY > rect.top + rect.height / 2;
+          if (after) {
+            item.after(dragging);
+          } else {
+            item.before(dragging);
+          }
+        });
+
+        item.addEventListener("drop", (e) => {
+          e.preventDefault();
+          if (!draggedId) return;
+          persistDraggedOrder();
+        });
+      });
+    }
+
+    function persistDraggedOrder() {
+      const ids = Array.from($("taskList").querySelectorAll(".task")).map(el => el.dataset.taskId);
+      ids.forEach((id, index) => {
+        const task = state.tasks.find(t => t.id === id);
+        if (task) task.order = index + 1;
+      });
+      saveState();
+      render();
     }
 
     function renderCurrentTask() {
@@ -1279,7 +1481,7 @@
           ${activeTemplates.map(t => `
             <div style="margin-bottom:8px;">
               <strong>${escapeHtml(t.title)}</strong><br>
-              ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始
+              ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
               <button class="ghost" style="margin-left:6px; padding:5px 8px; font-size:12px;" onclick="stopRecurringTemplate('${t.id}')">停止</button>
             </div>
           `).join("")}
@@ -1291,6 +1493,7 @@
           <div class="future-date">${t.date}</div>
           <strong>${escapeHtml(t.title)}</strong><br>
           ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
+          ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
         </div>
       `).join("");
 
@@ -1421,6 +1624,20 @@
       return list;
     }
 
+    function getWeekStartKey(dateKey) {
+      const d = parseDateKey(dateKey);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return toDateKey(d);
+    }
+
+    function getWeekEndKey(weekStartKey) {
+      const d = parseDateKey(weekStartKey);
+      d.setDate(d.getDate() + 6);
+      return toDateKey(d);
+    }
+
     function renderReviewDashboard() {
       const rangeEl = $("reviewRange");
       const categoryEl = $("reviewCategory");
@@ -1448,6 +1665,19 @@
       $("reviewTotal").textContent = formatMinutes(total);
       $("reviewDays").textContent = `${focusedDays}日`;
       $("reviewBest").textContent = formatMinutes(bestMinutes);
+
+      if (state.reviewMode === "weekly") {
+        renderWeeklyReview(dates, category);
+      } else {
+        renderDailyReview(dates, category);
+      }
+    }
+
+    function renderDailyReview(dates, category) {
+      $("reviewTimeline").classList.remove("hidden");
+      $("weeklyReviewList").classList.add("hidden");
+      $("dailyReviewTab").classList.add("active");
+      $("weeklyReviewTab").classList.remove("active");
 
       const timeline = $("reviewTimeline");
       if (dates.length === 0) {
@@ -1485,6 +1715,13 @@
           .map(s => `<span class="mini-tag">${s.type === "manual" ? "手動：" : ""}${escapeHtml(s.taskTitle || "未選択")}</span>`)
           .join("");
 
+        const deadlineTasks = dayTasks
+          .filter(t => t.deadline)
+          .sort((a, b) => a.deadline.localeCompare(b.deadline))
+          .slice(0, 3)
+          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
+          .join("");
+
         return `
           <div class="day-review">
             <div class="day-review-head">
@@ -1493,12 +1730,101 @@
             </div>
             <div class="mini-tags">${tags || `<span class="mini-tag">集中記録なし</span>`}</div>
             <div class="mini-tags">${sessionTitles}</div>
+            ${deadlineTasks ? `<div class="mini-tags">${deadlineTasks}</div>` : ""}
             ${review ? `<div class="review-note">${escapeHtml(review)}</div>` : `<div class="small">振り返りメモなし</div>`}
           </div>
         `;
       }).join("");
 
       timeline.innerHTML = rows;
+    }
+
+    function renderWeeklyReview(dates, category) {
+      $("reviewTimeline").classList.add("hidden");
+      $("weeklyReviewList").classList.remove("hidden");
+      $("dailyReviewTab").classList.remove("active");
+      $("weeklyReviewTab").classList.add("active");
+
+      const weeks = {};
+      for (const date of dates) {
+        const wk = getWeekStartKey(date);
+        if (!weeks[wk]) weeks[wk] = [];
+        weeks[wk].push(date);
+      }
+
+      const weekKeys = Object.keys(weeks).sort((a, b) => b.localeCompare(a));
+      const box = $("weeklyReviewList");
+
+      if (weekKeys.length === 0) {
+        box.innerHTML = `<div class="small">まだ週次レビューのデータがありません。</div>`;
+        return;
+      }
+
+      box.innerHTML = weekKeys.map(weekStart => {
+        const weekEnd = getWeekEndKey(weekStart);
+        const weekDates = weeks[weekStart];
+
+        const weekSessions = state.sessions.filter(s => {
+          const inWeek = weekDates.includes(s.date);
+          const inCategory = category === "all" || s.category === category;
+          return inWeek && inCategory;
+        });
+
+        const weekTasks = state.tasks.filter(t => {
+          const inWeek = weekDates.includes(t.date);
+          const inCategory = category === "all" || t.category === category;
+          return inWeek && inCategory;
+        });
+
+        const total = weekSessions.reduce((sum, s) => sum + s.minutes, 0);
+        const done = weekTasks.filter(t => t.done).length;
+        const all = weekTasks.length;
+
+        const byCategory = {};
+        for (const s of weekSessions) {
+          byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes;
+        }
+
+        const categoryTags = Object.entries(byCategory)
+          .sort((a, b) => b[1] - a[1])
+          .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
+          .join("");
+
+        const bestDayEntry = Object.entries(
+          weekSessions.reduce((obj, s) => {
+            obj[s.date] = (obj[s.date] || 0) + s.minutes;
+            return obj;
+          }, {})
+        ).sort((a, b) => b[1] - a[1])[0];
+
+        const bestDay = bestDayEntry ? `${bestDayEntry[0]} ${formatMinutes(bestDayEntry[1])}` : "なし";
+
+        const dueSoon = weekTasks
+          .filter(t => t.deadline && !t.done)
+          .sort((a, b) => a.deadline.localeCompare(b.deadline))
+          .slice(0, 4)
+          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
+          .join("");
+
+        const notes = weekDates
+          .sort((a, b) => a.localeCompare(b))
+          .filter(d => state.reviews[d])
+          .map(d => `${d}: ${state.reviews[d]}`)
+          .join("\\n");
+
+        return `
+          <div class="week-card">
+            <div class="week-card-head">
+              <div class="week-title">${weekStart} 〜 ${weekEnd}</div>
+              <div class="week-total">${formatMinutes(total)}</div>
+            </div>
+            <div class="mini-tags">${categoryTags || `<span class="mini-tag">記録なし</span>`}</div>
+            <div class="small">完了タスク：${done}/${all} / 最高日：${bestDay}</div>
+            ${dueSoon ? `<div class="mini-tags">${dueSoon}</div>` : ""}
+            ${notes ? `<div class="week-note">${escapeHtml(notes)}</div>` : `<div class="small">週内の振り返りメモなし</div>`}
+          </div>
+        `;
+      }).join("");
     }
 
     function renderQuote() {
@@ -1782,6 +2108,12 @@
       alert("振り返りを保存しました。");
     }
 
+    function setReviewMode(mode) {
+      state.reviewMode = mode;
+      saveState();
+      renderReviewDashboard();
+    }
+
     function exportData() {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -1873,6 +2205,8 @@
     $("saveReviewBtn").addEventListener("click", saveReview);
     $("reviewRange").addEventListener("change", renderReviewDashboard);
     $("reviewCategory").addEventListener("change", renderReviewDashboard);
+    $("dailyReviewTab").addEventListener("click", () => setReviewMode("daily"));
+    $("weeklyReviewTab").addEventListener("click", () => setReviewMode("weekly"));
     $("exportBtn").addEventListener("click", exportData);
     $("importBtn").addEventListener("click", () => $("importFile").click());
     $("importFile").addEventListener("change", (e) => {
