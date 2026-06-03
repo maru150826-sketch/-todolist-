@@ -232,6 +232,33 @@
       resize: vertical;
     }
 
+    .quick-task-box {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+
+    .quick-task-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .quick-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-buttons button {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
     .add-task {
       display: grid;
       grid-template-columns: 1.4fr .7fr .65fr .75fr .8fr auto;
@@ -563,6 +590,10 @@
         grid-template-columns: 1fr;
       }
 
+      .quick-task-row {
+        grid-template-columns: 1fr;
+      }
+
       .manual-log-note {
         grid-column: auto;
       }
@@ -646,6 +677,22 @@
 
         <section style="margin-top:18px;">
           <h2>今日のタスク</h2>
+          <div class="quick-task-box">
+            <div class="quick-task-row">
+              <input id="quickTaskInput" placeholder="クイック入力：例 TOEIC単語100問 / ジム胸肩 / IT過去問 / 大学レポート" />
+              <button id="quickAddTaskBtn" class="ok">今日に追加</button>
+            </div>
+            <div class="quick-buttons">
+              <button class="ghost" data-template="TOEIC単語100問" data-category="TOEIC" data-priority="high">TOEIC単語</button>
+              <button class="ghost" data-template="TOEIC Part 7 精読" data-category="TOEIC" data-priority="high">TOEIC精読</button>
+              <button class="ghost" data-template="ジム" data-category="筋トレ" data-priority="normal">ジム</button>
+              <button class="ghost" data-template="ITパスポート 過去問" data-category="ITパスポート" data-priority="high">IT過去問</button>
+              <button class="ghost" data-template="大学の課題" data-category="大学課題" data-priority="high">大学課題</button>
+              <button class="ghost" data-template="読書" data-category="読書" data-priority="low">読書</button>
+            </div>
+            <div class="small">クイック入力は、文字からカテゴリを自動判定します。細かく設定したい場合は下の通常入力を使ってください。</div>
+          </div>
+
           <div class="add-task">
             <input id="taskInput" placeholder="例：TOEIC Part 7 精読" />
             <select id="categoryInput">
@@ -1031,6 +1078,72 @@
       saveState();
       render();
     }
+
+
+    function inferTaskCategory(title) {
+      const text = title.toLowerCase();
+
+      if (text.includes("toeic") || text.includes("トイック") || text.includes("英語") || text.includes("part") || text.includes("単語") || text.includes("精読")) {
+        return "TOEIC";
+      }
+      if (text.includes("ジム") || text.includes("筋トレ") || text.includes("ベンチ") || text.includes("スクワット") || text.includes("背中") || text.includes("胸") || text.includes("肩") || text.includes("脚") || text.includes("腕")) {
+        return "筋トレ";
+      }
+      if (text.includes("it") || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報")) {
+        return "ITパスポート";
+      }
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) {
+        return "大学課題";
+      }
+      if (text.includes("読書") || text.includes("本")) {
+        return "読書";
+      }
+      return "その他";
+    }
+
+    function inferTaskPriority(category, title) {
+      const text = title.toLowerCase();
+      if (text.includes("最重要") || text.includes("締切") || text.includes("今日中") || text.includes("課題")) return "high";
+      if (category === "TOEIC" || category === "ITパスポート" || category === "大学課題") return "high";
+      if (category === "筋トレ") return "normal";
+      return "normal";
+    }
+
+    function addQuickTask(title, category = null, priority = null) {
+      const cleanTitle = String(title || "").trim();
+      if (!cleanTitle) return;
+
+      const inferredCategory = category || inferTaskCategory(cleanTitle);
+      const inferredPriority = priority || inferTaskPriority(inferredCategory, cleanTitle);
+
+      const task = {
+        id: crypto.randomUUID(),
+        templateId: null,
+        title: cleanTitle,
+        category: inferredCategory,
+        priority: inferredPriority,
+        repeat: "none",
+        done: false,
+        date: todayKey(),
+        createdAt: new Date().toISOString(),
+        completedAt: null
+      };
+
+      state.tasks.unshift(task);
+      if (!state.currentTaskId) state.currentTaskId = task.id;
+
+      saveState();
+      render();
+    }
+
+    function addQuickTaskFromInput() {
+      const input = $("quickTaskInput");
+      const title = input.value.trim();
+      if (!title) return;
+      addQuickTask(title);
+      input.value = "";
+    }
+
 
     function setCurrentTask(id) {
       state.currentTaskId = id;
@@ -1668,6 +1781,15 @@
 
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
+    $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
+    $("quickTaskInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addQuickTaskFromInput();
+    });
+    document.querySelectorAll("[data-template]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        addQuickTask(btn.dataset.template, btn.dataset.category, btn.dataset.priority);
+      });
+    });
     $("taskInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") addTask();
     });
