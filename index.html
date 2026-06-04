@@ -799,6 +799,7 @@
         <section class="must-do-panel">
           <h2>締切近い順</h2>
           <div class="small" style="margin-bottom:10px;">締切日がある未完了タスクだけを、近い順に表示します。</div>
+          <button class="ghost" style="margin-bottom:10px;" id="cleanupDuplicatesBtn">重複タスクを整理</button>
           <div class="must-do-list" id="mustDoList"></div>
         </section>
 
@@ -1102,6 +1103,7 @@
     function migrateDateIfNeeded() {
       const today = todayKey();
       generateRecurringTasksUntil(today);
+      if (removeDuplicateTasks()) saveState();
 
       if (state.lastOpenedDate !== today) {
         state.lastOpenedDate = today;
@@ -1658,6 +1660,86 @@
       if (diff === 0) return "今日まで";
       if (diff === 1) return "あと1日";
       return `あと${diff}日`;
+    }
+
+
+    function normalizeStringForDedupe(value) {
+      return String(value || "").trim().replace(/\s+/g, " ");
+    }
+
+    function taskDedupeKey(task) {
+      return [
+        normalizeStringForDedupe(task.title),
+        normalizeStringForDedupe(task.category),
+        task.date || "",
+        task.deadline || "",
+        task.repeat || "none"
+      ].join("||");
+    }
+
+    function recurringTemplateDedupeKey(template) {
+      return [
+        normalizeStringForDedupe(template.title),
+        normalizeStringForDedupe(template.category),
+        template.startDate || "",
+        template.deadline || "",
+        template.repeat || "none"
+      ].join("||");
+    }
+
+    function removeDuplicateTasks() {
+      const seen = new Map();
+      const cleaned = [];
+
+      for (const task of state.tasks) {
+        const key = taskDedupeKey(task);
+        if (!seen.has(key)) {
+          seen.set(key, task);
+          cleaned.push(task);
+          continue;
+        }
+
+        const kept = seen.get(key);
+
+        // 重複のうち、進捗があるもの・完了済みのものを優先して残す
+        const keptScore = (kept.done ? 2 : 0) + (getTaskSessionMinutes(kept.id) > 0 ? 1 : 0);
+        const taskScore = (task.done ? 2 : 0) + (getTaskSessionMinutes(task.id) > 0 ? 1 : 0);
+
+        if (taskScore > keptScore) {
+          const index = cleaned.indexOf(kept);
+          if (index >= 0) cleaned[index] = task;
+          seen.set(key, task);
+        }
+      }
+
+      const changed = cleaned.length !== state.tasks.length;
+      state.tasks = cleaned;
+
+      if (Array.isArray(state.recurringTemplates)) {
+        const templateSeen = new Set();
+        const templates = [];
+        for (const template of state.recurringTemplates) {
+          const key = recurringTemplateDedupeKey(template);
+          if (templateSeen.has(key)) continue;
+          templateSeen.add(key);
+          templates.push(template);
+        }
+        if (templates.length !== state.recurringTemplates.length) {
+          state.recurringTemplates = templates;
+          return true;
+        }
+      }
+
+      return changed;
+    }
+
+    function cleanupDuplicatesAndRender() {
+      const changed = removeDuplicateTasks();
+      if (changed) {
+        saveState();
+      }
+      render();
+      alert(changed ? "重複タスクを整理しました。" : "重複タスクは見つかりませんでした。");
     }
 
     function renderMustDoList() {
@@ -2485,6 +2567,7 @@
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
     window.stopRecurringTemplate = stopRecurringTemplate;
+    window.cleanupDuplicatesAndRender = cleanupDuplicatesAndRender;
     window.togglePastDailyLog = togglePastDailyLog;
     window.togglePastWeeklyLog = togglePastWeeklyLog;
     window.showCalendarDetail = showCalendarDetail;
@@ -2505,6 +2588,7 @@
 
     if ($("prevMonthBtn")) $("prevMonthBtn").addEventListener("click", () => changeCalendarMonth(-1));
     if ($("nextMonthBtn")) $("nextMonthBtn").addEventListener("click", () => changeCalendarMonth(1));
+    if ($("cleanupDuplicatesBtn")) $("cleanupDuplicatesBtn").addEventListener("click", cleanupDuplicatesAndRender);
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
