@@ -1312,7 +1312,7 @@
       if (!title) return;
 
       const selectedDate = $("taskDateInput").value || todayKey();
-      const deadline = $("deadlineInput").value || null;
+      const deadline = $("deadlineInput") ? $("deadlineInput").value || null : null;
       const repeat = $("repeatInput").value || "none";
 
       if (repeat !== "none") {
@@ -1357,7 +1357,7 @@
       }
 
       $("taskInput").value = "";
-      $("deadlineInput").value = "";
+      if ($("deadlineInput")) $("deadlineInput").value = "";
       $("repeatInput").value = "none";
       saveState();
       render();
@@ -1634,6 +1634,10 @@
       const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
       return diff >= 0 && diff <= 2;
     }
+    function cleanDedupeText(value) {
+      return String(value || "").trim().replace(/\s+/g, " ");
+    }
+
     function getUniqueDeadlineTasksForDisplay() {
       const map = new Map();
 
@@ -1642,8 +1646,8 @@
         .filter(t => !!t.deadline)
         .forEach(t => {
           const key = [
-            typeof normalizeStringForDedupe === "function" ? normalizeStringForDedupe(t.title) : String(t.title || "").trim(),
-            typeof normalizeStringForDedupe === "function" ? normalizeStringForDedupe(t.category) : String(t.category || "").trim(),
+            cleanDedupeText(t.title),
+            cleanDedupeText(t.category),
             t.deadline || ""
           ].join("||");
 
@@ -1652,7 +1656,6 @@
           } else {
             const existing = map.get(key);
             existing.duplicateCount += 1;
-            // 同じ課題なら、表示用には一番早いタスク日を残す
             if ((t.date || "9999-99-99") < (existing.date || "9999-99-99")) {
               existing.date = t.date;
             }
