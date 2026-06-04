@@ -694,7 +694,7 @@
     .task.overdue-task { border-color: rgba(251,113,133,.65); background: rgba(251,113,133,.12); }
     .must-do-panel { border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.07); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
     .must-do-list { display: flex; flex-direction: column; gap: 8px; }
-    .must-do-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+    .must-do-item { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
     .must-do-title { font-weight: 800; }
     .calendar-controls { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
     .calendar-title { text-align: center; font-weight: 900; }
@@ -797,8 +797,8 @@
         </section>
 
         <section class="must-do-panel">
-          <h2>ちゃんとやる</h2>
-          <div class="small" style="margin-bottom:10px;">未着手・未完了・締切が近いものを自動で出します。</div>
+          <h2>締切近い順</h2>
+          <div class="small" style="margin-bottom:10px;">締切日がある未完了タスクだけを、近い順に表示します。</div>
           <div class="must-do-list" id="mustDoList"></div>
         </section>
 
@@ -1634,36 +1634,58 @@
       const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
       return diff >= 0 && diff <= 2;
     }
-    function getMustDoTasks() {
-      const today = todayKey();
-      return state.tasks.filter(t => !t.done)
-        .filter(t => t.date <= today || isTaskDueSoon(t) || isTaskOverdue(t))
-        .map(t => {
-          let score = 0;
-          if (isTaskOverdue(t)) score += 100;
-          if (isTaskDueSoon(t)) score += 70;
-          if (isTaskNotStarted(t)) score += 40;
-          if (t.priority === "high") score += 30;
-          if (t.date < today) score += 20;
-          return { ...t, score };
+    function getDeadlineTasks() {
+      return state.tasks
+        .filter(t => !t.done)
+        .filter(t => !!t.deadline)
+        .sort((a, b) => {
+          const d = a.deadline.localeCompare(b.deadline);
+          if (d !== 0) return d;
+          const pa = a.priority === "high" ? 0 : a.priority === "normal" ? 1 : 2;
+          const pb = b.priority === "high" ? 0 : b.priority === "normal" ? 1 : 2;
+          return pa - pb;
         })
-        .sort((a, b) => b.score - a.score || (a.deadline || "9999").localeCompare(b.deadline || "9999") || (a.order || 999999) - (b.order || 999999))
-        .slice(0, 6);
+        .slice(0, 12);
     }
+
+    function getDeadlineStatus(deadline) {
+      if (!deadline) return "";
+      const today = parseDateKey(todayKey());
+      const d = parseDateKey(deadline);
+      const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+
+      if (diff < 0) return `締切超過 ${Math.abs(diff)}日`;
+      if (diff === 0) return "今日まで";
+      if (diff === 1) return "あと1日";
+      return `あと${diff}日`;
+    }
+
     function renderMustDoList() {
       const box = $("mustDoList");
       if (!box) return;
-      const tasks = getMustDoTasks();
+
+      const tasks = getDeadlineTasks();
       if (!tasks.length) {
-        box.innerHTML = `<div class="small">強調すべき未完了タスクはありません。</div>`;
+        box.innerHTML = `<div class="small">締切がある未完了タスクはありません。</div>`;
         return;
       }
+
       box.innerHTML = tasks.map(t => {
-        const badges = [];
-        if (isTaskOverdue(t)) badges.push(`<span class="deadline overdue">締切超過</span>`);
-        else if (isTaskDueSoon(t)) badges.push(`<span class="deadline soon">${deadlineLabel(t.deadline)}</span>`);
-        if (isTaskNotStarted(t)) badges.push(`<span class="deadline soon">未着手</span>`);
-        return `<div class="must-do-item"><div><div class="must-do-title">${escapeHtml(t.title)}</div><div class="task-meta">${escapeHtml(t.category)} / ${t.date} ${badges.join(" ")}</div></div><button class="ok" onclick="setCurrentTask('${t.id}')">これをやる</button></div>`;
+        const cls = deadlineClass(t.deadline);
+        const status = getDeadlineStatus(t.deadline);
+        return `
+          <div class="must-do-item">
+            <div>
+              <div class="must-do-title">${escapeHtml(t.title)}</div>
+              <div class="task-meta">
+                ${escapeHtml(t.category)} / 締切：${t.deadline}
+                <span class="deadline ${cls}">${status}</span>
+              </div>
+            </div>
+            <button class="ok" onclick="setCurrentTask('${t.id}')">これをやる</button>
+            <button class="danger" onclick="deleteTask('${t.id}')">削除</button>
+          </div>
+        `;
       }).join("");
     }
 
