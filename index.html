@@ -873,7 +873,7 @@
         </section>
 
         <section class="panel" style="margin-top:18px;">
-          <h2>履歴</h2>
+          <h2>今日の履歴</h2>
           <div class="history" id="historyList"></div>
         </section>
 
@@ -1655,11 +1655,16 @@
     }
 
     function renderHistory() {
-      const history = [...state.sessions].sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt)).slice(0, 20);
       const box = $("historyList");
+      if (!box) return;
+
+      const history = state.sessions
+        .filter(s => s.date === todayKey())
+        .slice()
+        .reverse();
 
       if (history.length === 0) {
-        box.innerHTML = `<div class="small">まだ履歴はありません。</div>`;
+        box.innerHTML = `<div class="small">今日の履歴はまだありません。</div>`;
         return;
       }
 
@@ -1668,40 +1673,13 @@
           <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
           ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
+          ${typeof editSessionMinutes === "function" ? `
           <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">
             <button class="ghost" onclick="editSessionMinutes('${s.id}')">時間編集</button>
             <button class="danger" onclick="deleteSession('${s.id}')">記録削除</button>
-          </div>
+          </div>` : ""}
         </div>
       `).join("");
-    }
-
-
-    function editSessionMinutes(sessionId) {
-      const session = state.sessions.find(s => s.id === sessionId);
-      if (!session) return;
-
-      const input = prompt("何分として記録しますか？", session.minutes);
-      if (input === null) return;
-
-      const minutes = clamp(Number(input), 1, 600);
-      session.minutes = minutes;
-      session.editedAt = new Date().toISOString();
-
-      saveState();
-      render();
-    }
-
-    function deleteSession(sessionId) {
-      const session = state.sessions.find(s => s.id === sessionId);
-      if (!session) return;
-
-      const ok = confirm(`「${session.taskTitle || "記録"}」の記録を削除しますか？`);
-      if (!ok) return;
-
-      state.sessions = state.sessions.filter(s => s.id !== sessionId);
-      saveState();
-      render();
     }
 
     function renderReview() {
@@ -1747,54 +1725,110 @@
       return toDateKey(d);
     }
 
+    function getWeekStartKey(dateKey) {
+      const d = parseDateKey(dateKey);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return toDateKey(d);
+    }
+
+    function getWeekEndKey(weekStartKey) {
+      const d = parseDateKey(weekStartKey);
+      d.setDate(d.getDate() + 6);
+      return toDateKey(d);
+    }
+
+    function getDateRange(startKey, endKey) {
+      const result = [];
+      const d = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      while (d <= end) {
+        result.push(toDateKey(d));
+        d.setDate(d.getDate() + 1);
+      }
+      return result;
+    }
+
     function renderReviewDashboard() {
       const rangeEl = $("reviewRange");
       const categoryEl = $("reviewCategory");
-      if (!rangeEl || !categoryEl) return;
+      const category = categoryEl ? categoryEl.value || "all" : "all";
 
-      const range = rangeEl.value || "7";
-      const category = categoryEl.value || "all";
-      const dates = getDatesForReview(range);
+      const today = todayKey();
+      const weekStart = getWeekStartKey(today);
+      const weekEnd = getWeekEndKey(weekStart);
+      const weekDates = getDateRange(weekStart, weekEnd);
 
-      const sessions = state.sessions.filter(s => {
-        const inDate = dates.includes(s.date);
+      const weekSessions = state.sessions.filter(s => {
+        const inWeek = weekDates.includes(s.date);
         const inCategory = category === "all" || s.category === category;
-        return inDate && inCategory;
+        return inWeek && inCategory;
       });
 
-      const total = sessions.reduce((sum, s) => sum + s.minutes, 0);
-      const focusedDays = new Set(sessions.map(s => s.date)).size;
+      const total = weekSessions.reduce((sum, s) => sum + s.minutes, 0);
+      const focusedDays = new Set(weekSessions.map(s => s.date)).size;
+      const bestMinutes = Math.max(0, ...weekDates.map(d =>
+        weekSessions.filter(s => s.date === d).reduce((sum, s) => sum + s.minutes, 0)
+      ));
 
-      const totalsByDay = {};
-      for (const s of sessions) {
-        totalsByDay[s.date] = (totalsByDay[s.date] || 0) + s.minutes;
-      }
-      const bestMinutes = Object.values(totalsByDay).length ? Math.max(...Object.values(totalsByDay)) : 0;
-
-      $("reviewTotal").textContent = formatMinutes(total);
-      $("reviewDays").textContent = `${focusedDays}日`;
-      $("reviewBest").textContent = formatMinutes(bestMinutes);
+      if ($("reviewTotal")) $("reviewTotal").textContent = formatMinutes(total);
+      if ($("reviewDays")) $("reviewDays").textContent = `${focusedDays}日`;
+      if ($("reviewBest")) $("reviewBest").textContent = formatMinutes(bestMinutes);
 
       if (state.reviewMode === "weekly") {
-        renderWeeklyReview(dates, category);
+        renderWeeklyReviewTodayFirst(category);
       } else {
-        renderDailyReview(dates, category);
+        renderDailyReviewTodayFirst(category);
       }
     }
 
-    function renderDailyReview(dates, category) {
-      $("reviewTimeline").classList.remove("hidden");
-      $("weeklyReviewList").classList.add("hidden");
-      $("dailyReviewTab").classList.add("active");
-      $("weeklyReviewTab").classList.remove("active");
+    function renderDailyReviewTodayFirst(category) {
+      if ($("reviewTimeline")) $("reviewTimeline").classList.remove("hidden");
+      if ($("weeklyReviewList")) $("weeklyReviewList").classList.add("hidden");
+      if ($("dailyReviewTab")) $("dailyReviewTab").classList.add("active");
+      if ($("weeklyReviewTab")) $("weeklyReviewTab").classList.remove("active");
+
+      const today = todayKey();
+      const weekStart = getWeekStartKey(today);
+      const weekEnd = getWeekEndKey(weekStart);
+      const weekDates = getDateRange(weekStart, weekEnd);
+
+      const otherWeekDates = weekDates.filter(d => d !== today).sort((a, b) => b.localeCompare(a));
+
+      const allDates = Array.from(new Set([
+        ...state.sessions.map(s => s.date),
+        ...state.tasks.map(t => t.date),
+        ...Object.keys(state.reviews || {})
+      ])).sort((a, b) => b.localeCompare(a));
+
+      const pastDates = allDates.filter(d => d < weekStart);
 
       const timeline = $("reviewTimeline");
-      if (dates.length === 0) {
-        timeline.innerHTML = `<div class="small">まだ振り返りデータがありません。</div>`;
-        return;
-      }
+      if (!timeline) return;
 
-      const rows = dates.map(date => {
+      timeline.innerHTML = `
+        <div class="current-week-box">
+          <div class="week-title">今日：${today}</div>
+          ${renderDayCards([today], category)}
+        </div>
+
+        <div class="current-week-box">
+          <div class="week-title">今週：${weekStart} 〜 ${weekEnd}</div>
+          ${otherWeekDates.length ? renderDayCards(otherWeekDates, category) : `<div class="small">今日以外の今週ログはまだありません。</div>`}
+        </div>
+
+        <div class="past-log-box">
+          <button class="ghost archive-toggle" onclick="togglePastDailyLog()">過去ログを表示 / 非表示</button>
+          <div id="pastDailyLog" class="hidden" style="margin-top:10px;">
+            ${pastDates.length ? renderDayCards(pastDates, category) : `<div class="small">過去ログはまだありません。</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDayCards(dates, category) {
+      return dates.map(date => {
         const daySessions = state.sessions.filter(s => {
           const inCategory = category === "all" || s.category === category;
           return s.date === date && inCategory;
@@ -1820,120 +1854,111 @@
           .join("");
 
         const review = state.reviews[date] || "";
-        const sessionTitles = daySessions.slice(0, 4)
+        const sessionTitles = daySessions.slice(0, 6)
           .map(s => `<span class="mini-tag">${s.type === "manual" ? "手動：" : ""}${escapeHtml(s.taskTitle || "未選択")}</span>`)
           .join("");
 
-        const deadlineTasks = dayTasks
-          .filter(t => t.deadline)
-          .sort((a, b) => a.deadline.localeCompare(b.deadline))
-          .slice(0, 3)
-          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
-          .join("");
-
         return `
-          <div class="day-review">
+          <div class="day-review" style="margin-top:10px;">
             <div class="day-review-head">
               <div class="day-review-title">${date}</div>
               <div class="day-review-meta">${formatMinutes(dayTotal)} / 完了 ${done}/${all}</div>
             </div>
-            <div class="mini-tags">${tags || `<span class="mini-tag">集中記録なし</span>`}</div>
+            <div class="mini-tags">${tags || `<span class="mini-tag">記録なし</span>`}</div>
             <div class="mini-tags">${sessionTitles}</div>
-            ${deadlineTasks ? `<div class="mini-tags">${deadlineTasks}</div>` : ""}
             ${review ? `<div class="review-note">${escapeHtml(review)}</div>` : `<div class="small">振り返りメモなし</div>`}
           </div>
         `;
       }).join("");
-
-      timeline.innerHTML = rows;
     }
 
-    function renderWeeklyReview(dates, category) {
-      $("reviewTimeline").classList.add("hidden");
-      $("weeklyReviewList").classList.remove("hidden");
-      $("dailyReviewTab").classList.remove("active");
-      $("weeklyReviewTab").classList.add("active");
+    function togglePastDailyLog() {
+      const el = $("pastDailyLog");
+      if (el) el.classList.toggle("hidden");
+    }
 
-      const weeks = {};
-      for (const date of dates) {
-        const wk = getWeekStartKey(date);
-        if (!weeks[wk]) weeks[wk] = [];
-        weeks[wk].push(date);
-      }
+    function renderWeeklyReviewTodayFirst(category) {
+      if ($("reviewTimeline")) $("reviewTimeline").classList.add("hidden");
+      if ($("weeklyReviewList")) $("weeklyReviewList").classList.remove("hidden");
+      if ($("dailyReviewTab")) $("dailyReviewTab").classList.remove("active");
+      if ($("weeklyReviewTab")) $("weeklyReviewTab").classList.add("active");
 
-      const weekKeys = Object.keys(weeks).sort((a, b) => b.localeCompare(a));
+      const today = todayKey();
+      const currentWeekStart = getWeekStartKey(today);
+      const currentWeekEnd = getWeekEndKey(currentWeekStart);
+
+      const allDates = Array.from(new Set([
+        ...state.sessions.map(s => s.date),
+        ...state.tasks.map(t => t.date),
+        today
+      ]));
+
+      const weekKeys = Array.from(new Set(allDates.map(getWeekStartKey))).sort((a, b) => b.localeCompare(a));
+      const pastWeeks = weekKeys.filter(w => w < currentWeekStart);
+
       const box = $("weeklyReviewList");
+      if (!box) return;
 
-      if (weekKeys.length === 0) {
-        box.innerHTML = `<div class="small">まだ週次レビューのデータがありません。</div>`;
-        return;
+      box.innerHTML = `
+        <div class="current-week-box">
+          <div class="week-title">今週：${currentWeekStart} 〜 ${currentWeekEnd}</div>
+          ${renderWeekCard(currentWeekStart, category)}
+        </div>
+
+        <div class="past-log-box">
+          <button class="ghost archive-toggle" onclick="togglePastWeeklyLog()">過去週を表示 / 非表示</button>
+          <div id="pastWeeklyLog" class="hidden" style="margin-top:10px;">
+            ${pastWeeks.length ? pastWeeks.map(w => renderWeekCard(w, category)).join("") : `<div class="small">過去週の記録はまだありません。</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePastWeeklyLog() {
+      const el = $("pastWeeklyLog");
+      if (el) el.classList.toggle("hidden");
+    }
+
+    function renderWeekCard(weekStart, category) {
+      const weekEnd = getWeekEndKey(weekStart);
+      const weekDates = getDateRange(weekStart, weekEnd);
+
+      const weekSessions = state.sessions.filter(s => {
+        const inWeek = weekDates.includes(s.date);
+        const inCategory = category === "all" || s.category === category;
+        return inWeek && inCategory;
+      });
+
+      const weekTasks = state.tasks.filter(t => {
+        const inWeek = weekDates.includes(t.date);
+        const inCategory = category === "all" || t.category === category;
+        return inWeek && inCategory;
+      });
+
+      const total = weekSessions.reduce((sum, s) => sum + s.minutes, 0);
+      const done = weekTasks.filter(t => t.done).length;
+      const all = weekTasks.length;
+
+      const byCategory = {};
+      for (const s of weekSessions) {
+        byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes;
       }
 
-      box.innerHTML = weekKeys.map(weekStart => {
-        const weekEnd = getWeekEndKey(weekStart);
-        const weekDates = weeks[weekStart];
+      const categoryTags = Object.entries(byCategory)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
+        .join("");
 
-        const weekSessions = state.sessions.filter(s => {
-          const inWeek = weekDates.includes(s.date);
-          const inCategory = category === "all" || s.category === category;
-          return inWeek && inCategory;
-        });
-
-        const weekTasks = state.tasks.filter(t => {
-          const inWeek = weekDates.includes(t.date);
-          const inCategory = category === "all" || t.category === category;
-          return inWeek && inCategory;
-        });
-
-        const total = weekSessions.reduce((sum, s) => sum + s.minutes, 0);
-        const done = weekTasks.filter(t => t.done).length;
-        const all = weekTasks.length;
-
-        const byCategory = {};
-        for (const s of weekSessions) {
-          byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes;
-        }
-
-        const categoryTags = Object.entries(byCategory)
-          .sort((a, b) => b[1] - a[1])
-          .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
-          .join("");
-
-        const bestDayEntry = Object.entries(
-          weekSessions.reduce((obj, s) => {
-            obj[s.date] = (obj[s.date] || 0) + s.minutes;
-            return obj;
-          }, {})
-        ).sort((a, b) => b[1] - a[1])[0];
-
-        const bestDay = bestDayEntry ? `${bestDayEntry[0]} ${formatMinutes(bestDayEntry[1])}` : "なし";
-
-        const dueSoon = weekTasks
-          .filter(t => t.deadline && !t.done)
-          .sort((a, b) => a.deadline.localeCompare(b.deadline))
-          .slice(0, 4)
-          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
-          .join("");
-
-        const notes = weekDates
-          .sort((a, b) => a.localeCompare(b))
-          .filter(d => state.reviews[d])
-          .map(d => `${d}: ${state.reviews[d]}`)
-          .join("\\n");
-
-        return `
-          <div class="week-card">
-            <div class="week-card-head">
-              <div class="week-title">${weekStart} 〜 ${weekEnd}</div>
-              <div class="week-total">${formatMinutes(total)}</div>
-            </div>
-            <div class="mini-tags">${categoryTags || `<span class="mini-tag">記録なし</span>`}</div>
-            <div class="small">完了タスク：${done}/${all} / 最高日：${bestDay}</div>
-            ${dueSoon ? `<div class="mini-tags">${dueSoon}</div>` : ""}
-            ${notes ? `<div class="week-note">${escapeHtml(notes)}</div>` : `<div class="small">週内の振り返りメモなし</div>`}
+      return `
+        <div class="week-card" style="margin-top:10px;">
+          <div class="week-card-head">
+            <div class="week-title">${weekStart} 〜 ${weekEnd}</div>
+            <div class="week-total">${formatMinutes(total)}</div>
           </div>
-        `;
-      }).join("");
+          <div class="mini-tags">${categoryTags || `<span class="mini-tag">記録なし</span>`}</div>
+          <div class="small">完了タスク：${done}/${all}</div>
+        </div>
+      `;
     }
 
     function renderQuote() {
@@ -2401,6 +2426,8 @@
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
     window.stopRecurringTemplate = stopRecurringTemplate;
+    window.togglePastDailyLog = togglePastDailyLog;
+    window.togglePastWeeklyLog = togglePastWeeklyLog;
     window.editSessionMinutes = editSessionMinutes;
     window.deleteSession = deleteSession;
 
