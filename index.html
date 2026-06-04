@@ -689,7 +689,26 @@
         font-size: 58px;
       }
     }
-  </style>
+  
+    .log-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #07111f;
+      background: var(--ok, #34d399);
+      font-weight: 800;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .log-link:hover {
+      opacity: .92;
+    }
+
+</style>
 </head>
 <body>
   <div class="app">
@@ -699,7 +718,8 @@
         <div class="date" id="todayText"></div>
       </div>
       <div class="top-actions">
-        <button class="ghost" id="exportBtn">データ出力</button>
+        <a href="log.html" target="_blank" class="log-link">カレンダーを見る</a>
+      <button class="ghost" id="exportBtn">データ出力</button>
         <button class="ghost" id="importBtn">データ読込</button>
         <button class="danger" id="resetDataBtn">全データ削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
