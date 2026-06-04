@@ -694,7 +694,7 @@
     .task.overdue-task { border-color: rgba(251,113,133,.65); background: rgba(251,113,133,.12); }
     .must-do-panel { border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.07); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
     .must-do-list { display: flex; flex-direction: column; gap: 8px; }
-    .must-do-item { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+    .must-do-item { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
     .must-do-title { font-weight: 800; }
     .calendar-controls { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
     .calendar-title { text-align: center; font-weight: 900; }
@@ -797,9 +797,8 @@
         </section>
 
         <section class="must-do-panel">
-          <h2>締切近い順</h2>
-          <div class="small" style="margin-bottom:10px;">締切日がある未完了タスクだけを、近い順に表示します。</div>
-          <button class="ghost" style="margin-bottom:10px;" id="cleanupDuplicatesBtn">重複タスクを整理</button>
+          <h2>締切一覧</h2>
+          <div class="small" style="margin-bottom:10px;">締切日がある未完了タスクを、締切が近い順にまとめて表示します。</div>
           <div class="must-do-list" id="mustDoList"></div>
         </section>
 
@@ -1103,7 +1102,6 @@
     function migrateDateIfNeeded() {
       const today = todayKey();
       generateRecurringTasksUntil(today);
-      if (removeDuplicateTasks()) saveState();
 
       if (state.lastOpenedDate !== today) {
         state.lastOpenedDate = today;
@@ -1636,18 +1634,38 @@
       const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
       return diff >= 0 && diff <= 2;
     }
-    function getDeadlineTasks() {
-      return state.tasks
+    function getUniqueDeadlineTasksForDisplay() {
+      const map = new Map();
+
+      state.tasks
         .filter(t => !t.done)
         .filter(t => !!t.deadline)
+        .forEach(t => {
+          const key = [
+            typeof normalizeStringForDedupe === "function" ? normalizeStringForDedupe(t.title) : String(t.title || "").trim(),
+            typeof normalizeStringForDedupe === "function" ? normalizeStringForDedupe(t.category) : String(t.category || "").trim(),
+            t.deadline || ""
+          ].join("||");
+
+          if (!map.has(key)) {
+            map.set(key, { ...t, duplicateCount: 1 });
+          } else {
+            const existing = map.get(key);
+            existing.duplicateCount += 1;
+            // 同じ課題なら、表示用には一番早いタスク日を残す
+            if ((t.date || "9999-99-99") < (existing.date || "9999-99-99")) {
+              existing.date = t.date;
+            }
+          }
+        });
+
+      return Array.from(map.values())
         .sort((a, b) => {
           const d = a.deadline.localeCompare(b.deadline);
           if (d !== 0) return d;
-          const pa = a.priority === "high" ? 0 : a.priority === "normal" ? 1 : 2;
-          const pb = b.priority === "high" ? 0 : b.priority === "normal" ? 1 : 2;
-          return pa - pb;
+          return String(a.title || "").localeCompare(String(b.title || ""));
         })
-        .slice(0, 12);
+        .slice(0, 20);
     }
 
     function getDeadlineStatus(deadline) {
@@ -1662,91 +1680,11 @@
       return `あと${diff}日`;
     }
 
-
-    function normalizeStringForDedupe(value) {
-      return String(value || "").trim().replace(/\s+/g, " ");
-    }
-
-    function taskDedupeKey(task) {
-      return [
-        normalizeStringForDedupe(task.title),
-        normalizeStringForDedupe(task.category),
-        task.date || "",
-        task.deadline || "",
-        task.repeat || "none"
-      ].join("||");
-    }
-
-    function recurringTemplateDedupeKey(template) {
-      return [
-        normalizeStringForDedupe(template.title),
-        normalizeStringForDedupe(template.category),
-        template.startDate || "",
-        template.deadline || "",
-        template.repeat || "none"
-      ].join("||");
-    }
-
-    function removeDuplicateTasks() {
-      const seen = new Map();
-      const cleaned = [];
-
-      for (const task of state.tasks) {
-        const key = taskDedupeKey(task);
-        if (!seen.has(key)) {
-          seen.set(key, task);
-          cleaned.push(task);
-          continue;
-        }
-
-        const kept = seen.get(key);
-
-        // 重複のうち、進捗があるもの・完了済みのものを優先して残す
-        const keptScore = (kept.done ? 2 : 0) + (getTaskSessionMinutes(kept.id) > 0 ? 1 : 0);
-        const taskScore = (task.done ? 2 : 0) + (getTaskSessionMinutes(task.id) > 0 ? 1 : 0);
-
-        if (taskScore > keptScore) {
-          const index = cleaned.indexOf(kept);
-          if (index >= 0) cleaned[index] = task;
-          seen.set(key, task);
-        }
-      }
-
-      const changed = cleaned.length !== state.tasks.length;
-      state.tasks = cleaned;
-
-      if (Array.isArray(state.recurringTemplates)) {
-        const templateSeen = new Set();
-        const templates = [];
-        for (const template of state.recurringTemplates) {
-          const key = recurringTemplateDedupeKey(template);
-          if (templateSeen.has(key)) continue;
-          templateSeen.add(key);
-          templates.push(template);
-        }
-        if (templates.length !== state.recurringTemplates.length) {
-          state.recurringTemplates = templates;
-          return true;
-        }
-      }
-
-      return changed;
-    }
-
-    function cleanupDuplicatesAndRender() {
-      const changed = removeDuplicateTasks();
-      if (changed) {
-        saveState();
-      }
-      render();
-      alert(changed ? "重複タスクを整理しました。" : "重複タスクは見つかりませんでした。");
-    }
-
     function renderMustDoList() {
       const box = $("mustDoList");
       if (!box) return;
 
-      const tasks = getDeadlineTasks();
+      const tasks = getUniqueDeadlineTasksForDisplay();
       if (!tasks.length) {
         box.innerHTML = `<div class="small">締切がある未完了タスクはありません。</div>`;
         return;
@@ -1755,6 +1693,7 @@
       box.innerHTML = tasks.map(t => {
         const cls = deadlineClass(t.deadline);
         const status = getDeadlineStatus(t.deadline);
+        const dup = t.duplicateCount > 1 ? `<span class="mini-tag">同名${t.duplicateCount}件をまとめて表示</span>` : "";
         return `
           <div class="must-do-item">
             <div>
@@ -1762,10 +1701,9 @@
               <div class="task-meta">
                 ${escapeHtml(t.category)} / 締切：${t.deadline}
                 <span class="deadline ${cls}">${status}</span>
+                ${dup}
               </div>
             </div>
-            <button class="ok" onclick="setCurrentTask('${t.id}')">これをやる</button>
-            <button class="danger" onclick="deleteTask('${t.id}')">削除</button>
           </div>
         `;
       }).join("");
@@ -2588,7 +2526,6 @@
 
     if ($("prevMonthBtn")) $("prevMonthBtn").addEventListener("click", () => changeCalendarMonth(-1));
     if ($("nextMonthBtn")) $("nextMonthBtn").addEventListener("click", () => changeCalendarMonth(1));
-    if ($("cleanupDuplicatesBtn")) $("cleanupDuplicatesBtn").addEventListener("click", cleanupDuplicatesAndRender);
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
