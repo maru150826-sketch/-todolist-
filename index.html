@@ -744,6 +744,53 @@
       box-shadow: 0 0 0 3px rgba(255, 255, 255, .08);
     }
 
+
+    .active-tab {
+      border-color: rgba(56,189,248,.8) !important;
+      background: rgba(56,189,248,.16) !important;
+      color: var(--text) !important;
+    }
+
+    .calendar-view {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .calendar-view.show {
+      display: block;
+    }
+
+    .calendar-frame-wrap {
+      background: rgba(17, 24, 39, .88);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    .calendar-frame-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-frame-head h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .calendar-frame {
+      width: 100%;
+      height: calc(100vh - 170px);
+      min-height: 620px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: #0f172a;
+    }
+
 </style>
 </head>
 <body>
@@ -754,7 +801,8 @@
         <div class="date" id="todayText"></div>
       </div>
       <div class="top-actions">
-        <a href="log.html" target="_blank" class="log-link">カレンダーを見る</a>
+        <button class="ghost active-tab" id="showDashboardTab" type="button">本体</button>
+        <button class="log-link" id="showCalendarTab" type="button">カレンダーを見る</button>
       <button class="ghost" id="exportBtn">データ出力</button>
         <button class="ghost" id="importBtn">データ読込</button>
         <button class="danger" id="resetDataBtn">全データ削除</button>
@@ -762,7 +810,7 @@
       </div>
     </header>
 
-    <div class="grid">
+    <div class="grid" id="dashboardView">
       <main class="panel">
         <section class="main-task">
           <div class="main-task-label">この25分でやること</div>
@@ -957,6 +1005,20 @@
         </section>
       </aside>
     </div>
+
+    <section class="calendar-view" id="calendarView">
+      <div class="calendar-frame-wrap">
+        <div class="calendar-frame-head">
+          <div>
+            <h2>カレンダー・週別サマリー</h2>
+            <div class="small">同じ画面内で log.html を表示します。編集は本体側で行います。</div>
+          </div>
+          <button class="ghost" id="backToDashboardBtn" type="button">本体に戻る</button>
+        </div>
+        <iframe class="calendar-frame" id="calendarFrame" src="log.html" title="カレンダー・週別サマリー"></iframe>
+      </div>
+    </section>
+
   </div>
 
   <div class="overlay" id="alarmOverlay">
@@ -2571,6 +2633,33 @@
     window.editSessionMinutes = editSessionMinutes;
     window.deleteSession = deleteSession;
 
+
+    function showDashboardView() {
+      const dashboard = $("dashboardView");
+      const calendar = $("calendarView");
+      const dashboardTab = $("showDashboardTab");
+      const calendarTab = $("showCalendarTab");
+      if (dashboard) dashboard.style.display = "grid";
+      if (calendar) calendar.classList.remove("show");
+      if (dashboardTab) dashboardTab.classList.add("active-tab");
+      if (calendarTab) calendarTab.classList.remove("active-tab");
+    }
+
+    function showCalendarView() {
+      const dashboard = $("dashboardView");
+      const calendar = $("calendarView");
+      const dashboardTab = $("showDashboardTab");
+      const calendarTab = $("showCalendarTab");
+      const frame = $("calendarFrame");
+      if (dashboard) dashboard.style.display = "none";
+      if (calendar) calendar.classList.add("show");
+      if (dashboardTab) dashboardTab.classList.remove("active-tab");
+      if (calendarTab) calendarTab.classList.add("active-tab");
+      if (frame && frame.contentWindow) {
+        try { frame.contentWindow.location.reload(); } catch {}
+      }
+    }
+
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && timer.running) {
         tick();
@@ -2583,6 +2672,10 @@
       }
     });
 
+
+    if ($("showDashboardTab")) $("showDashboardTab").addEventListener("click", showDashboardView);
+    if ($("showCalendarTab")) $("showCalendarTab").addEventListener("click", showCalendarView);
+    if ($("backToDashboardBtn")) $("backToDashboardBtn").addEventListener("click", showDashboardView);
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
