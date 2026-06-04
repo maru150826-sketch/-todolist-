@@ -643,6 +643,88 @@
       margin-top: 8px;
     }
 
+
+    .next-suggestion {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(52,211,153,.28);
+      background: rgba(52,211,153,.07);
+    }
+
+    .suggestion-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .suggestion-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      font-size: 13px;
+    }
+
+    .suggestion-title {
+      font-weight: 900;
+    }
+
+    .weekly-goals-form {
+      display: grid;
+      grid-template-columns: 1fr 90px;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .goal-row {
+      display: grid;
+      grid-template-columns: 92px 1fr 86px;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .goal-bar {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      overflow: hidden;
+    }
+
+    .goal-bar > div {
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .goal-bar > div.done {
+      background: var(--ok);
+    }
+
+    .goal-status {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .suggestion-item,
+      .goal-row,
+      .weekly-goals-form {
+        grid-template-columns: 1fr;
+      }
+
+      .goal-status {
+        text-align: left;
+      }
+    }
+
     .hidden {
       display: none !important;
     }
@@ -764,6 +846,12 @@
           <div class="small">左から：集中分数 / 短い休憩 / 長い休憩 / アラーム音。変更すると停止中のタイマーに反映されます。</div>
         </section>
 
+        <section class="next-suggestion">
+          <h2>次にやること</h2>
+          <div class="small" style="margin-bottom:10px;">作業後に迷わないための候補です。</div>
+          <div class="suggestion-list" id="nextSuggestionList"></div>
+        </section>
+
 
         <section style="margin-top:18px;">
           <h2>手動ログ</h2>
@@ -856,6 +944,24 @@
             </div>
           </div>
           <div class="progress-table" id="categoryProgress"></div>
+        </section>
+
+        <section class="panel" style="margin-top:18px;">
+          <h2>今週の目標</h2>
+          <div class="small" style="margin-bottom:10px;">週ごとの目標時間を分単位で設定します。0分のカテゴリは非表示扱いです。</div>
+          <div class="weekly-goals-form">
+            <select id="goalCategoryInput">
+              <option value="TOEIC">TOEIC</option>
+              <option value="ITパスポート">ITパスポート</option>
+              <option value="大学課題">大学課題</option>
+              <option value="筋トレ">筋トレ</option>
+              <option value="読書">読書</option>
+              <option value="その他">その他</option>
+            </select>
+            <input type="number" id="goalMinutesInput" min="0" max="6000" placeholder="分" />
+            <button class="ok" id="saveWeeklyGoalBtn">目標保存</button>
+          </div>
+          <div id="weeklyGoalProgress"></div>
         </section>
 
         <section class="panel" style="margin-top:18px;">
@@ -1040,6 +1146,14 @@
         sessions: [],
         reviews: {},
         reviewMode: "daily",
+        weeklyGoals: {
+          TOEIC: 600,
+          "ITパスポート": 300,
+          "大学課題": 180,
+          "筋トレ": 240,
+          "読書": 0,
+          "その他": 0
+        },
         settings: {
           focusMin: 25,
           breakMin: 5,
@@ -1055,7 +1169,12 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (!saved) return defaultState();
         const parsed = JSON.parse(saved);
-        return { ...defaultState(), ...parsed, settings: { ...defaultState().settings, ...(parsed.settings || {}) } };
+        return {
+          ...defaultState(),
+          ...parsed,
+          weeklyGoals: { ...defaultState().weeklyGoals, ...(parsed.weeklyGoals || {}) },
+          settings: { ...defaultState().settings, ...(parsed.settings || {}) }
+        };
       } catch {
         return defaultState();
       }
@@ -1583,6 +1702,181 @@
         .reduce((sum, s) => sum + s.minutes, 0);
     }
 
+
+    function getCurrentWeekDates() {
+      const start = getWeekStartKey(todayKey());
+      const end = getWeekEndKey(start);
+      return getDateRange(start, end);
+    }
+
+    function getWeekCategoryMinutes(category) {
+      const dates = getCurrentWeekDates();
+      return state.sessions
+        .filter(s => dates.includes(s.date))
+        .filter(s => s.category === category)
+        .reduce((sum, s) => sum + s.minutes, 0);
+    }
+
+    function renderWeeklyGoals() {
+      const box = $("weeklyGoalProgress");
+      if (!box) return;
+
+      if (!state.weeklyGoals) {
+        state.weeklyGoals = defaultState().weeklyGoals;
+      }
+
+      const categories = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const rows = categories
+        .map(cat => {
+          const goal = Number(state.weeklyGoals[cat] || 0);
+          const actual = getWeekCategoryMinutes(cat);
+          return { cat, goal, actual };
+        })
+        .filter(row => row.goal > 0 || row.actual > 0);
+
+      if (rows.length === 0) {
+        box.innerHTML = `<div class="small">週の目標はまだ設定されていません。</div>`;
+        return;
+      }
+
+      box.innerHTML = rows.map(row => {
+        const percent = row.goal > 0 ? Math.min(100, Math.round((row.actual / row.goal) * 100)) : 0;
+        const remaining = Math.max(0, row.goal - row.actual);
+        const doneClass = row.goal > 0 && row.actual >= row.goal ? "done" : "";
+        const status = row.goal > 0
+          ? row.actual >= row.goal ? "達成" : `あと${formatMinutes(remaining)}`
+          : formatMinutes(row.actual);
+
+        return `
+          <div class="goal-row">
+            <div>${escapeHtml(row.cat)}</div>
+            <div class="goal-bar"><div class="${doneClass}" style="width:${percent}%"></div></div>
+            <div class="goal-status">${formatMinutes(row.actual)} / ${row.goal ? formatMinutes(row.goal) : "目標なし"}<br>${status}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function saveWeeklyGoal() {
+      const category = $("goalCategoryInput").value;
+      const minutes = clamp(Number($("goalMinutesInput").value), 0, 6000);
+
+      if (!state.weeklyGoals) {
+        state.weeklyGoals = defaultState().weeklyGoals;
+      }
+
+      state.weeklyGoals[category] = minutes;
+      $("goalMinutesInput").value = "";
+      saveState();
+      renderWeeklyGoals();
+    }
+
+    function getNextUnfinishedTask(excludeId = null) {
+      return todayTasks()
+        .filter(t => !t.done)
+        .filter(t => t.id !== excludeId)
+        .sort((a, b) => {
+          const order = { high: 0, normal: 1, low: 2 };
+          const p = order[a.priority] - order[b.priority];
+          if (p !== 0) return p;
+          const ao = Number.isFinite(a.order) ? a.order : 999999;
+          const bo = Number.isFinite(b.order) ? b.order : 999999;
+          return ao - bo;
+        })[0] || null;
+    }
+
+    function renderNextSuggestions() {
+      const box = $("nextSuggestionList");
+      if (!box) return;
+
+      const task = currentTask();
+      const next = getNextUnfinishedTask(task ? task.id : null);
+      const suggestions = [];
+
+      if (task && !task.done) {
+        suggestions.push({
+          title: `同じタスクをもう1セット：${task.title}`,
+          meta: "集中対象を変えずに続ける",
+          action: `continueSameTask()`,
+          button: "続ける"
+        });
+
+        suggestions.push({
+          title: `今のタスクを完了にする：${task.title}`,
+          meta: "終わったなら完了扱いにする",
+          action: `completeCurrentTask()`,
+          button: "完了"
+        });
+      }
+
+      if (next) {
+        suggestions.push({
+          title: `次のタスクへ：${next.title}`,
+          meta: `${next.category} / ${next.priority === "high" ? "最重要" : next.priority === "normal" ? "普通" : "軽め"}`,
+          action: `selectSuggestedTask("${next.id}")`,
+          button: "選ぶ"
+        });
+      }
+
+      suggestions.push({
+        title: "5分休憩を入れる",
+        meta: "切り替え前に短く回復する",
+        action: `startSuggestedBreak()`,
+        button: "休憩"
+      });
+
+      if (suggestions.length === 1 && !task && !next) {
+        box.innerHTML = `<div class="small">今日の未完了タスクがありません。必要ならタスクを追加してください。</div>`;
+        return;
+      }
+
+      box.innerHTML = suggestions.map(s => `
+        <div class="suggestion-item">
+          <div>
+            <div class="suggestion-title">${escapeHtml(s.title)}</div>
+            <div class="small">${escapeHtml(s.meta)}</div>
+          </div>
+          <button class="ok" onclick='${s.action}'>${escapeHtml(s.button)}</button>
+        </div>
+      `).join("");
+    }
+
+    function continueSameTask() {
+      timer.mode = "focus";
+      timer.secondsLeft = state.settings.focusMin * 60;
+      timer.running = false;
+      timer.startedAt = null;
+      timer.accumulatedSeconds = 0;
+      timer.endAt = null;
+      render();
+    }
+
+    function completeCurrentTask() {
+      const task = currentTask();
+      if (!task) return;
+      task.done = true;
+      task.completedAt = new Date().toISOString();
+      state.currentTaskId = null;
+      saveState();
+      render();
+    }
+
+    function selectSuggestedTask(taskId) {
+      state.currentTaskId = taskId;
+      timer.mode = "focus";
+      timer.secondsLeft = state.settings.focusMin * 60;
+      timer.running = false;
+      timer.startedAt = null;
+      timer.accumulatedSeconds = 0;
+      timer.endAt = null;
+      saveState();
+      render();
+    }
+
+    function startSuggestedBreak() {
+      setBreak(false);
+    }
+
     function renderStats() {
       const sessions = todaySessions();
       const total = sessions.reduce((sum, s) => sum + s.minutes, 0);
@@ -1991,6 +2285,8 @@
       renderTasks();
       renderFutureTasks();
       renderStats();
+      renderWeeklyGoals();
+      renderNextSuggestions();
       renderDebt();
       renderHistory();
       renderReviewDashboard();
@@ -2378,7 +2674,12 @@
       reader.onload = () => {
         try {
           const imported = JSON.parse(reader.result);
-          state = { ...defaultState(), ...imported, settings: { ...defaultState().settings, ...(imported.settings || {}) } };
+          state = {
+            ...defaultState(),
+            ...imported,
+            weeklyGoals: { ...defaultState().weeklyGoals, ...(imported.weeklyGoals || {}) },
+            settings: { ...defaultState().settings, ...(imported.settings || {}) }
+          };
           saveState();
           resetTimer();
           render();
@@ -2426,6 +2727,10 @@
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
     window.stopRecurringTemplate = stopRecurringTemplate;
+    window.continueSameTask = continueSameTask;
+    window.completeCurrentTask = completeCurrentTask;
+    window.selectSuggestedTask = selectSuggestedTask;
+    window.startSuggestedBreak = startSuggestedBreak;
     window.togglePastDailyLog = togglePastDailyLog;
     window.togglePastWeeklyLog = togglePastWeeklyLog;
     window.editSessionMinutes = editSessionMinutes;
@@ -2465,6 +2770,7 @@
     $("shortBreakBtn").addEventListener("click", () => setBreak(false));
     $("longBreakBtn").addEventListener("click", () => setBreak(true));
     $("saveSettingsBtn").addEventListener("click", saveSettings);
+    if ($("saveWeeklyGoalBtn")) $("saveWeeklyGoalBtn").addEventListener("click", saveWeeklyGoal);
     $("focusMin").addEventListener("change", autoApplySettings);
     $("breakMin").addEventListener("change", autoApplySettings);
     $("longBreakMin").addEventListener("change", autoApplySettings);
