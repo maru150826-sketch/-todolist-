@@ -689,7 +689,38 @@
         font-size: 58px;
       }
     }
-  </style>
+  
+    .task.not-started { border-color: rgba(251,191,36,.45); background: rgba(251,191,36,.08); }
+    .task.overdue-task { border-color: rgba(251,113,133,.65); background: rgba(251,113,133,.12); }
+    .must-do-panel { border: 1px solid rgba(251,191,36,.35); background: rgba(251,191,36,.07); border-radius: 16px; padding: 12px; margin-bottom: 16px; }
+    .must-do-list { display: flex; flex-direction: column; gap: 8px; }
+    .must-do-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+    .must-do-title { font-weight: 800; }
+    .calendar-controls { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .calendar-title { text-align: center; font-weight: 900; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+    .calendar-day-name { color: var(--muted); text-align: center; font-size: 12px; padding: 4px 0; }
+    .calendar-day { min-height: 62px; padding: 7px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); cursor: pointer; font-size: 12px; }
+    .calendar-day:hover { border-color: var(--accent); }
+    .calendar-day.today { border-color: rgba(56,189,248,.7); background: rgba(56,189,248,.12); }
+    .calendar-day.empty { opacity: .25; cursor: default; }
+    .calendar-num { font-weight: 900; margin-bottom: 4px; }
+    .calendar-min { color: var(--accent); font-weight: 800; }
+    .calendar-dot { display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: var(--warn); margin-right: 3px; }
+    .calendar-detail { margin-top: 10px; padding: 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); font-size: 13px; line-height: 1.55; }
+    .current-week-box { border: 1px solid rgba(56,189,248,.35); background: rgba(56,189,248,.07); border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+    .past-log-box { margin-top: 12px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px; }
+    .study-table { width: 100%; border-collapse: collapse; font-size: 13px; overflow: hidden; border-radius: 12px; }
+    .study-table th, .study-table td { border-bottom: 1px solid rgba(255,255,255,.08); padding: 8px; text-align: right; }
+    .study-table th:first-child, .study-table td:first-child { text-align: left; }
+    .study-table th { color: #d1d5db; background: rgba(255,255,255,.06); font-weight: 800; }
+    .weekly-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+    .weekly-bar-row { display: grid; grid-template-columns: 74px 1fr 60px; gap: 8px; align-items: center; font-size: 12px; }
+    .weekly-bar { height: 12px; border-radius: 999px; background: rgba(255,255,255,.09); overflow: hidden; }
+    .weekly-bar > div { height: 100%; border-radius: inherit; background: var(--accent); }
+    .archive-toggle { width: 100%; margin-top: 8px; }
+
+</style>
 </head>
 <body>
   <div class="app">
@@ -763,6 +794,12 @@
             <button id="addManualLogBtn" class="ok">記録</button>
             <textarea class="manual-log-note" id="manualNoteInput" placeholder="メモ任意：何をやったか、重量、気づきなど"></textarea>
           </div>
+        </section>
+
+        <section class="must-do-panel">
+          <h2>ちゃんとやる</h2>
+          <div class="small" style="margin-bottom:10px;">未着手・未完了・締切が近いものを自動で出します。</div>
+          <div class="must-do-list" id="mustDoList"></div>
         </section>
 
         <section style="margin-top:18px;">
@@ -850,6 +887,23 @@
             <textarea id="reviewText" placeholder="例：今日はPart 7を逃げずにできた。明日は最初にITパスポートをやる。"></textarea>
             <button class="ok" id="saveReviewBtn">振り返り保存</button>
           </div>
+        </section>
+
+        <section class="panel" style="margin-top:18px;">
+          <h2>カレンダー</h2>
+          <div class="calendar-controls">
+            <button class="ghost" id="prevMonthBtn">前月</button>
+            <div class="calendar-title" id="calendarTitle"></div>
+            <button class="ghost" id="nextMonthBtn">次月</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="calendar-detail" id="calendarDetail">日付をクリックすると、その日にやった内容が表示されます。</div>
+        </section>
+
+        <section class="panel" style="margin-top:18px;">
+          <h2>週別学習サマリー</h2>
+          <div class="small" style="margin-bottom:10px;">週ごとに、何をどれだけやったかを確認できます。</div>
+          <div id="weeklyStudySummary"></div>
         </section>
 
         <section class="panel" style="margin-top:18px;">
@@ -1418,7 +1472,7 @@
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
         return `
-          <div class="task ${task.done ? "done" : ""}" draggable="true" data-task-id="${task.id}">
+          <div class="task ${task.done ? "done" : ""} ${isTaskNotStarted(task) ? "not-started" : ""} ${isTaskOverdue(task) ? "overdue-task" : ""}" draggable="true" data-task-id="${task.id}">
             <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${task.id}')" />
             <div>
               <div class="task-title">${escapeHtml(task.title)}</div>
@@ -1561,6 +1615,56 @@
       return state.sessions
         .filter(s => s.taskId === taskId && s.date === date)
         .reduce((sum, s) => sum + s.minutes, 0);
+    }
+
+
+    function getTaskSessionMinutes(taskId) {
+      return state.sessions.filter(s => s.taskId === taskId).reduce((sum, s) => sum + s.minutes, 0);
+    }
+    function isTaskNotStarted(task) {
+      return !task.done && getTaskSessionMinutes(task.id) === 0;
+    }
+    function isTaskOverdue(task) {
+      return task.deadline && !task.done && task.deadline < todayKey();
+    }
+    function isTaskDueSoon(task) {
+      if (!task.deadline || task.done) return false;
+      const today = parseDateKey(todayKey());
+      const d = parseDateKey(task.deadline);
+      const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      return diff >= 0 && diff <= 2;
+    }
+    function getMustDoTasks() {
+      const today = todayKey();
+      return state.tasks.filter(t => !t.done)
+        .filter(t => t.date <= today || isTaskDueSoon(t) || isTaskOverdue(t))
+        .map(t => {
+          let score = 0;
+          if (isTaskOverdue(t)) score += 100;
+          if (isTaskDueSoon(t)) score += 70;
+          if (isTaskNotStarted(t)) score += 40;
+          if (t.priority === "high") score += 30;
+          if (t.date < today) score += 20;
+          return { ...t, score };
+        })
+        .sort((a, b) => b.score - a.score || (a.deadline || "9999").localeCompare(b.deadline || "9999") || (a.order || 999999) - (b.order || 999999))
+        .slice(0, 6);
+    }
+    function renderMustDoList() {
+      const box = $("mustDoList");
+      if (!box) return;
+      const tasks = getMustDoTasks();
+      if (!tasks.length) {
+        box.innerHTML = `<div class="small">強調すべき未完了タスクはありません。</div>`;
+        return;
+      }
+      box.innerHTML = tasks.map(t => {
+        const badges = [];
+        if (isTaskOverdue(t)) badges.push(`<span class="deadline overdue">締切超過</span>`);
+        else if (isTaskDueSoon(t)) badges.push(`<span class="deadline soon">${deadlineLabel(t.deadline)}</span>`);
+        if (isTaskNotStarted(t)) badges.push(`<span class="deadline soon">未着手</span>`);
+        return `<div class="must-do-item"><div><div class="must-do-title">${escapeHtml(t.title)}</div><div class="task-meta">${escapeHtml(t.category)} / ${t.date} ${badges.join(" ")}</div></div><button class="ok" onclick="setCurrentTask('${t.id}')">これをやる</button></div>`;
+      }).join("");
     }
 
     function renderStats() {
@@ -1727,193 +1831,168 @@
       return toDateKey(d);
     }
 
-    function renderReviewDashboard() {
-      const rangeEl = $("reviewRange");
-      const categoryEl = $("reviewCategory");
-      if (!rangeEl || !categoryEl) return;
 
-      const range = rangeEl.value || "7";
-      const category = categoryEl.value || "all";
-      const dates = getDatesForReview(range);
-
-      const sessions = state.sessions.filter(s => {
-        const inDate = dates.includes(s.date);
-        const inCategory = category === "all" || s.category === category;
-        return inDate && inCategory;
-      });
-
-      const total = sessions.reduce((sum, s) => sum + s.minutes, 0);
-      const focusedDays = new Set(sessions.map(s => s.date)).size;
-
-      const totalsByDay = {};
-      for (const s of sessions) {
-        totalsByDay[s.date] = (totalsByDay[s.date] || 0) + s.minutes;
+    function getWeekStartKey(dateKey) {
+      const d = parseDateKey(dateKey);
+      const day = d.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      d.setDate(d.getDate() + diff);
+      return toDateKey(d);
+    }
+    function getWeekEndKey(weekStartKey) {
+      const d = parseDateKey(weekStartKey);
+      d.setDate(d.getDate() + 6);
+      return toDateKey(d);
+    }
+    function getDateRange(startKey, endKey) {
+      const result = [];
+      const d = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      while (d <= end) {
+        result.push(toDateKey(d));
+        d.setDate(d.getDate() + 1);
       }
-      const bestMinutes = Object.values(totalsByDay).length ? Math.max(...Object.values(totalsByDay)) : 0;
-
+      return result;
+    }
+    function renderReviewDashboard() {
+      const categoryEl = $("reviewCategory");
+      if (!categoryEl) return;
+      const category = categoryEl.value || "all";
+      const currentWeekStart = getWeekStartKey(todayKey());
+      const currentWeekEnd = getWeekEndKey(currentWeekStart);
+      const currentWeekDates = getDateRange(currentWeekStart, currentWeekEnd);
+      const currentWeekSessions = state.sessions.filter(s => currentWeekDates.includes(s.date) && (category === "all" || s.category === category));
+      const total = currentWeekSessions.reduce((sum, s) => sum + s.minutes, 0);
+      const focusedDays = new Set(currentWeekSessions.map(s => s.date)).size;
+      const bestMinutes = Math.max(0, ...currentWeekDates.map(d => currentWeekSessions.filter(s => s.date === d).reduce((sum, s) => sum + s.minutes, 0)));
       $("reviewTotal").textContent = formatMinutes(total);
       $("reviewDays").textContent = `${focusedDays}日`;
       $("reviewBest").textContent = formatMinutes(bestMinutes);
-
-      if (state.reviewMode === "weekly") {
-        renderWeeklyReview(dates, category);
-      } else {
-        renderDailyReview(dates, category);
-      }
+      if (state.reviewMode === "weekly") renderWeeklyReviewCurrentFirst(category);
+      else renderDailyReviewCurrentFirst(category);
     }
-
-    function renderDailyReview(dates, category) {
+    function renderDailyReviewCurrentFirst(category) {
       $("reviewTimeline").classList.remove("hidden");
       $("weeklyReviewList").classList.add("hidden");
       $("dailyReviewTab").classList.add("active");
       $("weeklyReviewTab").classList.remove("active");
-
-      const timeline = $("reviewTimeline");
-      if (dates.length === 0) {
-        timeline.innerHTML = `<div class="small">まだ振り返りデータがありません。</div>`;
-        return;
-      }
-
-      const rows = dates.map(date => {
-        const daySessions = state.sessions.filter(s => {
-          const inCategory = category === "all" || s.category === category;
-          return s.date === date && inCategory;
-        });
-
-        const dayTasks = state.tasks.filter(t => {
-          const inCategory = category === "all" || t.category === category;
-          return t.date === date && inCategory;
-        });
-
+      const currentWeekStart = getWeekStartKey(todayKey());
+      const currentWeekEnd = getWeekEndKey(currentWeekStart);
+      const currentDates = getDateRange(currentWeekStart, currentWeekEnd).sort((a,b) => a.localeCompare(b));
+      const allDates = Array.from(new Set([...state.sessions.map(s => s.date), ...state.tasks.map(t => t.date), ...Object.keys(state.reviews || {})])).sort((a,b) => b.localeCompare(a));
+      const pastDates = allDates.filter(d => d < currentWeekStart);
+      $("reviewTimeline").innerHTML = `<div class="current-week-box"><div class="week-title">今週：${currentWeekStart} 〜 ${currentWeekEnd}</div>${renderDayCards(currentDates, category)}</div><div class="past-log-box"><button class="ghost archive-toggle" onclick="togglePastDailyLog()">過去ログを表示 / 非表示</button><div id="pastDailyLog" class="hidden" style="margin-top:10px;">${pastDates.length ? renderDayCards(pastDates, category) : `<div class="small">過去ログはまだありません。</div>`}</div></div>`;
+    }
+    function renderDayCards(dates, category) {
+      return dates.map(date => {
+        const daySessions = state.sessions.filter(s => s.date === date && (category === "all" || s.category === category));
+        const dayTasks = state.tasks.filter(t => t.date === date && (category === "all" || t.category === category));
         const dayTotal = daySessions.reduce((sum, s) => sum + s.minutes, 0);
         const done = dayTasks.filter(t => t.done).length;
         const all = dayTasks.length;
-
         const byCategory = {};
-        for (const s of daySessions) {
-          byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes;
-        }
-
-        const tags = Object.entries(byCategory)
-          .sort((a, b) => b[1] - a[1])
-          .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
-          .join("");
-
+        daySessions.forEach(s => byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes);
+        const tags = Object.entries(byCategory).sort((a,b) => b[1]-a[1]).map(([cat,min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`).join("");
+        const sessionTitles = daySessions.slice(0,5).map(s => `<span class="mini-tag">${s.type === "manual" ? "手動：" : ""}${escapeHtml(s.taskTitle || "未選択")}</span>`).join("");
         const review = state.reviews[date] || "";
-        const sessionTitles = daySessions.slice(0, 4)
-          .map(s => `<span class="mini-tag">${s.type === "manual" ? "手動：" : ""}${escapeHtml(s.taskTitle || "未選択")}</span>`)
-          .join("");
-
-        const deadlineTasks = dayTasks
-          .filter(t => t.deadline)
-          .sort((a, b) => a.deadline.localeCompare(b.deadline))
-          .slice(0, 3)
-          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
-          .join("");
-
-        return `
-          <div class="day-review">
-            <div class="day-review-head">
-              <div class="day-review-title">${date}</div>
-              <div class="day-review-meta">${formatMinutes(dayTotal)} / 完了 ${done}/${all}</div>
-            </div>
-            <div class="mini-tags">${tags || `<span class="mini-tag">集中記録なし</span>`}</div>
-            <div class="mini-tags">${sessionTitles}</div>
-            ${deadlineTasks ? `<div class="mini-tags">${deadlineTasks}</div>` : ""}
-            ${review ? `<div class="review-note">${escapeHtml(review)}</div>` : `<div class="small">振り返りメモなし</div>`}
-          </div>
-        `;
+        return `<div class="day-review" style="margin-top:10px;"><div class="day-review-head"><div class="day-review-title">${date}</div><div class="day-review-meta">${formatMinutes(dayTotal)} / 完了 ${done}/${all}</div></div><div class="mini-tags">${tags || `<span class="mini-tag">記録なし</span>`}</div><div class="mini-tags">${sessionTitles}</div>${review ? `<div class="review-note">${escapeHtml(review)}</div>` : `<div class="small">振り返りメモなし</div>`}</div>`;
       }).join("");
-
-      timeline.innerHTML = rows;
     }
-
-    function renderWeeklyReview(dates, category) {
+    function togglePastDailyLog() { const el = $("pastDailyLog"); if (el) el.classList.toggle("hidden"); }
+    function renderWeeklyReviewCurrentFirst(category) {
       $("reviewTimeline").classList.add("hidden");
       $("weeklyReviewList").classList.remove("hidden");
       $("dailyReviewTab").classList.remove("active");
       $("weeklyReviewTab").classList.add("active");
+      const currentWeekStart = getWeekStartKey(todayKey());
+      const currentWeekEnd = getWeekEndKey(currentWeekStart);
+      const allDates = Array.from(new Set([...state.sessions.map(s => s.date), ...state.tasks.map(t => t.date), todayKey()]));
+      const weekKeys = Array.from(new Set(allDates.map(getWeekStartKey))).sort((a,b) => b.localeCompare(a));
+      const pastWeeks = weekKeys.filter(w => w < currentWeekStart);
+      $("weeklyReviewList").innerHTML = `<div class="current-week-box"><div class="week-title">今週：${currentWeekStart} 〜 ${currentWeekEnd}</div>${renderWeekCard(currentWeekStart, category)}</div><div class="past-log-box"><button class="ghost archive-toggle" onclick="togglePastWeeklyLog()">過去週を表示 / 非表示</button><div id="pastWeeklyLog" class="hidden" style="margin-top:10px;">${pastWeeks.length ? pastWeeks.map(w => renderWeekCard(w, category)).join("") : `<div class="small">過去週の記録はまだありません。</div>`}</div></div>`;
+    }
+    function togglePastWeeklyLog() { const el = $("pastWeeklyLog"); if (el) el.classList.toggle("hidden"); }
+    function renderWeekCard(weekStart, category) {
+      const weekEnd = getWeekEndKey(weekStart);
+      const dates = getDateRange(weekStart, weekEnd);
+      const sessions = state.sessions.filter(s => dates.includes(s.date) && (category === "all" || s.category === category));
+      const tasks = state.tasks.filter(t => dates.includes(t.date) && (category === "all" || t.category === category));
+      const total = sessions.reduce((sum,s) => sum + s.minutes, 0);
+      const done = tasks.filter(t => t.done).length;
+      const byCategory = {};
+      sessions.forEach(s => byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes);
+      const tags = Object.entries(byCategory).sort((a,b) => b[1]-a[1]).map(([cat,min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`).join("");
+      return `<div class="week-card" style="margin-top:10px;"><div class="week-card-head"><div class="week-title">${weekStart} 〜 ${weekEnd}</div><div class="week-total">${formatMinutes(total)}</div></div><div class="mini-tags">${tags || `<span class="mini-tag">記録なし</span>`}</div><div class="small">完了タスク：${done}/${tasks.length}</div></div>`;
+    }
 
-      const weeks = {};
-      for (const date of dates) {
-        const wk = getWeekStartKey(date);
-        if (!weeks[wk]) weeks[wk] = [];
-        weeks[wk].push(date);
+
+    let calendarCursor = new Date();
+
+    function renderCalendar() {
+      const grid = $("calendarGrid");
+      if (!grid) return;
+      const year = calendarCursor.getFullYear();
+      const month = calendarCursor.getMonth();
+      $("calendarTitle").textContent = `${year}年 ${month + 1}月`;
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const names = ["日", "月", "火", "水", "木", "金", "土"];
+      let parts = names.map(d => `<div class="calendar-day-name">${d}</div>`);
+      for (let i=0; i<first.getDay(); i++) parts.push(`<div class="calendar-day empty"></div>`);
+      for (let day=1; day<=last.getDate(); day++) {
+        const key = toDateKey(new Date(year, month, day));
+        const sessions = state.sessions.filter(s => s.date === key);
+        const tasks = state.tasks.filter(t => t.date === key);
+        const total = sessions.reduce((sum,s) => sum + s.minutes, 0);
+        const undone = tasks.filter(t => !t.done).length;
+        parts.push(`<div class="calendar-day ${key === todayKey() ? "today" : ""}" onclick="showCalendarDetail('${key}')"><div class="calendar-num">${day}</div>${total ? `<div class="calendar-min">${formatMinutes(total)}</div>` : `<div class="small">-</div>`}${undone ? `<div><span class="calendar-dot"></span>${undone}件</div>` : ""}</div>`);
       }
-
-      const weekKeys = Object.keys(weeks).sort((a, b) => b.localeCompare(a));
-      const box = $("weeklyReviewList");
-
-      if (weekKeys.length === 0) {
-        box.innerHTML = `<div class="small">まだ週次レビューのデータがありません。</div>`;
-        return;
+      grid.innerHTML = parts.join("");
+    }
+    function showCalendarDetail(dateKey) {
+      const detail = $("calendarDetail");
+      if (!detail) return;
+      const sessions = state.sessions.filter(s => s.date === dateKey);
+      const tasks = state.tasks.filter(t => t.date === dateKey);
+      const total = sessions.reduce((sum,s) => sum + s.minutes, 0);
+      const byCategory = {};
+      sessions.forEach(s => byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes);
+      const cats = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`).join("");
+      const sessionHtml = sessions.length ? sessions.map(s => `<div>・${escapeHtml(s.taskTitle || "記録")} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}</div>`).join("") : `<div class="small">この日の記録はありません。</div>`;
+      const taskHtml = tasks.length ? tasks.map(t => `<div>□ ${escapeHtml(t.title)} ${t.done ? "（完了）" : "（未完了）"}</div>`).join("") : `<div class="small">この日のタスクはありません。</div>`;
+      detail.innerHTML = `<strong>${dateKey}</strong><br>合計：${formatMinutes(total)}<div class="mini-tags" style="margin-top:8px;">${cats}</div><div style="margin-top:8px;"><strong>やったこと</strong>${sessionHtml}</div><div style="margin-top:8px;"><strong>タスク</strong>${taskHtml}</div>`;
+    }
+    function changeCalendarMonth(offset) {
+      calendarCursor.setMonth(calendarCursor.getMonth() + offset);
+      renderCalendar();
+    }
+    function getRecentWeekKeys(count = 8) {
+      const keys = [];
+      const current = parseDateKey(getWeekStartKey(todayKey()));
+      for (let i=0; i<count; i++) {
+        const d = new Date(current);
+        d.setDate(d.getDate() - i*7);
+        keys.push(toDateKey(d));
       }
-
-      box.innerHTML = weekKeys.map(weekStart => {
-        const weekEnd = getWeekEndKey(weekStart);
-        const weekDates = weeks[weekStart];
-
-        const weekSessions = state.sessions.filter(s => {
-          const inWeek = weekDates.includes(s.date);
-          const inCategory = category === "all" || s.category === category;
-          return inWeek && inCategory;
+      return keys;
+    }
+    function renderWeeklyStudySummary() {
+      const box = $("weeklyStudySummary");
+      if (!box) return;
+      const cats = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const rows = getRecentWeekKeys(8).map(w => {
+        const dates = getDateRange(w, getWeekEndKey(w));
+        const row = { week: w, total: 0 };
+        cats.forEach(c => row[c] = 0);
+        state.sessions.filter(s => dates.includes(s.date)).forEach(s => {
+          const cat = cats.includes(s.category) ? s.category : "その他";
+          row[cat] += s.minutes;
+          row.total += s.minutes;
         });
-
-        const weekTasks = state.tasks.filter(t => {
-          const inWeek = weekDates.includes(t.date);
-          const inCategory = category === "all" || t.category === category;
-          return inWeek && inCategory;
-        });
-
-        const total = weekSessions.reduce((sum, s) => sum + s.minutes, 0);
-        const done = weekTasks.filter(t => t.done).length;
-        const all = weekTasks.length;
-
-        const byCategory = {};
-        for (const s of weekSessions) {
-          byCategory[s.category] = (byCategory[s.category] || 0) + s.minutes;
-        }
-
-        const categoryTags = Object.entries(byCategory)
-          .sort((a, b) => b[1] - a[1])
-          .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
-          .join("");
-
-        const bestDayEntry = Object.entries(
-          weekSessions.reduce((obj, s) => {
-            obj[s.date] = (obj[s.date] || 0) + s.minutes;
-            return obj;
-          }, {})
-        ).sort((a, b) => b[1] - a[1])[0];
-
-        const bestDay = bestDayEntry ? `${bestDayEntry[0]} ${formatMinutes(bestDayEntry[1])}` : "なし";
-
-        const dueSoon = weekTasks
-          .filter(t => t.deadline && !t.done)
-          .sort((a, b) => a.deadline.localeCompare(b.deadline))
-          .slice(0, 4)
-          .map(t => `<span class="mini-tag">${escapeHtml(t.title)}：${deadlineLabel(t.deadline)}</span>`)
-          .join("");
-
-        const notes = weekDates
-          .sort((a, b) => a.localeCompare(b))
-          .filter(d => state.reviews[d])
-          .map(d => `${d}: ${state.reviews[d]}`)
-          .join("\\n");
-
-        return `
-          <div class="week-card">
-            <div class="week-card-head">
-              <div class="week-title">${weekStart} 〜 ${weekEnd}</div>
-              <div class="week-total">${formatMinutes(total)}</div>
-            </div>
-            <div class="mini-tags">${categoryTags || `<span class="mini-tag">記録なし</span>`}</div>
-            <div class="small">完了タスク：${done}/${all} / 最高日：${bestDay}</div>
-            ${dueSoon ? `<div class="mini-tags">${dueSoon}</div>` : ""}
-            ${notes ? `<div class="week-note">${escapeHtml(notes)}</div>` : `<div class="small">週内の振り返りメモなし</div>`}
-          </div>
-        `;
-      }).join("");
+        return row;
+      });
+      const max = Math.max(60, ...rows.map(r => r.total));
+      box.innerHTML = `<table class="study-table"><thead><tr><th>週</th><th>合計</th><th>TOEIC</th><th>IT</th><th>大学</th><th>筋トレ</th><th>読書</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r.week}</td><td>${formatMinutes(r.total)}</td><td>${formatMinutes(r["TOEIC"])}</td><td>${formatMinutes(r["ITパスポート"])}</td><td>${formatMinutes(r["大学課題"])}</td><td>${formatMinutes(r["筋トレ"])}</td><td>${formatMinutes(r["読書"])}</td></tr>`).join("")}</tbody></table><div class="weekly-bars">${rows.map(r => `<div class="weekly-bar-row"><div>${r.week.slice(5)}</div><div class="weekly-bar"><div style="width:${Math.round((r.total/max)*100)}%"></div></div><div>${formatMinutes(r.total)}</div></div>`).join("")}</div>`;
     }
 
     function renderQuote() {
@@ -1945,7 +2024,10 @@
       if ($("manualDateInput") && !$("manualDateInput").value) $("manualDateInput").value = todayKey();
       renderTasks();
       renderFutureTasks();
+      renderMustDoList();
       renderStats();
+      renderCalendar();
+      renderWeeklyStudySummary();
       renderDebt();
       renderHistory();
       renderReviewDashboard();
@@ -2381,6 +2463,9 @@
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
     window.stopRecurringTemplate = stopRecurringTemplate;
+    window.togglePastDailyLog = togglePastDailyLog;
+    window.togglePastWeeklyLog = togglePastWeeklyLog;
+    window.showCalendarDetail = showCalendarDetail;
     window.editSessionMinutes = editSessionMinutes;
     window.deleteSession = deleteSession;
 
@@ -2396,6 +2481,8 @@
       }
     });
 
+    if ($("prevMonthBtn")) $("prevMonthBtn").addEventListener("click", () => changeCalendarMonth(-1));
+    if ($("nextMonthBtn")) $("nextMonthBtn").addEventListener("click", () => changeCalendarMonth(1));
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
