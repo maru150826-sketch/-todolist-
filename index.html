@@ -708,60 +708,40 @@
       opacity: .92;
     }
 
-
-    .weekly-goals-panel {
-      margin-top: 18px;
+    /* ===== 見やすさ調整：タスク入力と手動ログの背景色を分離 ===== */
+    .add-task {
+      background: rgba(56, 189, 248, .10);
+      border: 1px solid rgba(56, 189, 248, .32);
+      border-radius: 16px;
+      padding: 12px;
     }
 
-    .weekly-goals-form {
-      display: grid;
-      grid-template-columns: 1fr 90px auto;
-      gap: 8px;
-      margin-bottom: 12px;
+    .manual-log {
+      background: rgba(52, 211, 153, .10);
+      border: 1px solid rgba(52, 211, 153, .32);
+      border-radius: 16px;
+      padding: 12px;
     }
 
-    .goal-row {
-      display: grid;
-      grid-template-columns: 92px 1fr 92px;
-      gap: 8px;
-      align-items: center;
-      font-size: 13px;
-      margin-bottom: 8px;
+    #taskDateInput {
+      background: rgba(56, 189, 248, .18);
+      border-color: rgba(56, 189, 248, .72);
     }
 
-    .goal-bar {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.09);
-      overflow: hidden;
+    #deadlineInput {
+      background: rgba(251, 191, 36, .18);
+      border-color: rgba(251, 191, 36, .72);
     }
 
-    .goal-bar > div {
-      height: 100%;
-      border-radius: inherit;
-      background: var(--accent);
+    #manualDateInput {
+      background: rgba(52, 211, 153, .18);
+      border-color: rgba(52, 211, 153, .72);
     }
 
-    .goal-bar > div.goal-done {
-      background: var(--ok);
-    }
-
-    .goal-status {
-      text-align: right;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    @media (max-width: 980px) {
-      .weekly-goals-form,
-      .goal-row {
-        grid-template-columns: 1fr;
-      }
-
-      .goal-status {
-        text-align: left;
-      }
+    #taskDateInput:focus,
+    #deadlineInput:focus,
+    #manualDateInput:focus {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, .08);
     }
 
 </style>
@@ -912,24 +892,6 @@
             </div>
           </div>
           <div class="progress-table" id="categoryProgress"></div>
-        </section>
-
-        <section class="panel weekly-goals-panel">
-          <h2>今週の時間目標</h2>
-          <div class="small" style="margin-bottom:10px;">カテゴリごとに週の目標時間を設定します。0分にすると非表示扱いです。</div>
-          <div class="weekly-goals-form">
-            <select id="goalCategoryInput">
-              <option value="TOEIC">TOEIC</option>
-              <option value="ITパスポート">ITパスポート</option>
-              <option value="大学課題">大学課題</option>
-              <option value="筋トレ">筋トレ</option>
-              <option value="読書">読書</option>
-              <option value="その他">その他</option>
-            </select>
-            <input type="number" id="goalMinutesInput" min="0" max="6000" placeholder="分" />
-            <button class="ok" id="saveWeeklyGoalBtn">保存</button>
-          </div>
-          <div id="weeklyGoalProgress"></div>
         </section>
 
 
