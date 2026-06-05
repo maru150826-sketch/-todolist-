@@ -673,6 +673,27 @@
       margin-top: 8px;
     }
 
+
+    .history-controls {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .history-controls button {
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+
+    .history-summary {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -705,6 +726,10 @@
 
       .manual-log {
         grid-template-columns: 1fr;
+      }
+
+      .history-controls {
+        grid-template-columns: 1fr 1fr;
       }
 
       .quick-task-row {
@@ -989,6 +1014,14 @@
 
         <section class="panel" style="margin-top:18px;">
           <h2>履歴</h2>
+          <div class="small" style="margin-bottom:10px;">日付を選ぶと、その日の記録だけを表示します。探すために長くスクロールする必要を減らします。</div>
+          <div class="history-controls">
+            <input type="date" id="historyDateInput" title="履歴の日付" />
+            <button class="ghost" id="historyTodayBtn">今日</button>
+            <button class="ghost" id="historyYesterdayBtn">昨日</button>
+            <button class="ghost" id="historyAllBtn">全履歴</button>
+          </div>
+          <div class="history-summary" id="historySummary"></div>
           <div class="history" id="historyList"></div>
         </section>
 
@@ -1934,17 +1967,38 @@
     }
 
     function renderHistory() {
-      const history = [...state.sessions].sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt)).slice(0, 20);
       const box = $("historyList");
+      const summary = $("historySummary");
+      const dateInput = $("historyDateInput");
+      const selectedDate = state.historyDateFilter || (dateInput ? dateInput.value : todayKey());
 
-      if (history.length === 0) {
-        box.innerHTML = `<div class="small">まだ履歴はありません。</div>`;
+      let history = [...state.sessions].sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt));
+
+      if (selectedDate !== "all") {
+        history = history.filter(s => s.date === selectedDate);
+      }
+
+      const totalMinutes = history.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const visibleHistory = selectedDate === "all" ? history.slice(0, 50) : history;
+
+      if (summary) {
+        if (selectedDate === "all") {
+          summary.textContent = `全履歴：${history.length}件 / 合計 ${formatMinutes(totalMinutes)}。最新50件まで表示します。`;
+        } else {
+          summary.textContent = `${selectedDate}：${history.length}件 / 合計 ${formatMinutes(totalMinutes)}`;
+        }
+      }
+
+      if (visibleHistory.length === 0) {
+        box.innerHTML = selectedDate === "all"
+          ? `<div class="small">まだ履歴はありません。</div>`
+          : `<div class="small">この日の履歴はありません。</div>`;
         return;
       }
 
-      box.innerHTML = history.map(s => `
+      box.innerHTML = visibleHistory.map(s => `
         <div class="history-item">
-          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
+          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class="mini-tag">手動</span>" : ""}${s.reason === "finished_early" ? " <span class="mini-tag">途中終了</span>" : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
           ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
           <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">
@@ -1955,6 +2009,25 @@
       `).join("");
     }
 
+    function setHistoryDate(dateKey) {
+      const input = $("historyDateInput");
+      if (!input) return;
+
+      if (dateKey === "all") {
+        state.historyDateFilter = "all";
+      } else {
+        state.historyDateFilter = "";
+        input.value = dateKey;
+      }
+
+      renderHistory();
+    }
+
+    function setHistoryYesterday() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      setHistoryDate(toDateKey(d));
+    }
 
     function editSessionMinutes(sessionId) {
       const session = state.sessions.find(s => s.id === sessionId);
@@ -2242,6 +2315,7 @@
       renderCurrentTask();
       if ($("taskDateInput") && !$("taskDateInput").value) $("taskDateInput").value = todayKey();
       if ($("manualDateInput") && !$("manualDateInput").value) $("manualDateInput").value = todayKey();
+      if ($("historyDateInput") && !$("historyDateInput").value) $("historyDateInput").value = todayKey();
       renderTasks();
       renderFutureTasks();
       renderStats();
@@ -2764,6 +2838,13 @@
     $("reviewCategory").addEventListener("change", renderReviewDashboard);
     $("dailyReviewTab").addEventListener("click", () => setReviewMode("daily"));
     $("weeklyReviewTab").addEventListener("click", () => setReviewMode("weekly"));
+    if ($("historyDateInput")) $("historyDateInput").addEventListener("change", () => {
+      state.historyDateFilter = "";
+      renderHistory();
+    });
+    if ($("historyTodayBtn")) $("historyTodayBtn").addEventListener("click", () => setHistoryDate(todayKey()));
+    if ($("historyYesterdayBtn")) $("historyYesterdayBtn").addEventListener("click", setHistoryYesterday);
+    if ($("historyAllBtn")) $("historyAllBtn").addEventListener("click", () => setHistoryDate("all"));
     $("exportBtn").addEventListener("click", exportData);
     $("importBtn").addEventListener("click", () => $("importFile").click());
     $("importFile").addEventListener("change", (e) => {
