@@ -933,6 +933,35 @@
       background: rgba(251, 191, 36, .10);
     }
 
+
+    .task.pinned-today-task {
+      border-color: rgba(52, 211, 153, .62);
+      background: rgba(52, 211, 153, .10);
+    }
+
+    .future-task-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .future-task-actions button {
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .today-pin-badge {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(52, 211, 153, .45);
+      background: rgba(52, 211, 153, .12);
+      color: #bbf7d0;
+    }
+
 </style>
 </head>
 <body>
@@ -1499,7 +1528,9 @@
       const today = todayKey();
       if (!task) return false;
       if (task.date === today) return true;
-      return !task.done && task.deadline === today;
+      if (!task.done && task.deadline === today) return true;
+      if (!task.done && task.doTodayDate === today) return true;
+      return false;
     }
 
     function todayTasks() {
@@ -1692,11 +1723,41 @@
       render();
     }
 
+
+    function startTaskToday(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task || task.done) return;
+      task.doTodayDate = todayKey();
+      if (!Number.isFinite(task.order) || task.date !== todayKey()) {
+        task.order = nextTaskOrder(todayKey());
+      }
+      state.currentTaskId = id;
+      saveState();
+      render();
+    }
+
+    function removeTaskFromToday(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+      if (task.doTodayDate === todayKey()) {
+        delete task.doTodayDate;
+      }
+      if (state.currentTaskId === id && !shouldShowInTodayTasks(task)) {
+        state.currentTaskId = null;
+      }
+      saveState();
+      render();
+    }
+
     function renderTasks() {
       const list = $("taskList");
       normalizeTaskOrders(todayKey());
       const today = todayKey();
       const tasks = todayTasks().sort((a, b) => {
+        const aPinnedToday = !a.done && a.doTodayDate === today && a.date !== today;
+        const bPinnedToday = !b.done && b.doTodayDate === today && b.date !== today;
+        if (aPinnedToday !== bPinnedToday) return aPinnedToday ? -1 : 1;
+
         const aDueTodayFromOtherDate = !a.done && a.deadline === today && a.date !== today;
         const bDueTodayFromOtherDate = !b.done && b.deadline === today && b.date !== today;
         if (aDueTodayFromOtherDate !== bDueTodayFromOtherDate) return aDueTodayFromOtherDate ? -1 : 1;
@@ -1716,18 +1777,21 @@
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
         const dueTodayFromOtherDate = !task.done && task.deadline === today && task.date !== today;
+        const pinnedTodayFromOtherDate = !task.done && task.doTodayDate === today && task.date !== today;
         const taskDateText = task.date && task.date !== today ? ` / タスク日 ${task.date}` : "";
         return `
-          <div class="task ${task.done ? "done" : ""} ${dueTodayFromOtherDate ? "due-today-task" : ""}" draggable="true" data-task-id="${task.id}">
+          <div class="task ${task.done ? "done" : ""} ${dueTodayFromOtherDate ? "due-today-task" : ""} ${pinnedTodayFromOtherDate ? "pinned-today-task" : ""}" draggable="true" data-task-id="${task.id}">
             <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${task.id}')" />
             <div>
               <div class="task-title">${escapeHtml(task.title)}</div>
               <div class="task-meta">${escapeHtml(task.category)} / ${priorityText}${repeatText}${taskDateText}</div>
+              ${pinnedTodayFromOtherDate ? `<div class="today-pin-badge">今日やるに追加済み</div>` : ""}
               ${dueTodayFromOtherDate ? `<div class="deadline soon">締切が今日なので今日のタスクに表示</div>` : ""}
               ${task.deadline ? `<div class="deadline ${deadlineClass(task.deadline)}">${deadlineLabel(task.deadline)}</div>` : ""}
             </div>
             <div class="task-actions">
               <button class="${task.id === state.currentTaskId ? "ok" : "ghost"}" onclick="setCurrentTask('${task.id}')">${selected}</button>
+              ${pinnedTodayFromOtherDate && !dueTodayFromOtherDate ? `<button class="ghost" onclick="removeTaskFromToday('${task.id}')">今日から外す</button>` : ""}
               <button class="danger" onclick="deleteTask('${task.id}')">削除</button>
             </div>
           </div>
@@ -1866,13 +1930,27 @@
       const futureHtml = Object.entries(grouped).map(([date, tasks], index) => {
         const openAttr = index < 3 ? " open" : "";
         const dayTotal = tasks.length;
-        const taskRows = tasks.map(t => `
-          <div class="future-task-mini">
-            <strong>${escapeHtml(t.title)}</strong><br>
-            ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
-            ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
-          </div>
-        `).join("");
+        const taskRows = tasks.map(t => {
+          const pinnedToday = t.doTodayDate === today;
+          const canPullToday = Boolean(t.deadline) && !t.done;
+          const actionHtml = canPullToday
+            ? `<div class="future-task-actions">
+                ${pinnedToday
+                  ? `<button class="ghost" onclick="removeTaskFromToday('${t.id}')">今日から外す</button>`
+                  : `<button class="ok" onclick="startTaskToday('${t.id}')">今日やるに追加</button>`}
+              </div>`
+            : "";
+
+          return `
+            <div class="future-task-mini">
+              <strong>${escapeHtml(t.title)}</strong><br>
+              ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
+              ${pinnedToday ? `<div class="today-pin-badge">今日やるに追加済み</div>` : ""}
+              ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
+              ${actionHtml}
+            </div>
+          `;
+        }).join("");
 
         return `
           <details class="future-day"${openAttr}>
@@ -2087,13 +2165,24 @@
       const visibleDebts = debts.slice(0, visibleLimit);
       const hiddenDebts = debts.slice(visibleLimit);
 
-      const debtHtml = (items) => items.map(t => `
-        <div class="debt">
-          <strong>${escapeHtml(t.title)}</strong><br />
-          ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "low" ? "軽め" : "普通"} / タスク日 ${t.date || "未設定"}<br />
-          <span class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</span>
-        </div>
-      `).join("");
+      const debtHtml = (items) => items.map(t => {
+        const pinnedToday = t.doTodayDate === today;
+        const alreadyToday = shouldShowInTodayTasks(t);
+        const actionHtml = pinnedToday
+          ? `<div class="future-task-actions"><button class="ghost" onclick="removeTaskFromToday('${t.id}')">今日から外す</button></div>`
+          : !alreadyToday
+            ? `<div class="future-task-actions"><button class="ok" onclick="startTaskToday('${t.id}')">今日やるに追加</button></div>`
+            : "";
+        return `
+          <div class="debt">
+            <strong>${escapeHtml(t.title)}</strong><br />
+            ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "low" ? "軽め" : "普通"} / タスク日 ${t.date || "未設定"}<br />
+            ${pinnedToday ? `<div class="today-pin-badge">今日やるに追加済み</div>` : ""}
+            <span class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</span>
+            ${actionHtml}
+          </div>
+        `;
+      }).join("");
 
       const summaryHtml = `<div class="debt-summary">締切あり未完了 ${debts.length}件。将来の毎週タスクと締切なしタスクは非表示です。</div>`;
       const moreHtml = hiddenDebts.length > 0
@@ -2895,6 +2984,8 @@
     window.setCurrentTask = setCurrentTask;
     window.toggleDone = toggleDone;
     window.deleteTask = deleteTask;
+    window.startTaskToday = startTaskToday;
+    window.removeTaskFromToday = removeTaskFromToday;
     window.stopRecurringTemplate = stopRecurringTemplate;
     window.editSessionMinutes = editSessionMinutes;
     window.deleteSession = deleteSession;
