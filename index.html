@@ -1478,7 +1478,11 @@
     }
 
     function ensureCurrentTask() {
-      const selected = state.tasks.find(t => t.id === state.currentTaskId && t.date === todayKey() && !t.done);
+      const selected = state.tasks.find(t =>
+        t.id === state.currentTaskId &&
+        shouldShowInTodayTasks(t) &&
+        !t.done
+      );
       if (selected) return selected;
 
       const suggested = getSuggestedTask();
