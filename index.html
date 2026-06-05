@@ -974,8 +974,8 @@
 
 
         <section class="panel" style="margin-top:18px;">
-          <h2>放置タスク</h2>
-          <div class="small" style="margin-bottom:10px;">2日以上未完了のタスクを表示します。</div>
+          <h2>締切あり未完了タスク</h2>
+          <div class="small" style="margin-bottom:10px;">今日以前のタスクのうち、締切を設定した未完了タスクだけを表示します。将来の毎週タスクはここには出しません。</div>
           <div class="debt-list" id="debtList"></div>
         </section>
 
@@ -1884,25 +1884,32 @@
     }
 
     function renderDebt() {
+      const today = todayKey();
       const now = new Date();
       const priorityRank = { high: 0, normal: 1, low: 2 };
+
       const debts = state.tasks
         .filter(t => !t.done)
+        .filter(t => t.deadline)
+        .filter(t => (t.date || today) <= today)
         .map(t => {
-          const days = Math.floor((now - new Date(t.createdAt)) / (1000 * 60 * 60 * 24));
+          const days = Math.max(0, Math.floor((now - new Date(t.createdAt)) / (1000 * 60 * 60 * 24)));
           return { ...t, days };
         })
-        .filter(t => t.days >= 2)
         .sort((a, b) => {
+          const deadlineOrder = String(a.deadline).localeCompare(String(b.deadline));
+          if (deadlineOrder !== 0) return deadlineOrder;
+
           const pa = priorityRank[a.priority] ?? 1;
           const pb = priorityRank[b.priority] ?? 1;
           if (pa !== pb) return pa - pb;
+
           return b.days - a.days;
         });
 
       const box = $("debtList");
       if (debts.length === 0) {
-        box.innerHTML = `<div class="small">放置タスクはありません。</div>`;
+        box.innerHTML = `<div class="small">締切ありの未完了タスクはありません。</div>`;
         return;
       }
 
@@ -1913,11 +1920,12 @@
       const debtHtml = (items) => items.map(t => `
         <div class="debt">
           <strong>${escapeHtml(t.title)}</strong><br />
-          ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "low" ? "軽め" : "普通"} / ${t.days}日放置
+          ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "low" ? "軽め" : "普通"} / タスク日 ${t.date || "未設定"}<br />
+          <span class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</span>
         </div>
       `).join("");
 
-      const summaryHtml = `<div class="debt-summary">放置タスク ${debts.length}件。まず上の${Math.min(visibleLimit, debts.length)}件だけ処理すれば十分です。</div>`;
+      const summaryHtml = `<div class="debt-summary">締切あり未完了 ${debts.length}件。将来の毎週タスクと締切なしタスクは非表示です。</div>`;
       const moreHtml = hiddenDebts.length > 0
         ? `<details class="debt-more"><summary>残り${hiddenDebts.length}件を見る</summary><div style="margin-top:10px; display:grid; gap:9px;">${debtHtml(hiddenDebts)}</div></details>`
         : "";
