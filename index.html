@@ -962,125 +962,6 @@
       color: #bbf7d0;
     }
 
-
-
-    .cheer-panel {
-      overflow: hidden;
-      background:
-        radial-gradient(circle at top right, rgba(167,139,250,.22), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(96,165,250,.14), transparent 30%),
-        rgba(17, 24, 39, .92);
-    }
-
-    .cheer-figure {
-      display: grid;
-      gap: 12px;
-      justify-items: center;
-      text-align: center;
-    }
-
-    .cheer-image-wrap {
-      position: relative;
-      width: 100%;
-      max-width: 330px;
-      margin: 0 auto;
-    }
-
-    .cheer-image {
-      width: 100%;
-      display: block;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: 0 14px 38px rgba(0,0,0,.28);
-    }
-
-    .cheer-bubble {
-      width: 100%;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(196,181,253,.40);
-      border-radius: 18px;
-      padding: 12px 14px;
-      color: #f5f3ff;
-      line-height: 1.7;
-      font-size: 14px;
-      white-space: pre-wrap;
-      text-align: left;
-      position: relative;
-    }
-
-    .cheer-bubble::before {
-      content: "";
-      position: absolute;
-      top: -10px;
-      left: 32px;
-      border-width: 0 10px 10px 10px;
-      border-style: solid;
-      border-color: transparent transparent rgba(196,181,253,.40) transparent;
-    }
-
-    .cheer-bubble::after {
-      content: "";
-      position: absolute;
-      top: -8px;
-      left: 33px;
-      border-width: 0 9px 9px 9px;
-      border-style: solid;
-      border-color: transparent transparent rgba(26, 28, 50, .98) transparent;
-    }
-
-    .cheer-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .cheer-pill {
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.05);
-      color: #ddd6fe;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-
-
-
-    .cheer-image-wrap {
-      cursor: pointer;
-    }
-
-    .cheer-image-wrap:active .cheer-image {
-      transform: scale(.985);
-    }
-
-    .cheer-speak-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 2px;
-    }
-
-    .cheer-speak-row button {
-      padding: 8px 10px;
-      font-size: 12px;
-    }
-
-    .cheer-speaking {
-      border-color: rgba(244,114,182,.70);
-      box-shadow: 0 0 0 3px rgba(244,114,182,.14), 0 14px 38px rgba(0,0,0,.28);
-    }
-
-    .cheer-bubble.pop {
-      animation: cheerBubblePop .24s ease-out;
-    }
-
-    @keyframes cheerBubblePop {
-      0% { transform: scale(.97); opacity: .72; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
 </style>
 </head>
 <body>
@@ -1132,10 +1013,12 @@
               <option value="siren">サイレン</option>
               <option value="retro">レトロ</option>
               <option value="soft">控えめ</option>
+              <option value="us_anthem">アメリカ国歌</option>
+              <option value="kongyo">コンギョ</option>
             </select>
             <button class="ghost" id="saveSettingsBtn">時間を反映</button>
           </div>
-          <div class="small">左から：集中分数 / 短い休憩 / 長い休憩 / アラーム音。変更すると停止中のタイマーに反映されます。</div>
+          <div class="small">左から：集中分数 / 短い休憩 / 長い休憩 / 集中終了音。休憩終了時は自動で Just Do It が流れます。</div>
         </section>
 
 
@@ -1213,27 +1096,6 @@
       </main>
 
       <aside>
-
-        <section class="panel cheer-panel">
-          <h2>応援キャラ</h2>
-          <div class="small" style="margin-bottom:10px;">毎日ひとことが変わります。少しだけふわっと動きます。</div>
-          <div class="cheer-figure">
-            <div class="cheer-image-wrap">
-              <img src="cheer-girl.png" alt="応援してくれる女の子" class="cheer-image" id="cheerGirlImage" />
-            </div>
-            <div class="cheer-meta">
-              <div class="cheer-pill" id="cheerStreakPill">連続 0日</div>
-              <div class="cheer-pill" id="cheerTodayPill">今日の集中 0分</div>
-            </div>
-            <div class="cheer-bubble" id="cheerMessage">今日もがんばろう。</div>
-            <div class="cheer-speak-row">
-              <button class="ghost" id="cheerSpeakBtn" type="button">声を再生</button>
-              <button class="ghost" id="cheerNextLineBtn" type="button">セリフと声を変える</button>
-            </div>
-            <div class="small">キャラ画像を押しても、セリフ変更＋音声再生できます。</div>
-          </div>
-        </section>
-
         <section class="panel">
           <h2>今日の進捗</h2>
           <div class="stats">
@@ -1414,78 +1276,6 @@
           "消費者に聞くだけでなく、新しい価値を作れ　〜盛田昭夫〜"
     ];
 
-
-    const cheerMessages = [
-      "おはよう。今日も少しずつ進めよう。25分やるだけでも十分えらいよ。",
-      "完璧じゃなくていいよ。まず始めた時点でかなり強い。",
-      "今日は重たい日でも、1セットやれたらちゃんと前進だよ。",
-      "積み上げは裏切らないよ。小さい1回を軽く見ないでね。",
-      "迷ったら一番重い課題からやろう。終わった後かなり気持ちいいよ。",
-      "しんどい日は、最初の25分だけでいい。始める力が一番大事。",
-      "昨日より少しでも進めば勝ち。ちゃんと積み上がってるよ。",
-      "今日は集中の質で勝とう。短くても濃くやれたら十分えらい。",
-      "課題を先に潰す日、すごくいいと思う。未来の自分が助かる。",
-      "やる気を待たなくていいよ。動いたらやる気は後から来るから。",
-      "今日は逃げずに1つ終わらせよう。1個終わるだけで空気が変わるよ。",
-      "記録を残してる時点でかなり偉いよ。適当に生きてない証拠だから。",
-      "疲れててもゼロにしないのが強さだよ。少しでもやれたら勝ち。",
-      "大学の課題もTOEICも、先に手をつける人が最後に楽になるよ。",
-      "今日のあなた、まだまだいけるよ。まずは今の25分を取りに行こ。",
-      "がんばる日も休む日も、ちゃんと自分で選べてるのがいいところ。",
-      "先送りしない1回はすごく価値があるよ。未来の不安を減らしてる。",
-      "今日は丁寧にやろう。雑に1時間より、濃い25分の方が強いよ。",
-      "やり始めるまでが一番重いよね。でもそこを越えたらあなたは強い。",
-      "締切があるものを先に潰す判断、かなり賢いよ。いい攻め方。"
-    ];
-
-    function dayNumberOfYear(date = new Date()) {
-      const start = new Date(date.getFullYear(), 0, 1);
-      const current = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      return Math.floor((current - start) / (1000 * 60 * 60 * 24));
-    }
-
-    function getCheerMessage() {
-      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
-      const streak = calculateStreak();
-      const base = cheerMessages[dayNumberOfYear() % cheerMessages.length];
-
-      if (todayMinutes === 0) {
-        return `${base}
-
-今日はまだ記録がないよ。まずは25分だけ、一緒に始めよう。`;
-      }
-
-      if (streak >= 30) {
-        return `${base}
-
-連続${streak}日ってかなり強いよ。ここまで続けてるの、本当にすごい。`;
-      }
-
-      if (streak >= 7) {
-        return `${base}
-
-連続${streak}日続いてるのえらいよ。この流れ、今日も守ろう。`;
-      }
-
-      return `${base}
-
-今日ももう${formatMinutes(todayMinutes)}やれてる。ちゃんと前に進んでるよ。`;
-    }
-
-    function renderCheerCharacter() {
-      const messageEl = $("cheerMessage");
-      const streakEl = $("cheerStreakPill");
-      const todayEl = $("cheerTodayPill");
-      if (!messageEl || !streakEl || !todayEl) return;
-
-      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
-      const streak = calculateStreak();
-
-      messageEl.textContent = getCheerMessage();
-      streakEl.textContent = `連続 ${streak}日`;
-      todayEl.textContent = `今日の集中 ${formatMinutes(todayMinutes)}`;
-    }
-
     let state = loadState();
     let timer = {
       mode: "focus",
@@ -1499,7 +1289,14 @@
 
     let alarm = {
       audioContext: null,
-      intervalId: null
+      intervalId: null,
+      audio: null
+    };
+
+    const customAlarmSounds = {
+      us_anthem: "us-anthem.mp3",
+      kongyo: "kongyo.mp3",
+      just_do_it: "just-do-it.mp3"
     };
 
     const $ = (id) => document.getElementById(id);
@@ -2735,101 +2532,6 @@
       $("quoteBox").textContent = quotes[index];
     }
 
-
-
-    const cheerVoiceFiles = [
-      "voice-ganbatte-sikkari.wav",
-      "isshoniganbaro_01.wav",
-      "ganbattekudasai_01.wav",
-      "ganbatte_01.wav",
-      "hisashiburiniyaruzo_01.wav",
-      "ganbattayo_01.wav"
-    ];
-
-    let currentCheerAudio = null;
-
-    function playCheerVoice() {
-      if (!cheerVoiceFiles.length) return;
-
-      if (currentCheerAudio) {
-        currentCheerAudio.pause();
-        currentCheerAudio.currentTime = 0;
-      }
-
-      const index = Math.floor(Math.random() * cheerVoiceFiles.length);
-      currentCheerAudio = new Audio(cheerVoiceFiles[index]);
-      currentCheerAudio.volume = 1.0;
-
-      const img = $("cheerGirlImage");
-      if (img) img.classList.add("cheer-speaking");
-
-      currentCheerAudio.addEventListener("ended", () => {
-        if (img) img.classList.remove("cheer-speaking");
-      });
-
-      currentCheerAudio.addEventListener("error", () => {
-        if (img) img.classList.remove("cheer-speaking");
-        alert("音声ファイルが見つかりません。index.html と同じ場所に WAV ファイルをアップロードしてください。");
-      });
-
-      currentCheerAudio.play().catch(() => {
-        if (img) img.classList.remove("cheer-speaking");
-        alert("音声を再生できませんでした。もう一度キャラかボタンをクリックしてください。");
-      });
-    }
-
-    function speakCheerLine() {
-      playCheerVoice();
-    }
-
-    function nextCheerLine() {
-      const messageEl = $("cheerMessage");
-      if (!messageEl) return;
-
-      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
-      const index = Math.floor(Math.random() * cheerMessages.length);
-      let line = cheerMessages[index];
-
-      if (todayMinutes === 0) {
-        line += "\n\n今日はまだ記録がないよ。まずは25分だけ、一緒に始めよう。";
-      } else {
-        line += `\n\n今日ももう${formatMinutes(todayMinutes)}やれてる。ちゃんと前に進んでるよ。`;
-      }
-
-      messageEl.textContent = line;
-      messageEl.classList.remove("pop");
-      void messageEl.offsetWidth;
-      messageEl.classList.add("pop");
-    }
-
-    function attachCheerVoiceHandlers() {
-      const imageWrap = document.querySelector(".cheer-image-wrap");
-      const speakBtn = $("cheerSpeakBtn");
-      const nextBtn = $("cheerNextLineBtn");
-
-      if (imageWrap && !imageWrap.dataset.voiceReady) {
-        imageWrap.dataset.voiceReady = "1";
-        imageWrap.addEventListener("click", () => {
-          nextCheerLine();
-          speakCheerLine();
-        });
-      }
-
-      if (speakBtn && !speakBtn.dataset.voiceReady) {
-        speakBtn.dataset.voiceReady = "1";
-        speakBtn.addEventListener("click", speakCheerLine);
-      }
-
-      if (nextBtn && !nextBtn.dataset.voiceReady) {
-        nextBtn.dataset.voiceReady = "1";
-        nextBtn.addEventListener("click", () => {
-          nextCheerLine();
-          speakCheerLine();
-        });
-      }
-    }
-
-
     function renderTimer() {
       $("timeText").textContent = formatTime(timer.secondsLeft);
       $("modeText").textContent = timer.mode === "focus" ? "集中" : "休憩";
@@ -2856,7 +2558,6 @@
       renderHistory();
       renderReviewDashboard();
       renderQuote();
-      renderCheerCharacter();
       renderTimer();
       renderSettings();
     }
@@ -2987,7 +2688,7 @@
         timer.startedAt = null;
         timer.accumulatedSeconds = 0;
       } else {
-        showAlarm("休憩終了", "戻れ。次のタスクに入る時間です。");
+        showAlarm("休憩終了", "戻れ。次のタスクに入る時間です。", "just_do_it");
         timer.mode = "focus";
         timer.secondsLeft = state.settings.focusMin * 60;
         timer.startedAt = null;
@@ -3119,18 +2820,35 @@
     }
 
 
-    function showAlarm(title, message) {
+    function showAlarm(title, message, soundOverride = null) {
       $("alarmTitle").textContent = title;
       $("alarmMessage").textContent = message + " ボタンを押すまで音は止まりません。";
       $("alarmOverlay").classList.add("show");
-      startAlarmSound();
+      startAlarmSound(soundOverride);
     }
 
-    function startAlarmSound() {
+    function startAlarmSound(soundOverride = null) {
       stopAlarmSound();
-      alarm.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-      const type = state.settings.alarmType || "urgent";
+      const type = soundOverride || state.settings.alarmType || "urgent";
+      const audioFile = customAlarmSounds[type];
+
+      if (audioFile) {
+        alarm.audio = new Audio(encodeURI(audioFile));
+        alarm.audio.volume = 1.0;
+        alarm.audio.loop = true;
+
+        alarm.audio.addEventListener("error", () => {
+          alert(`音源ファイル「${audioFile}」を読み込めません。index.html と同じ場所に音源ファイルをアップロードしてください。`);
+        });
+
+        alarm.audio.play().catch(() => {
+          alert("音声を再生できませんでした。もう一度画面をクリックしてから試してください。");
+        });
+        return;
+      }
+
+      alarm.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       const playTone = (frequency, startOffset, duration, wave = "square", volume = 0.35) => {
         const ctx = alarm.audioContext;
@@ -3201,6 +2919,13 @@
     function stopAlarmSound() {
       if (alarm.intervalId) clearInterval(alarm.intervalId);
       alarm.intervalId = null;
+
+      if (alarm.audio) {
+        alarm.audio.pause();
+        alarm.audio.currentTime = 0;
+      }
+      alarm.audio = null;
+
       if (alarm.audioContext) {
         alarm.audioContext.close().catch(() => {});
       }
@@ -3391,7 +3116,6 @@
 
     migrateDateIfNeeded();
     render();
-    attachCheerVoiceHandlers();
   </script>
 </body>
 </html>
