@@ -1998,7 +1998,7 @@
 
       box.innerHTML = visibleHistory.map(s => `
         <div class="history-item">
-          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class="mini-tag">手動</span>" : ""}${s.reason === "finished_early" ? " <span class="mini-tag">途中終了</span>" : ""}<br />
+          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
           ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
           <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">
