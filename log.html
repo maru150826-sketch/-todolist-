@@ -34,7 +34,7 @@
     }
 
     .app {
-      max-width: 1180px;
+      max-width: 1220px;
       margin: 0 auto;
     }
 
@@ -64,8 +64,9 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.05fr .95fr;
       gap: 16px;
+      align-items: start;
     }
 
     .panel {
@@ -76,14 +77,11 @@
       box-shadow: 0 20px 60px rgba(0,0,0,.28);
     }
 
-    button, input, select {
-      font: inherit;
-    }
-
     button {
+      font: inherit;
       border: 0;
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 9px 12px;
       color: #07111f;
       background: var(--accent);
       font-weight: 800;
@@ -96,21 +94,96 @@
       border: 1px solid var(--line);
     }
 
-    input, select {
-      width: 100%;
+    select {
+      font: inherit;
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 10px 12px;
+      padding: 9px 12px;
       background: rgba(15,23,42,.78);
       color: var(--text);
       outline: none;
     }
 
-    .controls {
+    .calendar-head {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 8px;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
       margin-bottom: 12px;
+    }
+
+    .month-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .weekday-row,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .weekday {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      font-weight: 800;
+      padding-bottom: 4px;
+    }
+
+    .day-cell {
+      min-height: 86px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .day-cell:hover {
+      border-color: rgba(56,189,248,.55);
+    }
+
+    .day-cell.empty {
+      opacity: .25;
+      cursor: default;
+      background: transparent;
+    }
+
+    .day-cell.today {
+      border-color: rgba(52,211,153,.75);
+      box-shadow: 0 0 0 2px rgba(52,211,153,.12);
+    }
+
+    .day-cell.selected {
+      border-color: rgba(56,189,248,.95);
+      box-shadow: 0 0 0 2px rgba(56,189,248,.18);
+      background: rgba(56,189,248,.10);
+    }
+
+    .day-num {
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .day-total {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .day-mini {
+      color: #d1d5db;
+      font-size: 11px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .summary {
@@ -129,42 +202,22 @@
       color: #e5e7eb;
     }
 
-    .day-card {
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.04);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-
-    .day-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-
-    .day-title {
+    .selected-date {
+      font-size: 18px;
       font-weight: 900;
-      font-size: 16px;
-    }
-
-    .day-total {
-      color: var(--accent);
-      font-weight: 900;
+      margin-bottom: 6px;
     }
 
     .section-title {
-      margin-top: 10px;
-      margin-bottom: 6px;
+      margin-top: 12px;
+      margin-bottom: 7px;
       font-weight: 900;
       color: #f3f4f6;
     }
 
     .group-list {
       display: grid;
-      gap: 6px;
+      gap: 7px;
     }
 
     .group-item {
@@ -175,12 +228,12 @@
       border: 1px solid rgba(255,255,255,.07);
       background: rgba(15,23,42,.55);
       border-radius: 12px;
-      padding: 8px 10px;
+      padding: 9px 10px;
       line-height: 1.45;
     }
 
     .group-title {
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .group-meta {
@@ -198,7 +251,7 @@
     .task-line {
       color: #e5e7eb;
       font-size: 13px;
-      line-height: 1.65;
+      line-height: 1.75;
     }
 
     .task-line.done {
@@ -207,6 +260,31 @@
 
     .task-line.pending {
       color: #fde68a;
+    }
+
+    .week-card {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .week-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .week-title {
+      font-weight: 900;
+    }
+
+    .week-total {
+      color: var(--accent);
+      font-weight: 900;
     }
 
     .notice {
@@ -220,11 +298,14 @@
       line-height: 1.6;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 950px) {
       body { padding: 14px; }
       header { flex-direction: column; }
       .grid { grid-template-columns: 1fr; }
-      .controls { grid-template-columns: 1fr; }
+      .calendar-head { grid-template-columns: 1fr; }
+      .month-title { text-align: left; }
+      .day-cell { min-height: 70px; }
+      .day-mini { display: none; }
     }
   </style>
 </head>
@@ -233,47 +314,64 @@
     <header>
       <div>
         <h1>学習ログ・カレンダー</h1>
-        <div class="small">同じ日・同じカテゴリ・同じタイトルの記録は、1項目に合算して表示します。</div>
+        <div class="small">カレンダーから日付を選ぶ形式。選んだ日の「やったこと」は同じタイトルごとに合算します。</div>
       </div>
       <button class="ghost" onclick="location.reload()">再読み込み</button>
     </header>
 
     <div class="notice">
-      表示が変わらない場合は、このページのURLが <strong>.../log.html</strong> になっているか確認してください。その後 <strong>Ctrl + F5</strong> を押してください。
+      旧表示のままなら、このファイルを <strong>log.html</strong> として上書きし、公開ページで <strong>Ctrl + F5</strong> を押してください。
     </div>
-
-    <section class="panel" style="margin-bottom:16px;">
-      <h2>表示条件</h2>
-      <div class="controls">
-        <input type="date" id="dateInput" />
-        <select id="rangeInput">
-          <option value="1">選択日だけ</option>
-          <option value="7">直近7日</option>
-          <option value="30">直近30日</option>
-          <option value="all">全期間</option>
-        </select>
-        <button id="todayBtn">今日</button>
-      </div>
-      <div class="summary" id="overallSummary"></div>
-    </section>
 
     <div class="grid">
       <section class="panel">
-        <h2>日別ログ</h2>
-        <div id="dayList"></div>
+        <div class="calendar-head">
+          <button class="ghost" id="prevMonthBtn">前の月</button>
+          <div class="month-title" id="monthTitle"></div>
+          <button class="ghost" id="nextMonthBtn">次の月</button>
+        </div>
+        <div class="weekday-row">
+          <div class="weekday">月</div>
+          <div class="weekday">火</div>
+          <div class="weekday">水</div>
+          <div class="weekday">木</div>
+          <div class="weekday">金</div>
+          <div class="weekday">土</div>
+          <div class="weekday">日</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
       </section>
 
-      <section class="panel">
-        <h2>週別サマリー</h2>
-        <div id="weekList"></div>
-      </section>
+      <aside>
+        <section class="panel">
+          <div class="selected-date" id="selectedDateTitle"></div>
+          <div class="summary" id="daySummary"></div>
+
+          <div class="section-title">やったこと</div>
+          <div class="group-list" id="groupedSessions"></div>
+
+          <div class="section-title">タスク</div>
+          <div id="taskList"></div>
+
+          <div class="section-title">振り返り</div>
+          <div class="small" id="reviewBox"></div>
+        </section>
+
+        <section class="panel" style="margin-top:16px;">
+          <h2>この週のサマリー</h2>
+          <div id="weekSummary"></div>
+        </section>
+      </aside>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
-
     const $ = (id) => document.getElementById(id);
+
+    let visibleMonth = new Date();
+    visibleMonth.setDate(1);
+    let selectedDate = todayKey();
 
     function loadState() {
       try {
@@ -291,8 +389,7 @@
     }
 
     function todayKey() {
-      const d = new Date();
-      return toDateKey(d);
+      return toDateKey(new Date());
     }
 
     function toDateKey(d) {
@@ -344,8 +441,7 @@
             category,
             minutes: 0,
             count: 0,
-            manual: 0,
-            pomo: 0
+            manual: 0
           });
         }
 
@@ -353,7 +449,6 @@
         row.minutes += Number(s.minutes || 0);
         row.count += 1;
         if (s.type === "manual") row.manual += 1;
-        else row.pomo += 1;
       }
 
       return Array.from(map.values())
@@ -361,35 +456,6 @@
           if (b.minutes !== a.minutes) return b.minutes - a.minutes;
           return a.title.localeCompare(b.title, "ja");
         });
-    }
-
-    function getDateRange() {
-      const state = loadState();
-      const range = $("rangeInput").value;
-      const selected = $("dateInput").value || todayKey();
-
-      const allDates = new Set([
-        ...state.sessions.map(s => s.date).filter(Boolean),
-        ...state.tasks.map(t => t.date).filter(Boolean),
-        ...Object.keys(state.reviews || {})
-      ]);
-
-      if (range === "all") {
-        return Array.from(allDates).sort((a, b) => b.localeCompare(a));
-      }
-
-      const days = Number(range);
-      const end = parseDateKey(selected);
-      const start = new Date(end);
-      start.setDate(start.getDate() - (days - 1));
-
-      const result = [];
-      const d = new Date(end);
-      while (d >= start) {
-        result.push(toDateKey(d));
-        d.setDate(d.getDate() - 1);
-      }
-      return result;
     }
 
     function categorySummary(sessions) {
@@ -404,70 +470,108 @@
         .join("");
     }
 
-    function renderDayList() {
-      const state = loadState();
-      const dates = getDateRange();
-      const box = $("dayList");
+    function getMonthDays(year, monthIndex) {
+      const first = new Date(year, monthIndex, 1);
+      const last = new Date(year, monthIndex + 1, 0);
+      const days = [];
 
-      const allRangeSessions = state.sessions.filter(s => dates.includes(s.date));
-      const total = allRangeSessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
-      $("overallSummary").innerHTML = `
-        <span class="pill">合計 ${formatMinutes(total)}</span>
-        <span class="pill">記録 ${allRangeSessions.length}件</span>
-        ${categorySummary(allRangeSessions)}
-      `;
-
-      if (dates.length === 0) {
-        box.innerHTML = `<div class="small">まだログがありません。</div>`;
-        return;
+      const mondayBasedFirst = (first.getDay() + 6) % 7;
+      for (let i = 0; i < mondayBasedFirst; i++) {
+        days.push(null);
       }
 
-      box.innerHTML = dates.map(date => {
-        const sessions = state.sessions.filter(s => s.date === date);
-        const tasks = state.tasks.filter(t => t.date === date);
-        const grouped = groupSessions(sessions);
-        const dayTotal = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      for (let d = 1; d <= last.getDate(); d++) {
+        days.push(new Date(year, monthIndex, d));
+      }
 
-        const groupedHtml = grouped.length
-          ? grouped.map(g => `
-            <div class="group-item">
-              <div>
-                <div class="group-title">${escapeHtml(g.title)}</div>
-                <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算${g.manual ? ` / 手動${g.manual}件` : ""}</div>
-              </div>
-              <div class="group-time">${formatMinutes(g.minutes)}</div>
-            </div>
-          `).join("")
-          : `<div class="small">記録なし</div>`;
+      while (days.length % 7 !== 0) {
+        days.push(null);
+      }
 
-        const taskHtml = tasks.length
-          ? tasks.map(t => `
-            <div class="task-line ${t.done ? "done" : "pending"}">
-              □ ${escapeHtml(t.title)}（${t.done ? "完了" : "未完了"}）
-            </div>
-          `).join("")
-          : `<div class="small">タスクなし</div>`;
+      return days;
+    }
 
-        const review = state.reviews && state.reviews[date] ? `
-          <div class="section-title">振り返り</div>
-          <div class="small">${escapeHtml(state.reviews[date])}</div>
-        ` : "";
+    function renderCalendar() {
+      const state = loadState();
+      const y = visibleMonth.getFullYear();
+      const m = visibleMonth.getMonth();
+      $("monthTitle").textContent = `${y}年 ${m + 1}月`;
+
+      const grid = $("calendarGrid");
+      const days = getMonthDays(y, m);
+
+      grid.innerHTML = days.map(day => {
+        if (!day) return `<div class="day-cell empty"></div>`;
+
+        const key = toDateKey(day);
+        const sessions = state.sessions.filter(s => s.date === key);
+        const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+        const grouped = groupSessions(sessions).slice(0, 2);
+
+        const mini = grouped.map(g => `
+          <div class="day-mini">${escapeHtml(g.title)} ${formatMinutes(g.minutes)}</div>
+        `).join("");
+
+        const cls = [
+          "day-cell",
+          key === todayKey() ? "today" : "",
+          key === selectedDate ? "selected" : ""
+        ].filter(Boolean).join(" ");
 
         return `
-          <div class="day-card">
-            <div class="day-head">
-              <div class="day-title">${date}</div>
-              <div class="day-total">${formatMinutes(dayTotal)}</div>
-            </div>
-            <div class="summary">${categorySummary(sessions)}</div>
-            <div class="section-title">やったこと</div>
-            <div class="group-list">${groupedHtml}</div>
-            <div class="section-title">タスク</div>
-            ${taskHtml}
-            ${review}
+          <div class="${cls}" data-date="${key}">
+            <div class="day-num">${day.getDate()}</div>
+            ${total ? `<div class="day-total">${formatMinutes(total)}</div>` : `<div class="small">記録なし</div>`}
+            ${mini}
           </div>
         `;
       }).join("");
+
+      grid.querySelectorAll(".day-cell[data-date]").forEach(cell => {
+        cell.addEventListener("click", () => {
+          selectedDate = cell.dataset.date;
+          render();
+        });
+      });
+    }
+
+    function renderSelectedDay() {
+      const state = loadState();
+      const sessions = state.sessions.filter(s => s.date === selectedDate);
+      const tasks = state.tasks.filter(t => t.date === selectedDate);
+      const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const grouped = groupSessions(sessions);
+
+      $("selectedDateTitle").textContent = selectedDate;
+      $("daySummary").innerHTML = `
+        <span class="pill">合計 ${formatMinutes(total)}</span>
+        <span class="pill">記録 ${sessions.length}件</span>
+        ${categorySummary(sessions)}
+      `;
+
+      $("groupedSessions").innerHTML = grouped.length
+        ? grouped.map(g => `
+          <div class="group-item">
+            <div>
+              <div class="group-title">${escapeHtml(g.title)}</div>
+              <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算${g.manual ? ` / 手動${g.manual}件` : ""}</div>
+            </div>
+            <div class="group-time">${formatMinutes(g.minutes)}</div>
+          </div>
+        `).join("")
+        : `<div class="small">この日の記録はありません。</div>`;
+
+      $("taskList").innerHTML = tasks.length
+        ? tasks.map(t => `
+          <div class="task-line ${t.done ? "done" : "pending"}">
+            □ ${escapeHtml(t.title)}（${t.done ? "完了" : "未完了"}）
+          </div>
+        `).join("")
+        : `<div class="small">この日のタスクはありません。</div>`;
+
+      $("reviewBox").textContent = state.reviews && state.reviews[selectedDate]
+        ? state.reviews[selectedDate]
+        : "振り返りメモなし";
     }
 
     function getWeekStartKey(dateKey) {
@@ -484,71 +588,68 @@
       return toDateKey(d);
     }
 
-    function renderWeekList() {
+    function getDateRange(startKey, endKey) {
+      const result = [];
+      const d = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      while (d <= end) {
+        result.push(toDateKey(d));
+        d.setDate(d.getDate() + 1);
+      }
+      return result;
+    }
+
+    function renderWeekSummary() {
       const state = loadState();
-      const dates = getDateRange();
-      const weeks = {};
+      const start = getWeekStartKey(selectedDate);
+      const end = getWeekEndKey(start);
+      const dates = getDateRange(start, end);
+      const sessions = state.sessions.filter(s => dates.includes(s.date));
+      const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const grouped = groupSessions(sessions).slice(0, 8);
 
-      for (const date of dates) {
-        const week = getWeekStartKey(date);
-        if (!weeks[week]) weeks[week] = [];
-        weeks[week].push(date);
-      }
-
-      const weekKeys = Object.keys(weeks).sort((a, b) => b.localeCompare(a));
-      const box = $("weekList");
-
-      if (!weekKeys.length) {
-        box.innerHTML = `<div class="small">週別データがありません。</div>`;
-        return;
-      }
-
-      box.innerHTML = weekKeys.map(weekStart => {
-        const weekEnd = getWeekEndKey(weekStart);
-        const weekDates = weeks[weekStart];
-        const sessions = state.sessions.filter(s => weekDates.includes(s.date));
-        const grouped = groupSessions(sessions);
-        const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
-
-        const groupedHtml = grouped.length
-          ? grouped.map(g => `
-            <div class="group-item">
-              <div>
-                <div class="group-title">${escapeHtml(g.title)}</div>
-                <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算</div>
-              </div>
-              <div class="group-time">${formatMinutes(g.minutes)}</div>
-            </div>
-          `).join("")
-          : `<div class="small">記録なし</div>`;
-
-        return `
-          <div class="day-card">
-            <div class="day-head">
-              <div class="day-title">${weekStart} 〜 ${weekEnd}</div>
-              <div class="day-total">${formatMinutes(total)}</div>
-            </div>
-            <div class="summary">${categorySummary(sessions)}</div>
-            <div class="section-title">合算したやったこと</div>
-            <div class="group-list">${groupedHtml}</div>
+      $("weekSummary").innerHTML = `
+        <div class="week-card">
+          <div class="week-head">
+            <div class="week-title">${start} 〜 ${end}</div>
+            <div class="week-total">${formatMinutes(total)}</div>
           </div>
-        `;
-      }).join("");
+          <div class="summary">${categorySummary(sessions)}</div>
+          <div class="section-title">この週のやったこと</div>
+          <div class="group-list">
+            ${
+              grouped.length
+                ? grouped.map(g => `
+                  <div class="group-item">
+                    <div>
+                      <div class="group-title">${escapeHtml(g.title)}</div>
+                      <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算</div>
+                    </div>
+                    <div class="group-time">${formatMinutes(g.minutes)}</div>
+                  </div>
+                `).join("")
+                : `<div class="small">この週の記録はありません。</div>`
+            }
+          </div>
+        </div>
+      `;
     }
 
     function render() {
-      renderDayList();
-      renderWeekList();
+      renderCalendar();
+      renderSelectedDay();
+      renderWeekSummary();
     }
 
-    $("dateInput").value = todayKey();
-    $("todayBtn").addEventListener("click", () => {
-      $("dateInput").value = todayKey();
-      $("rangeInput").value = "1";
+    $("prevMonthBtn").addEventListener("click", () => {
+      visibleMonth.setMonth(visibleMonth.getMonth() - 1);
       render();
     });
-    $("dateInput").addEventListener("change", render);
-    $("rangeInput").addEventListener("change", render);
+
+    $("nextMonthBtn").addEventListener("click", () => {
+      visibleMonth.setMonth(visibleMonth.getMonth() + 1);
+      render();
+    });
 
     render();
   </script>
