@@ -962,6 +962,95 @@
       color: #bbf7d0;
     }
 
+
+
+    .cheer-panel {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(167,139,250,.22), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(96,165,250,.14), transparent 30%),
+        rgba(17, 24, 39, .92);
+    }
+
+    .cheer-figure {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .cheer-image-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 330px;
+      margin: 0 auto;
+    }
+
+    .cheer-image {
+      width: 100%;
+      display: block;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 14px 38px rgba(0,0,0,.28);
+      animation: cheerFloat 3.8s ease-in-out infinite;
+    }
+
+    .cheer-bubble {
+      width: 100%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(196,181,253,.40);
+      border-radius: 18px;
+      padding: 12px 14px;
+      color: #f5f3ff;
+      line-height: 1.7;
+      font-size: 14px;
+      white-space: pre-wrap;
+      text-align: left;
+      position: relative;
+    }
+
+    .cheer-bubble::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 32px;
+      border-width: 0 10px 10px 10px;
+      border-style: solid;
+      border-color: transparent transparent rgba(196,181,253,.40) transparent;
+    }
+
+    .cheer-bubble::after {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 33px;
+      border-width: 0 9px 9px 9px;
+      border-style: solid;
+      border-color: transparent transparent rgba(26, 28, 50, .98) transparent;
+    }
+
+    .cheer-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .cheer-pill {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: #ddd6fe;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    @keyframes cheerFloat {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+
 </style>
 </head>
 <body>
@@ -1094,6 +1183,22 @@
       </main>
 
       <aside>
+
+        <section class="panel cheer-panel">
+          <h2>応援キャラ</h2>
+          <div class="small" style="margin-bottom:10px;">毎日ひとことが変わります。少しだけふわっと動きます。</div>
+          <div class="cheer-figure">
+            <div class="cheer-image-wrap">
+              <img src="cheer-girl.png" alt="応援してくれる女の子" class="cheer-image" id="cheerGirlImage" />
+            </div>
+            <div class="cheer-meta">
+              <div class="cheer-pill" id="cheerStreakPill">連続 0日</div>
+              <div class="cheer-pill" id="cheerTodayPill">今日の集中 0分</div>
+            </div>
+            <div class="cheer-bubble" id="cheerMessage">今日もがんばろう。</div>
+          </div>
+        </section>
+
         <section class="panel">
           <h2>今日の進捗</h2>
           <div class="stats">
@@ -1273,6 +1378,78 @@
           "学歴ではなく、何を生み出すかで勝負せよ　〜盛田昭夫〜",
           "消費者に聞くだけでなく、新しい価値を作れ　〜盛田昭夫〜"
     ];
+
+
+    const cheerMessages = [
+      "おはよう。今日も少しずつ進めよう。25分やるだけでも十分えらいよ。",
+      "完璧じゃなくていいよ。まず始めた時点でかなり強い。",
+      "今日は重たい日でも、1セットやれたらちゃんと前進だよ。",
+      "積み上げは裏切らないよ。小さい1回を軽く見ないでね。",
+      "迷ったら一番重い課題からやろう。終わった後かなり気持ちいいよ。",
+      "しんどい日は、最初の25分だけでいい。始める力が一番大事。",
+      "昨日より少しでも進めば勝ち。ちゃんと積み上がってるよ。",
+      "今日は集中の質で勝とう。短くても濃くやれたら十分えらい。",
+      "課題を先に潰す日、すごくいいと思う。未来の自分が助かる。",
+      "やる気を待たなくていいよ。動いたらやる気は後から来るから。",
+      "今日は逃げずに1つ終わらせよう。1個終わるだけで空気が変わるよ。",
+      "記録を残してる時点でかなり偉いよ。適当に生きてない証拠だから。",
+      "疲れててもゼロにしないのが強さだよ。少しでもやれたら勝ち。",
+      "大学の課題もTOEICも、先に手をつける人が最後に楽になるよ。",
+      "今日のあなた、まだまだいけるよ。まずは今の25分を取りに行こ。",
+      "がんばる日も休む日も、ちゃんと自分で選べてるのがいいところ。",
+      "先送りしない1回はすごく価値があるよ。未来の不安を減らしてる。",
+      "今日は丁寧にやろう。雑に1時間より、濃い25分の方が強いよ。",
+      "やり始めるまでが一番重いよね。でもそこを越えたらあなたは強い。",
+      "締切があるものを先に潰す判断、かなり賢いよ。いい攻め方。"
+    ];
+
+    function dayNumberOfYear(date = new Date()) {
+      const start = new Date(date.getFullYear(), 0, 1);
+      const current = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return Math.floor((current - start) / (1000 * 60 * 60 * 24));
+    }
+
+    function getCheerMessage() {
+      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
+      const streak = calculateStreak();
+      const base = cheerMessages[dayNumberOfYear() % cheerMessages.length];
+
+      if (todayMinutes === 0) {
+        return `${base}
+
+今日はまだ記録がないよ。まずは25分だけ、一緒に始めよう。`;
+      }
+
+      if (streak >= 30) {
+        return `${base}
+
+連続${streak}日ってかなり強いよ。ここまで続けてるの、本当にすごい。`;
+      }
+
+      if (streak >= 7) {
+        return `${base}
+
+連続${streak}日続いてるのえらいよ。この流れ、今日も守ろう。`;
+      }
+
+      return `${base}
+
+今日ももう${formatMinutes(todayMinutes)}やれてる。ちゃんと前に進んでるよ。`;
+    }
+
+    function renderCheerCharacter() {
+      const messageEl = $("cheerMessage");
+      const streakEl = $("cheerStreakPill");
+      const todayEl = $("cheerTodayPill");
+      if (!messageEl || !streakEl || !todayEl) return;
+
+      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
+      const streak = calculateStreak();
+
+      messageEl.textContent = getCheerMessage();
+      streakEl.textContent = `連続 ${streak}日`;
+      todayEl.textContent = `今日の集中 ${formatMinutes(todayMinutes)}`;
+    }
 
     let state = loadState();
     let timer = {
@@ -2549,6 +2726,7 @@
       renderHistory();
       renderReviewDashboard();
       renderQuote();
+      renderCheerCharacter();
       renderTimer();
       renderSettings();
     }
