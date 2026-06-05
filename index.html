@@ -1045,6 +1045,42 @@
     }
 
 
+
+    .cheer-image-wrap {
+      cursor: pointer;
+    }
+
+    .cheer-image-wrap:active .cheer-image {
+      transform: scale(.985);
+    }
+
+    .cheer-speak-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .cheer-speak-row button {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .cheer-speaking {
+      border-color: rgba(244,114,182,.70);
+      box-shadow: 0 0 0 3px rgba(244,114,182,.14), 0 14px 38px rgba(0,0,0,.28);
+    }
+
+    .cheer-bubble.pop {
+      animation: cheerBubblePop .24s ease-out;
+    }
+
+    @keyframes cheerBubblePop {
+      0% { transform: scale(.97); opacity: .72; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
 </style>
 </head>
 <body>
@@ -1190,6 +1226,10 @@
               <div class="cheer-pill" id="cheerTodayPill">今日の集中 0分</div>
             </div>
             <div class="cheer-bubble" id="cheerMessage">今日もがんばろう。</div>
+            <div class="cheer-speak-row">
+              <button class="ghost" id="cheerSpeakBtn" type="button">声で応援</button>
+              <button class="ghost" id="cheerNextLineBtn" type="button">別のセリフ</button>
+            </div>
           </div>
         </section>
 
@@ -2694,6 +2734,112 @@
       $("quoteBox").textContent = quotes[index];
     }
 
+
+    function pickCuteJapaneseVoice() {
+      const voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+      if (!voices.length) return null;
+
+      const japanese = voices.filter(v => (v.lang || "").toLowerCase().startsWith("ja"));
+      const preferredWords = ["Kyoko", "Otoya", "Haruka", "Nanami", "Female", "女性", "Google 日本語", "Microsoft Nanami"];
+      const preferred = japanese.find(v => preferredWords.some(w => (v.name || "").includes(w)));
+      return preferred || japanese[0] || voices[0] || null;
+    }
+
+    function getCleanCheerTextForSpeech() {
+      const el = $("cheerMessage");
+      if (!el) return "今日もえらいよ。まずは25分、一緒にがんばろう。";
+      return el.textContent
+        .replaceAll("〜", "から")
+        .replace(/\n+/g, "。")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function speakCheerLine() {
+      if (!("speechSynthesis" in window)) {
+        alert("このブラウザは音声読み上げに対応していません。ChromeかEdgeで試してください。");
+        return;
+      }
+
+      speechSynthesis.cancel();
+
+      const text = getCleanCheerTextForSpeech();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = pickCuteJapaneseVoice();
+
+      utterance.lang = "ja-JP";
+      if (voice) utterance.voice = voice;
+
+      // かわいい寄りにするため、少し高め・少し速め。
+      utterance.pitch = 1.55;
+      utterance.rate = 1.08;
+      utterance.volume = 1.0;
+
+      const img = $("cheerGirlImage");
+      if (img) img.classList.add("cheer-speaking");
+
+      utterance.onend = () => {
+        if (img) img.classList.remove("cheer-speaking");
+      };
+      utterance.onerror = () => {
+        if (img) img.classList.remove("cheer-speaking");
+      };
+
+      speechSynthesis.speak(utterance);
+    }
+
+    function nextCheerLine() {
+      const messageEl = $("cheerMessage");
+      if (!messageEl) return;
+
+      const todayMinutes = todaySessions().reduce((sum, s) => sum + s.minutes, 0);
+      const index = Math.floor(Math.random() * cheerMessages.length);
+      let line = cheerMessages[index];
+
+      if (todayMinutes === 0) {
+        line += "\n\n今日はまだ記録がないよ。まずは25分だけ、一緒に始めよう。";
+      } else {
+        line += `\n\n今日ももう${formatMinutes(todayMinutes)}やれてる。ちゃんと前に進んでるよ。`;
+      }
+
+      messageEl.textContent = line;
+      messageEl.classList.remove("pop");
+      void messageEl.offsetWidth;
+      messageEl.classList.add("pop");
+    }
+
+    function attachCheerVoiceHandlers() {
+      const imageWrap = document.querySelector(".cheer-image-wrap");
+      const speakBtn = $("cheerSpeakBtn");
+      const nextBtn = $("cheerNextLineBtn");
+
+      if (imageWrap && !imageWrap.dataset.voiceReady) {
+        imageWrap.dataset.voiceReady = "1";
+        imageWrap.addEventListener("click", () => {
+          nextCheerLine();
+          speakCheerLine();
+        });
+      }
+
+      if (speakBtn && !speakBtn.dataset.voiceReady) {
+        speakBtn.dataset.voiceReady = "1";
+        speakBtn.addEventListener("click", speakCheerLine);
+      }
+
+      if (nextBtn && !nextBtn.dataset.voiceReady) {
+        nextBtn.dataset.voiceReady = "1";
+        nextBtn.addEventListener("click", () => {
+          nextCheerLine();
+          speakCheerLine();
+        });
+      }
+
+      if ("speechSynthesis" in window) {
+        speechSynthesis.onvoiceschanged = () => pickCuteJapaneseVoice();
+      }
+    }
+
+
     function renderTimer() {
       $("timeText").textContent = formatTime(timer.secondsLeft);
       $("modeText").textContent = timer.mode === "focus" ? "集中" : "休憩";
@@ -3255,6 +3401,7 @@
 
     migrateDateIfNeeded();
     render();
+    attachCheerVoiceHandlers();
   </script>
 </body>
 </html>
