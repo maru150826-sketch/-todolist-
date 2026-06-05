@@ -374,6 +374,52 @@
       margin-bottom: 4px;
     }
 
+    .future-day {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      overflow: hidden;
+    }
+
+    .future-day summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 11px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      background: rgba(56,189,248,.08);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-weight: 900;
+    }
+
+    .future-day summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .future-day-count {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .future-day-body {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .future-task-mini {
+      padding: 9px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
     .task-list {
       display: flex;
       flex-direction: column;
@@ -1776,8 +1822,15 @@
 
       const futureTasks = state.tasks
         .filter(t => t.date > today && !t.done)
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(0, 20);
+        .sort((a, b) => {
+          const dateOrder = a.date.localeCompare(b.date);
+          if (dateOrder !== 0) return dateOrder;
+          const priorityOrder = { high: 0, normal: 1, low: 2 };
+          const p = (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9);
+          if (p !== 0) return p;
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        })
+        .slice(0, 40);
 
       const activeTemplates = (state.recurringTemplates || []).filter(t => t.active);
 
@@ -1787,26 +1840,50 @@
       }
 
       const recurringHtml = activeTemplates.length ? `
-        <div class="future-item">
-          <div class="future-date">くり返し設定</div>
-          ${activeTemplates.map(t => `
-            <div style="margin-bottom:8px;">
-              <strong>${escapeHtml(t.title)}</strong><br>
-              ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
-              <button class="ghost" style="margin-left:6px; padding:5px 8px; font-size:12px;" onclick="stopRecurringTemplate('${t.id}')">停止</button>
-            </div>
-          `).join("")}
-        </div>
+        <details class="future-day">
+          <summary>
+            <span>くり返し設定</span>
+            <span class="future-day-count">${activeTemplates.length}件</span>
+          </summary>
+          <div class="future-day-body">
+            ${activeTemplates.map(t => `
+              <div class="future-task-mini">
+                <strong>${escapeHtml(t.title)}</strong><br>
+                ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
+                <button class="ghost" style="margin-left:6px; padding:5px 8px; font-size:12px;" onclick="stopRecurringTemplate('${t.id}')">停止</button>
+              </div>
+            `).join("")}
+          </div>
+        </details>
       ` : "";
 
-      const futureHtml = futureTasks.map(t => `
-        <div class="future-item">
-          <div class="future-date">${t.date}</div>
-          <strong>${escapeHtml(t.title)}</strong><br>
-          ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
-          ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
-        </div>
-      `).join("");
+      const grouped = futureTasks.reduce((acc, task) => {
+        if (!acc[task.date]) acc[task.date] = [];
+        acc[task.date].push(task);
+        return acc;
+      }, {});
+
+      const futureHtml = Object.entries(grouped).map(([date, tasks], index) => {
+        const openAttr = index < 3 ? " open" : "";
+        const dayTotal = tasks.length;
+        const taskRows = tasks.map(t => `
+          <div class="future-task-mini">
+            <strong>${escapeHtml(t.title)}</strong><br>
+            ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
+            ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
+          </div>
+        `).join("");
+
+        return `
+          <details class="future-day"${openAttr}>
+            <summary>
+              <span>${date}</span>
+              <span class="future-day-count">${dayTotal}件</span>
+            </summary>
+            <div class="future-day-body">${taskRows}</div>
+          </details>
+        `;
+      }).join("");
 
       box.innerHTML = recurringHtml + futureHtml;
     }
