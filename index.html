@@ -486,6 +486,36 @@
       line-height: 1.45;
     }
 
+    .debt-list {
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .debt-summary {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
+      color: #d1d5db;
+      line-height: 1.5;
+    }
+
+    .debt-more {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,.03);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .debt-more summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
     .review {
       display: grid;
       gap: 10px;
@@ -1855,6 +1885,7 @@
 
     function renderDebt() {
       const now = new Date();
+      const priorityRank = { high: 0, normal: 1, low: 2 };
       const debts = state.tasks
         .filter(t => !t.done)
         .map(t => {
@@ -1862,7 +1893,12 @@
           return { ...t, days };
         })
         .filter(t => t.days >= 2)
-        .sort((a, b) => b.days - a.days);
+        .sort((a, b) => {
+          const pa = priorityRank[a.priority] ?? 1;
+          const pb = priorityRank[b.priority] ?? 1;
+          if (pa !== pb) return pa - pb;
+          return b.days - a.days;
+        });
 
       const box = $("debtList");
       if (debts.length === 0) {
@@ -1870,12 +1906,23 @@
         return;
       }
 
-      box.innerHTML = debts.map(t => `
+      const visibleLimit = 5;
+      const visibleDebts = debts.slice(0, visibleLimit);
+      const hiddenDebts = debts.slice(visibleLimit);
+
+      const debtHtml = (items) => items.map(t => `
         <div class="debt">
           <strong>${escapeHtml(t.title)}</strong><br />
-          ${escapeHtml(t.category)} / ${t.days}日放置
+          ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "low" ? "軽め" : "普通"} / ${t.days}日放置
         </div>
       `).join("");
+
+      const summaryHtml = `<div class="debt-summary">放置タスク ${debts.length}件。まず上の${Math.min(visibleLimit, debts.length)}件だけ処理すれば十分です。</div>`;
+      const moreHtml = hiddenDebts.length > 0
+        ? `<details class="debt-more"><summary>残り${hiddenDebts.length}件を見る</summary><div style="margin-top:10px; display:grid; gap:9px;">${debtHtml(hiddenDebts)}</div></details>`
+        : "";
+
+      box.innerHTML = summaryHtml + debtHtml(visibleDebts) + moreHtml;
     }
 
     function renderHistory() {
