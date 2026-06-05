@@ -846,6 +846,47 @@
       background: #0f172a;
     }
 
+
+    /* ===== 見やすさ調整：履歴欄を紫系にして入力欄と区別 ===== */
+    .history-controls {
+      background: rgba(168, 85, 247, .10);
+      border: 1px solid rgba(168, 85, 247, .32);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    #historyDateInput {
+      background: rgba(168, 85, 247, .18);
+      border-color: rgba(168, 85, 247, .72);
+    }
+
+    #historyDateInput:focus {
+      border-color: rgba(216, 180, 254, .95);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, .16);
+    }
+
+    .history-summary {
+      background: rgba(168, 85, 247, .09);
+      border: 1px solid rgba(168, 85, 247, .24);
+      border-radius: 12px;
+      padding: 9px 10px;
+      color: #e9d5ff;
+    }
+
+    .history-item {
+      background: rgba(168, 85, 247, .075);
+      border-color: rgba(168, 85, 247, .26);
+    }
+
+    .history-item strong {
+      color: #f3e8ff;
+    }
+
+    .task.due-today-task {
+      border-color: rgba(251, 191, 36, .60);
+      background: rgba(251, 191, 36, .10);
+    }
+
 </style>
 </head>
 <body>
@@ -1408,8 +1449,15 @@
       return m === 0 ? `${h}時間` : `${h}時間${m}分`;
     }
 
+    function shouldShowInTodayTasks(task) {
+      const today = todayKey();
+      if (!task) return false;
+      if (task.date === today) return true;
+      return !task.done && task.deadline === today;
+    }
+
     function todayTasks() {
-      return state.tasks.filter(t => t.date === todayKey());
+      return state.tasks.filter(shouldShowInTodayTasks);
     }
 
     function todaySessions() {
@@ -1597,7 +1645,12 @@
     function renderTasks() {
       const list = $("taskList");
       normalizeTaskOrders(todayKey());
+      const today = todayKey();
       const tasks = todayTasks().sort((a, b) => {
+        const aDueTodayFromOtherDate = !a.done && a.deadline === today && a.date !== today;
+        const bDueTodayFromOtherDate = !b.done && b.deadline === today && b.date !== today;
+        if (aDueTodayFromOtherDate !== bDueTodayFromOtherDate) return aDueTodayFromOtherDate ? -1 : 1;
+
         const ao = Number.isFinite(a.order) ? a.order : 999999;
         const bo = Number.isFinite(b.order) ? b.order : 999999;
         return ao - bo;
@@ -1612,12 +1665,15 @@
         const selected = task.id === state.currentTaskId ? "今やる" : "これをやる";
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
+        const dueTodayFromOtherDate = !task.done && task.deadline === today && task.date !== today;
+        const taskDateText = task.date && task.date !== today ? ` / タスク日 ${task.date}` : "";
         return `
-          <div class="task ${task.done ? "done" : ""}" draggable="true" data-task-id="${task.id}">
+          <div class="task ${task.done ? "done" : ""} ${dueTodayFromOtherDate ? "due-today-task" : ""}" draggable="true" data-task-id="${task.id}">
             <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${task.id}')" />
             <div>
               <div class="task-title">${escapeHtml(task.title)}</div>
-              <div class="task-meta">${escapeHtml(task.category)} / ${priorityText}${repeatText}</div>
+              <div class="task-meta">${escapeHtml(task.category)} / ${priorityText}${repeatText}${taskDateText}</div>
+              ${dueTodayFromOtherDate ? `<div class="deadline soon">締切が今日なので今日のタスクに表示</div>` : ""}
               ${task.deadline ? `<div class="deadline ${deadlineClass(task.deadline)}">${deadlineLabel(task.deadline)}</div>` : ""}
             </div>
             <div class="task-actions">
