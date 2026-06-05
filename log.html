@@ -3,308 +3,228 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>学習ログ確認ページ</title>
+  <title>学習ログ・カレンダー</title>
   <style>
     :root {
-      --bg:#0f172a;
-      --panel:#111827;
-      --text:#f9fafb;
-      --muted:#9ca3af;
-      --line:#374151;
-      --accent:#38bdf8;
-      --warn:#fbbf24;
-      --danger:#fb7185;
-      --ok:#34d399;
-      --radius:18px;
-      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --accent: #38bdf8;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --radius: 18px;
     }
 
-    * { box-sizing:border-box; }
+    * { box-sizing: border-box; }
 
     body {
-      margin:0;
-      font-family:"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(56,189,248,.16), transparent 35%),
-        radial-gradient(circle at bottom right, rgba(251,113,133,.12), transparent 35%),
+        radial-gradient(circle at top left, rgba(56,189,248,.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(167,139,250,.14), transparent 32%),
         var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      padding:24px;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 22px;
     }
 
     .app {
-      max-width:1280px;
-      margin:0 auto;
+      max-width: 1180px;
+      margin: 0 auto;
     }
 
     header {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:16px;
-      margin-bottom:20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
     h1 {
-      margin:0;
-      font-size:28px;
+      margin: 0;
+      font-size: 26px;
     }
 
     h2 {
-      margin:0 0 14px;
-      font-size:18px;
-    }
-
-    .date {
-      color:var(--muted);
-      font-size:14px;
-      margin-top:5px;
-    }
-
-    .grid {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-    }
-
-    .panel {
-      background:rgba(17,24,39,.88);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
-
-    button, select {
-      font:inherit;
-    }
-
-    button {
-      border:0;
-      border-radius:12px;
-      padding:10px 14px;
-      color:#07111f;
-      background:var(--accent);
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    button.ghost {
-      background:transparent;
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-
-    button:hover {
-      opacity:.92;
+      margin: 0 0 12px;
+      font-size: 18px;
     }
 
     .small {
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(17, 24, 39, .90);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.28);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #07111f;
+      background: var(--accent);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(15,23,42,.78);
+      color: var(--text);
+      outline: none;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 12px;
+    }
+
+    .pill {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #e5e7eb;
+    }
+
+    .day-card {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .day-title {
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .day-total {
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .section-title {
+      margin-top: 10px;
+      margin-bottom: 6px;
+      font-weight: 900;
+      color: #f3f4f6;
+    }
+
+    .group-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .group-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(15,23,42,.55);
+      border-radius: 12px;
+      padding: 8px 10px;
+      line-height: 1.45;
+    }
+
+    .group-title {
+      font-weight: 800;
+    }
+
+    .group-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .group-time {
+      color: var(--ok);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .task-line {
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .task-line.done {
+      color: #d1fae5;
+    }
+
+    .task-line.pending {
+      color: #fde68a;
     }
 
     .notice {
-      padding:12px 14px;
-      border:1px solid rgba(251,191,36,.35);
-      background:rgba(251,191,36,.08);
-      border-radius:14px;
-      margin-bottom:18px;
-      color:#fde68a;
-      line-height:1.6;
-      font-size:14px;
+      border: 1px solid rgba(251,191,36,.35);
+      background: rgba(251,191,36,.08);
+      color: #fde68a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.6;
     }
 
-    .calendar-controls {
-      display:grid;
-      grid-template-columns:auto 1fr auto;
-      gap:8px;
-      align-items:center;
-      margin-bottom:8px;
-    }
-
-    .calendar-title {
-      text-align:center;
-      font-weight:900;
-      font-size:18px;
-    }
-
-    .calendar-grid {
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:6px;
-      margin-top:10px;
-    }
-
-    .calendar-day-name {
-      color:var(--muted);
-      text-align:center;
-      font-size:12px;
-      padding:4px 0;
-    }
-
-    .calendar-day {
-      min-height:70px;
-      padding:8px;
-      border-radius:12px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-      font-size:12px;
-    }
-
-    .calendar-day:hover {
-      border-color:var(--accent);
-    }
-
-    .calendar-day.today {
-      border-color:rgba(56,189,248,.7);
-      background:rgba(56,189,248,.12);
-    }
-
-    .calendar-day.empty {
-      opacity:.25;
-      cursor:default;
-    }
-
-    .calendar-num {
-      font-weight:900;
-      margin-bottom:4px;
-    }
-
-    .calendar-min {
-      color:var(--accent);
-      font-weight:900;
-      margin-bottom:4px;
-    }
-
-    .calendar-task {
-      color:#fbbf24;
-      font-size:11px;
-    }
-
-    .detail {
-      margin-top:12px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      font-size:13px;
-      line-height:1.6;
-    }
-
-    .mini-tags {
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      margin:8px 0;
-    }
-
-    .mini-tag {
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.05);
-      color:#d1d5db;
-      border-radius:999px;
-      padding:4px 8px;
-      font-size:12px;
-    }
-
-    .summary-controls {
-      display:grid;
-      grid-template-columns:1fr 1fr auto;
-      gap:8px;
-      margin-bottom:12px;
-    }
-
-    select {
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:10px 12px;
-      background:rgba(15,23,42,.78);
-      color:var(--text);
-      outline:none;
-    }
-
-    .study-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:13px;
-      margin-top:10px;
-    }
-
-    .study-table th,
-    .study-table td {
-      border-bottom:1px solid rgba(255,255,255,.08);
-      padding:8px;
-      text-align:right;
-      white-space:nowrap;
-    }
-
-    .study-table th:first-child,
-    .study-table td:first-child {
-      text-align:left;
-    }
-
-    .study-table th {
-      color:#d1d5db;
-      background:rgba(255,255,255,.06);
-      font-weight:800;
-    }
-
-    .weekly-bars {
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin-top:14px;
-    }
-
-    .weekly-bar-row {
-      display:grid;
-      grid-template-columns:76px 1fr 70px;
-      gap:8px;
-      align-items:center;
-      font-size:12px;
-    }
-
-    .weekly-bar {
-      height:12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.09);
-      overflow:hidden;
-    }
-
-    .weekly-bar > div {
-      height:100%;
-      border-radius:inherit;
-      background:var(--accent);
-    }
-
-    .week-detail {
-      margin-top:14px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      font-size:13px;
-      line-height:1.6;
-    }
-
-    .two-col {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    @media (max-width:980px) {
-      body { padding:14px; }
-      header { flex-direction:column; }
-      .grid, .two-col { grid-template-columns:1fr; }
-      .summary-controls { grid-template-columns:1fr; }
-      .calendar-day { min-height:58px; padding:5px; }
-      .study-table { font-size:12px; }
+    @media (max-width: 900px) {
+      body { padding: 14px; }
+      header { flex-direction: column; }
+      .grid { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -312,107 +232,87 @@
   <div class="app">
     <header>
       <div>
-        <h1>学習ログ確認ページ</h1>
-        <div class="date" id="todayText"></div>
+        <h1>学習ログ・カレンダー</h1>
+        <div class="small">同じ日・同じカテゴリ・同じタイトルの記録は、1項目に合算して表示します。</div>
       </div>
-      <button class="ghost" id="reloadBtn">再読み込み</button>
+      <button class="ghost" onclick="location.reload()">再読み込み</button>
     </header>
 
     <div class="notice">
-      これは本体アプリを壊さないための「確認専用ページ」です。<br>
-      既存の <strong>focus_dashboard_v1</strong> のデータを読むだけで、タスク追加・削除・編集はしません。
+      表示が変わらない場合は、このページのURLが <strong>.../log.html</strong> になっているか確認してください。その後 <strong>Ctrl + F5</strong> を押してください。
     </div>
+
+    <section class="panel" style="margin-bottom:16px;">
+      <h2>表示条件</h2>
+      <div class="controls">
+        <input type="date" id="dateInput" />
+        <select id="rangeInput">
+          <option value="1">選択日だけ</option>
+          <option value="7">直近7日</option>
+          <option value="30">直近30日</option>
+          <option value="all">全期間</option>
+        </select>
+        <button id="todayBtn">今日</button>
+      </div>
+      <div class="summary" id="overallSummary"></div>
+    </section>
 
     <div class="grid">
       <section class="panel">
-        <h2>カレンダー</h2>
-        <div class="calendar-controls">
-          <button class="ghost" id="prevMonthBtn">前月</button>
-          <div class="calendar-title" id="calendarTitle"></div>
-          <button class="ghost" id="nextMonthBtn">次月</button>
-        </div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-        <div class="detail" id="calendarDetail">日付をクリックすると、その日の学習内容が表示されます。</div>
+        <h2>日別ログ</h2>
+        <div id="dayList"></div>
       </section>
 
       <section class="panel">
-        <h2>週別学習サマリー</h2>
-        <div class="summary-controls">
-          <select id="weekCountSelect">
-            <option value="4">直近4週</option>
-            <option value="8" selected>直近8週</option>
-            <option value="12">直近12週</option>
-            <option value="24">直近24週</option>
-          </select>
-          <select id="categoryFilter">
-            <option value="all">全カテゴリ</option>
-            <option value="TOEIC">TOEIC</option>
-            <option value="ITパスポート">ITパスポート</option>
-            <option value="大学課題">大学課題</option>
-            <option value="筋トレ">筋トレ</option>
-            <option value="読書">読書</option>
-            <option value="その他">その他</option>
-          </select>
-          <button id="renderSummaryBtn">表示</button>
-        </div>
-        <div id="weeklySummary"></div>
+        <h2>週別サマリー</h2>
+        <div id="weekList"></div>
       </section>
     </div>
   </div>
 
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
+
     const $ = (id) => document.getElementById(id);
-
-    let state = loadState();
-    let calendarCursor = new Date();
-
-    function defaultState() {
-      return {
-        tasks: [],
-        sessions: [],
-        reviews: {}
-      };
-    }
 
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return defaultState();
+        if (!raw) return { tasks: [], sessions: [], reviews: {} };
         const parsed = JSON.parse(raw);
         return {
           tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
           sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
           reviews: parsed.reviews || {}
         };
-      } catch (e) {
-        console.error(e);
-        return defaultState();
+      } catch {
+        return { tasks: [], sessions: [], reviews: {} };
       }
     }
 
     function todayKey() {
-      return toDateKey(new Date());
+      const d = new Date();
+      return toDateKey(d);
     }
 
-    function toDateKey(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
+    function toDateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
     }
 
     function parseDateKey(key) {
-      const [y, m, d] = String(key).split("-").map(Number);
+      const [y, m, d] = key.split("-").map(Number);
       return new Date(y, m - 1, d);
     }
 
     function formatMinutes(min) {
-      min = Math.round(Number(min) || 0);
+      min = Number(min || 0);
       if (min < 60) return `${min}分`;
       const h = Math.floor(min / 60);
       const m = min % 60;
-      return m ? `${h}時間${m}分` : `${h}時間`;
+      return m === 0 ? `${h}時間` : `${h}時間${m}分`;
     }
 
     function escapeHtml(str) {
@@ -424,114 +324,150 @@
         .replaceAll("'", "&#039;");
     }
 
-    function normalizeCategory(cat) {
-      const valid = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
-      return valid.includes(cat) ? cat : "その他";
+    function normalizeTitle(title) {
+      return String(title || "未選択")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
-    function getSessionsForDate(dateKey, category = "all") {
-      return state.sessions.filter(s => {
-        const sameDate = s.date === dateKey;
-        const sameCat = category === "all" || normalizeCategory(s.category) === category;
-        return sameDate && sameCat;
-      });
-    }
+    function groupSessions(sessions) {
+      const map = new Map();
 
-    function getTasksForDate(dateKey) {
-      return state.tasks.filter(t => t.date === dateKey);
-    }
-
-    function render() {
-      state = loadState();
-      $("todayText").textContent = new Date().toLocaleDateString("ja-JP", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        weekday: "long"
-      });
-      renderCalendar();
-      renderWeeklySummary();
-    }
-
-    function renderCalendar() {
-      const grid = $("calendarGrid");
-      const year = calendarCursor.getFullYear();
-      const month = calendarCursor.getMonth();
-
-      $("calendarTitle").textContent = `${year}年 ${month + 1}月`;
-
-      const first = new Date(year, month, 1);
-      const last = new Date(year, month + 1, 0);
-      const startDay = first.getDay();
-
-      const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
-      let parts = dayNames.map(d => `<div class="calendar-day-name">${d}</div>`);
-
-      for (let i = 0; i < startDay; i++) {
-        parts.push(`<div class="calendar-day empty"></div>`);
-      }
-
-      for (let day = 1; day <= last.getDate(); day++) {
-        const key = toDateKey(new Date(year, month, day));
-        const sessions = getSessionsForDate(key);
-        const tasks = getTasksForDate(key);
-        const total = sessions.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0);
-        const undone = tasks.filter(t => !t.done).length;
-
-        parts.push(`
-          <div class="calendar-day ${key === todayKey() ? "today" : ""}" onclick="showCalendarDetail('${key}')">
-            <div class="calendar-num">${day}</div>
-            ${total ? `<div class="calendar-min">${formatMinutes(total)}</div>` : `<div class="small">-</div>`}
-            ${undone ? `<div class="calendar-task">未完了 ${undone}</div>` : ""}
-          </div>
-        `);
-      }
-
-      grid.innerHTML = parts.join("");
-    }
-
-    function showCalendarDetail(dateKey) {
-      const sessions = getSessionsForDate(dateKey);
-      const tasks = getTasksForDate(dateKey);
-      const total = sessions.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0);
-
-      const byCategory = {};
       for (const s of sessions) {
-        const cat = normalizeCategory(s.category);
-        byCategory[cat] = (byCategory[cat] || 0) + (Number(s.minutes) || 0);
+        const title = normalizeTitle(s.taskTitle || s.title || "未選択");
+        const category = s.category || "その他";
+        const key = `${category}|||${title}`;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            title,
+            category,
+            minutes: 0,
+            count: 0,
+            manual: 0,
+            pomo: 0
+          });
+        }
+
+        const row = map.get(key);
+        row.minutes += Number(s.minutes || 0);
+        row.count += 1;
+        if (s.type === "manual") row.manual += 1;
+        else row.pomo += 1;
       }
 
-      const categoryHtml = Object.entries(byCategory)
-        .sort((a, b) => b[1] - a[1])
-        .map(([cat, min]) => `<span class="mini-tag">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
-        .join("");
-
-      const sessionHtml = sessions.length
-        ? sessions
-            .sort((a, b) => String(a.endedAt || "").localeCompare(String(b.endedAt || "")))
-            .map(s => `<div>・${escapeHtml(s.taskTitle || "記録")} / ${escapeHtml(normalizeCategory(s.category))} / ${formatMinutes(s.minutes)}</div>`)
-            .join("")
-        : `<div class="small">この日の記録はありません。</div>`;
-
-      const taskHtml = tasks.length
-        ? tasks.map(t => `<div>□ ${escapeHtml(t.title || "無題")} ${t.done ? "（完了）" : "（未完了）"}</div>`).join("")
-        : `<div class="small">この日のタスクはありません。</div>`;
-
-      const review = state.reviews?.[dateKey] || "";
-
-      $("calendarDetail").innerHTML = `
-        <strong>${dateKey}</strong><br>
-        合計：${formatMinutes(total)}
-        <div class="mini-tags">${categoryHtml}</div>
-        <div style="margin-top:8px;"><strong>やったこと</strong>${sessionHtml}</div>
-        <div style="margin-top:8px;"><strong>タスク</strong>${taskHtml}</div>
-        ${review ? `<div style="margin-top:8px;"><strong>振り返り</strong><br>${escapeHtml(review)}</div>` : ""}
-      `;
+      return Array.from(map.values())
+        .sort((a, b) => {
+          if (b.minutes !== a.minutes) return b.minutes - a.minutes;
+          return a.title.localeCompare(b.title, "ja");
+        });
     }
 
-    function changeCalendarMonth(offset) {
-      calendarCursor.setMonth(calendarCursor.getMonth() + offset);
-      renderCalendar();
+    function getDateRange() {
+      const state = loadState();
+      const range = $("rangeInput").value;
+      const selected = $("dateInput").value || todayKey();
+
+      const allDates = new Set([
+        ...state.sessions.map(s => s.date).filter(Boolean),
+        ...state.tasks.map(t => t.date).filter(Boolean),
+        ...Object.keys(state.reviews || {})
+      ]);
+
+      if (range === "all") {
+        return Array.from(allDates).sort((a, b) => b.localeCompare(a));
+      }
+
+      const days = Number(range);
+      const end = parseDateKey(selected);
+      const start = new Date(end);
+      start.setDate(start.getDate() - (days - 1));
+
+      const result = [];
+      const d = new Date(end);
+      while (d >= start) {
+        result.push(toDateKey(d));
+        d.setDate(d.getDate() - 1);
+      }
+      return result;
+    }
+
+    function categorySummary(sessions) {
+      const byCat = {};
+      for (const s of sessions) {
+        const cat = s.category || "その他";
+        byCat[cat] = (byCat[cat] || 0) + Number(s.minutes || 0);
+      }
+      return Object.entries(byCat)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, min]) => `<span class="pill">${escapeHtml(cat)} ${formatMinutes(min)}</span>`)
+        .join("");
+    }
+
+    function renderDayList() {
+      const state = loadState();
+      const dates = getDateRange();
+      const box = $("dayList");
+
+      const allRangeSessions = state.sessions.filter(s => dates.includes(s.date));
+      const total = allRangeSessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      $("overallSummary").innerHTML = `
+        <span class="pill">合計 ${formatMinutes(total)}</span>
+        <span class="pill">記録 ${allRangeSessions.length}件</span>
+        ${categorySummary(allRangeSessions)}
+      `;
+
+      if (dates.length === 0) {
+        box.innerHTML = `<div class="small">まだログがありません。</div>`;
+        return;
+      }
+
+      box.innerHTML = dates.map(date => {
+        const sessions = state.sessions.filter(s => s.date === date);
+        const tasks = state.tasks.filter(t => t.date === date);
+        const grouped = groupSessions(sessions);
+        const dayTotal = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+
+        const groupedHtml = grouped.length
+          ? grouped.map(g => `
+            <div class="group-item">
+              <div>
+                <div class="group-title">${escapeHtml(g.title)}</div>
+                <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算${g.manual ? ` / 手動${g.manual}件` : ""}</div>
+              </div>
+              <div class="group-time">${formatMinutes(g.minutes)}</div>
+            </div>
+          `).join("")
+          : `<div class="small">記録なし</div>`;
+
+        const taskHtml = tasks.length
+          ? tasks.map(t => `
+            <div class="task-line ${t.done ? "done" : "pending"}">
+              □ ${escapeHtml(t.title)}（${t.done ? "完了" : "未完了"}）
+            </div>
+          `).join("")
+          : `<div class="small">タスクなし</div>`;
+
+        const review = state.reviews && state.reviews[date] ? `
+          <div class="section-title">振り返り</div>
+          <div class="small">${escapeHtml(state.reviews[date])}</div>
+        ` : "";
+
+        return `
+          <div class="day-card">
+            <div class="day-head">
+              <div class="day-title">${date}</div>
+              <div class="day-total">${formatMinutes(dayTotal)}</div>
+            </div>
+            <div class="summary">${categorySummary(sessions)}</div>
+            <div class="section-title">やったこと</div>
+            <div class="group-list">${groupedHtml}</div>
+            <div class="section-title">タスク</div>
+            ${taskHtml}
+            ${review}
+          </div>
+        `;
+      }).join("");
     }
 
     function getWeekStartKey(dateKey) {
@@ -548,151 +484,71 @@
       return toDateKey(d);
     }
 
-    function getDateRange(startKey, endKey) {
-      const result = [];
-      const d = parseDateKey(startKey);
-      const end = parseDateKey(endKey);
-      while (d <= end) {
-        result.push(toDateKey(d));
-        d.setDate(d.getDate() + 1);
+    function renderWeekList() {
+      const state = loadState();
+      const dates = getDateRange();
+      const weeks = {};
+
+      for (const date of dates) {
+        const week = getWeekStartKey(date);
+        if (!weeks[week]) weeks[week] = [];
+        weeks[week].push(date);
       }
-      return result;
-    }
 
-    function getRecentWeekKeys(count) {
-      const keys = [];
-      const current = parseDateKey(getWeekStartKey(todayKey()));
-      for (let i = 0; i < count; i++) {
-        const d = new Date(current);
-        d.setDate(d.getDate() - i * 7);
-        keys.push(toDateKey(d));
+      const weekKeys = Object.keys(weeks).sort((a, b) => b.localeCompare(a));
+      const box = $("weekList");
+
+      if (!weekKeys.length) {
+        box.innerHTML = `<div class="small">週別データがありません。</div>`;
+        return;
       }
-      return keys;
-    }
 
-    function renderWeeklySummary() {
-      const count = Number($("weekCountSelect").value || 8);
-      const categoryFilter = $("categoryFilter").value || "all";
-      const cats = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
-      const weeks = getRecentWeekKeys(count);
+      box.innerHTML = weekKeys.map(weekStart => {
+        const weekEnd = getWeekEndKey(weekStart);
+        const weekDates = weeks[weekStart];
+        const sessions = state.sessions.filter(s => weekDates.includes(s.date));
+        const grouped = groupSessions(sessions);
+        const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
 
-      const rows = weeks.map(week => {
-        const dates = getDateRange(week, getWeekEndKey(week));
-        const sessions = state.sessions.filter(s => {
-          const inWeek = dates.includes(s.date);
-          const cat = normalizeCategory(s.category);
-          const inCategory = categoryFilter === "all" || cat === categoryFilter;
-          return inWeek && inCategory;
-        });
-
-        const row = { week, total: 0 };
-        cats.forEach(c => row[c] = 0);
-
-        sessions.forEach(s => {
-          const cat = normalizeCategory(s.category);
-          const minutes = Number(s.minutes) || 0;
-          row[cat] += minutes;
-          row.total += minutes;
-        });
-
-        row.sessions = sessions;
-        return row;
-      });
-
-      const max = Math.max(60, ...rows.map(r => r.total));
-
-      const table = `
-        <table class="study-table">
-          <thead>
-            <tr>
-              <th>週</th>
-              <th>合計</th>
-              <th>TOEIC</th>
-              <th>IT</th>
-              <th>大学</th>
-              <th>筋トレ</th>
-              <th>読書</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(r => `
-              <tr onclick="showWeekDetail('${r.week}')" style="cursor:pointer;">
-                <td>${r.week}</td>
-                <td>${formatMinutes(r.total)}</td>
-                <td>${formatMinutes(r["TOEIC"])}</td>
-                <td>${formatMinutes(r["ITパスポート"])}</td>
-                <td>${formatMinutes(r["大学課題"])}</td>
-                <td>${formatMinutes(r["筋トレ"])}</td>
-                <td>${formatMinutes(r["読書"])}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      `;
-
-      const bars = `
-        <div class="weekly-bars">
-          ${rows.map(r => `
-            <div class="weekly-bar-row">
-              <div>${r.week.slice(5)}</div>
-              <div class="weekly-bar">
-                <div style="width:${Math.round((r.total / max) * 100)}%"></div>
+        const groupedHtml = grouped.length
+          ? grouped.map(g => `
+            <div class="group-item">
+              <div>
+                <div class="group-title">${escapeHtml(g.title)}</div>
+                <div class="group-meta">${escapeHtml(g.category)} / ${g.count}件を合算</div>
               </div>
-              <div>${formatMinutes(r.total)}</div>
+              <div class="group-time">${formatMinutes(g.minutes)}</div>
             </div>
-          `).join("")}
-        </div>
-      `;
+          `).join("")
+          : `<div class="small">記録なし</div>`;
 
-      $("weeklySummary").innerHTML = table + bars + `<div class="week-detail" id="weekDetail">週をクリックすると詳細が表示されます。</div>`;
-    }
-
-    function showWeekDetail(weekStart) {
-      const categoryFilter = $("categoryFilter").value || "all";
-      const dates = getDateRange(weekStart, getWeekEndKey(weekStart));
-      const sessions = state.sessions.filter(s => {
-        const inWeek = dates.includes(s.date);
-        const cat = normalizeCategory(s.category);
-        const inCategory = categoryFilter === "all" || cat === categoryFilter;
-        return inWeek && inCategory;
-      });
-
-      const total = sessions.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0);
-
-      const byDate = {};
-      for (const s of sessions) {
-        if (!byDate[s.date]) byDate[s.date] = [];
-        byDate[s.date].push(s);
-      }
-
-      const html = dates.map(date => {
-        const daySessions = byDate[date] || [];
-        const dayTotal = daySessions.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0);
         return `
-          <div style="margin-top:8px;">
-            <strong>${date}：${formatMinutes(dayTotal)}</strong>
-            ${daySessions.length
-              ? daySessions.map(s => `<div>・${escapeHtml(s.taskTitle || "記録")} / ${escapeHtml(normalizeCategory(s.category))} / ${formatMinutes(s.minutes)}</div>`).join("")
-              : `<div class="small">記録なし</div>`}
+          <div class="day-card">
+            <div class="day-head">
+              <div class="day-title">${weekStart} 〜 ${weekEnd}</div>
+              <div class="day-total">${formatMinutes(total)}</div>
+            </div>
+            <div class="summary">${categorySummary(sessions)}</div>
+            <div class="section-title">合算したやったこと</div>
+            <div class="group-list">${groupedHtml}</div>
           </div>
         `;
       }).join("");
-
-      const detail = document.getElementById("weekDetail");
-      if (detail) {
-        detail.innerHTML = `<strong>${weekStart} 〜 ${getWeekEndKey(weekStart)} / 合計 ${formatMinutes(total)}</strong>${html}`;
-      }
     }
 
-    $("prevMonthBtn").addEventListener("click", () => changeCalendarMonth(-1));
-    $("nextMonthBtn").addEventListener("click", () => changeCalendarMonth(1));
-    $("renderSummaryBtn").addEventListener("click", renderWeeklySummary);
-    $("reloadBtn").addEventListener("click", render);
-    $("weekCountSelect").addEventListener("change", renderWeeklySummary);
-    $("categoryFilter").addEventListener("change", renderWeeklySummary);
+    function render() {
+      renderDayList();
+      renderWeekList();
+    }
 
-    window.showCalendarDetail = showCalendarDetail;
-    window.showWeekDetail = showWeekDetail;
+    $("dateInput").value = todayKey();
+    $("todayBtn").addEventListener("click", () => {
+      $("dateInput").value = todayKey();
+      $("rangeInput").value = "1";
+      render();
+    });
+    $("dateInput").addEventListener("change", render);
+    $("rangeInput").addEventListener("change", render);
 
     render();
   </script>
