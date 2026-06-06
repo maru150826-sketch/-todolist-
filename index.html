@@ -1079,6 +1079,180 @@
       }
     }
 
+
+    /* ===== スマホ横はみ出し修正 ===== */
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .app,
+    .panel,
+    .quick-task-box,
+    .add-task,
+    .manual-log,
+    .history-controls,
+    .review-controls,
+    .summary-cards,
+    .calendar-frame-wrap {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: block;
+      width: 100%;
+      min-width: 0;
+      text-align: left;
+    }
+
+    select {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .add-task,
+    .manual-log,
+    .history-controls {
+      overflow: hidden;
+    }
+
+    .task,
+    .history-item,
+    .day-review,
+    .week-card,
+    .future-day,
+    .debt,
+    .debt-summary,
+    .debt-more {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .task-actions {
+      min-width: 0;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .app {
+        width: 100%;
+      }
+
+      .grid {
+        width: 100%;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .panel {
+        padding: 14px;
+        border-radius: 16px;
+      }
+
+      .add-task,
+      .manual-log {
+        grid-template-columns: minmax(0, 1fr) !important;
+        padding: 12px;
+      }
+
+      .history-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        padding: 12px;
+      }
+
+      .review-controls,
+      .summary-cards,
+      .review-tabs,
+      .stats {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      .quick-task-row {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      .quick-buttons {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .quick-buttons button {
+        width: 100%;
+        padding: 9px 8px;
+      }
+
+      .timer-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .timer-actions button {
+        width: 100%;
+      }
+
+      .settings {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      }
+
+      .settings button {
+        grid-column: 1 / -1;
+      }
+
+      .task {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .task-actions {
+        grid-column: 1 / -1;
+        justify-content: stretch;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .task-actions button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .panel {
+        padding: 12px;
+      }
+
+      .quick-buttons,
+      .timer-actions,
+      .settings,
+      .history-controls,
+      .task-actions {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+
+      .time {
+        font-size: 48px;
+      }
+    }
+
 </style>
 </head>
 <body>

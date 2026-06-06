@@ -307,7 +307,50 @@
       .day-cell { min-height: 70px; }
       .day-mini { display: none; }
     }
-  </style>
+  
+    /* ===== スマホ横はみ出し修正 ===== */
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .app,
+    .panel,
+    .calendar-grid,
+    .weekday-row,
+    .group-item,
+    .week-card {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    .group-item {
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 950px) {
+      body {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .panel {
+        padding: 12px;
+      }
+
+      .calendar-grid,
+      .weekday-row {
+        gap: 4px;
+      }
+
+      .day-cell {
+        min-width: 0;
+        padding: 6px;
+      }
+    }
+
+</style>
 </head>
 <body>
   <div class="app">
