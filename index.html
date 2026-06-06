@@ -1054,7 +1054,7 @@
       .top-actions {
         width: 100%;
         max-width: none;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         justify-content: stretch;
       }
 
@@ -1157,7 +1157,7 @@
 
       .grid {
         width: 100%;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .panel {
@@ -1302,7 +1302,7 @@
 
     @media (max-width: 980px) {
       .pwa-tools {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         justify-content: stretch;
       }
 
@@ -1318,13 +1318,36 @@
 
     @media (max-width: 520px) {
       .pwa-tools {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     /* ===== くり返し設定欄：単発の将来タスクは非表示 ===== */
     .future-list {
       max-height: none;
+    }
+
+
+    /* ===== 右上ボタン整理 ===== */
+    .top-actions {
+      align-items: start;
+    }
+
+    .top-actions button,
+    .top-actions .log-link {
+      min-width: 88px;
+      text-align: center;
+    }
+
+    .sync-status {
+      margin-top: 2px;
+    }
+
+    @media (max-width: 980px) {
+      .top-actions button,
+      .top-actions .log-link {
+        min-width: 0;
+      }
     }
 
 </style>
@@ -1345,14 +1368,11 @@
       <div class="top-actions">
         <button class="ghost active-tab" id="showDashboardTab" type="button">本体</button>
         <button class="log-link" id="showCalendarTab" type="button">カレンダー</button>
-      <button class="ghost" id="exportBtn">出力</button>
-        <button class="ghost" id="importBtn">読込</button>
-        <button class="ghost" id="supabaseSyncBtn" type="button">履歴同期</button>
-        <button class="ghost" id="supabaseTaskSyncBtn" type="button">タスク同期</button>
-        <button class="ghost" id="supabaseTestBtn" type="button">接続テスト</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
-          <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
+          
+        <button class="ghost" id="allSyncBtn" type="button">同期</button>
+        <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
         </div>
         <button class="danger" id="resetDataBtn">全削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
@@ -3374,6 +3394,28 @@
     }
 
 
+
+    async function syncAllWithSupabase() {
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
+        return;
+      }
+
+      setSyncStatus("同期：実行中...");
+      try {
+        await syncSessionsWithSupabase();
+        await syncTasksWithSupabase();
+        setSyncStatus("同期：完了。履歴とタスクを同期しました。", "ok");
+      } catch (error) {
+        console.error("Supabase一括同期エラー", error);
+        if (typeof describeSupabaseError === "function") {
+          setSyncStatus("同期：失敗\n" + describeSupabaseError(error), "warn");
+        } else {
+          setSyncStatus("同期：失敗", "warn");
+        }
+      }
+    }
+
     function startInitialTaskSync() {
       setTimeout(() => {
         syncTasksWithSupabase();
@@ -3948,16 +3990,17 @@
     if ($("historyTodayBtn")) $("historyTodayBtn").addEventListener("click", () => setHistoryDate(todayKey()));
     if ($("historyYesterdayBtn")) $("historyYesterdayBtn").addEventListener("click", setHistoryYesterday);
     if ($("historyAllBtn")) $("historyAllBtn").addEventListener("click", () => setHistoryDate("all"));
-    if ($("supabaseSyncBtn")) $("supabaseSyncBtn").addEventListener("click", syncSessionsWithSupabase);
-    if ($("supabaseTaskSyncBtn")) $("supabaseTaskSyncBtn").addEventListener("click", syncTasksWithSupabase);
-    if ($("supabaseTestBtn")) $("supabaseTestBtn").addEventListener("click", testSupabaseConnection);
-    $("exportBtn").addEventListener("click", exportData);
-    $("importBtn").addEventListener("click", () => $("importFile").click());
+    if ($("supabaseSyncBtn")) if ($("supabaseSyncBtn")) $("supabaseSyncBtn").addEventListener("click", syncSessionsWithSupabase);
+    if ($("supabaseTaskSyncBtn")) if ($("supabaseTaskSyncBtn")) $("supabaseTaskSyncBtn").addEventListener("click", syncTasksWithSupabase);
+    if ($("supabaseTestBtn")) if ($("supabaseTestBtn")) $("supabaseTestBtn").addEventListener("click", testSupabaseConnection);
+    if ($("exportBtn")) $("exportBtn").addEventListener("click", exportData);
+    if ($("importBtn")) $("importBtn").addEventListener("click", () => $("importFile").click());
     $("importFile").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) importData(file);
     });
     $("resetDataBtn").addEventListener("click", resetAllData);
+    if ($("allSyncBtn")) $("allSyncBtn").addEventListener("click", syncAllWithSupabase);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
     registerServiceWorker();
 
