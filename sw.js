@@ -1,4 +1,4 @@
-const CACHE_NAME = "focus-dashboard-pwa-v1";
+const CACHE_NAME = "focus-dashboard-pwa-pc-audio-v1";
 const STATIC_ASSETS = [
   "./manifest.json",
   "./icon-192.png",

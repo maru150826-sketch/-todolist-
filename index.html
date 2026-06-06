@@ -1322,6 +1322,30 @@
       }
     }
 
+
+    /* ===== PWA・PC音声運用 ===== */
+    .pc-audio-note {
+      grid-column: 1 / -1;
+      justify-self: end;
+      width: 100%;
+      max-width: 620px;
+      border: 1px solid rgba(56,189,248,.25);
+      background: rgba(56,189,248,.07);
+      color: #dbeafe;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+    }
+
+    @media (max-width: 980px) {
+      .pc-audio-note {
+        justify-self: stretch;
+        max-width: none;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -1349,10 +1373,8 @@
         <div class="pwa-tools">
           <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
           <button class="ghost" id="hardReloadBtn" type="button">強制再読込</button>
-          <button class="ghost" id="enableAudioBtn" type="button">音を有効化</button>
-          <button class="ghost" id="testAudioBtn" type="button">音テスト</button>
         </div>
-        <div class="audio-status" id="audioStatus">音：未確認。スマホでは最初に「音を有効化」を押してください。</div>
+        <div class="pc-audio-note">音：PCでの使用を想定。アラームは「音を止める」を押すまで鳴ります。スマホでは音なし運用でOKです。</div>
         <button class="danger" id="resetDataBtn">全削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
       </div>
@@ -3705,8 +3727,7 @@
         });
 
         alarm.audio.play().catch(() => {
-          setAudioStatus("アラーム音の再生に失敗。スマホでは先に「音を有効化」を押してください。", "warn");
-          alert("音声を再生できませんでした。スマホでは先に「音を有効化」を押してください。");
+          alert("音声を再生できませんでした。PCの音量、ブラウザの音声許可、音源ファイルの配置を確認してください。");
         });
         return;
       }
@@ -3912,80 +3933,6 @@
         try { frame.contentWindow.location.reload(); } catch {}
       }
     }
-
-
-    let audioReady = false;
-
-    function setAudioStatus(message, type = "") {
-      const el = $("audioStatus");
-      if (!el) return;
-      el.textContent = message;
-      el.classList.remove("ok", "warn");
-      if (type) el.classList.add(type);
-    }
-
-    async function unlockAudio() {
-      try {
-        const files = ["us-anthem.mp3", "kongyo.mp3", "just-do-it.mp3"];
-        await Promise.all(files.map(file => new Promise(resolve => {
-          const audio = new Audio(file);
-          audio.preload = "auto";
-          audio.volume = 0.01;
-          audio.addEventListener("canplaythrough", resolve, { once: true });
-          audio.addEventListener("error", resolve, { once: true });
-          audio.load();
-          setTimeout(resolve, 900);
-        })));
-
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === "suspended") await ctx.resume();
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = 660;
-        gain.gain.value = 0.08;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.12);
-
-        setTimeout(() => ctx.close().catch(() => {}), 300);
-
-        audioReady = true;
-        setAudioStatus("音：有効化済み。スマホでもアラームが鳴りやすくなりました。", "ok");
-      } catch (error) {
-        audioReady = false;
-        console.error("音声有効化エラー", error);
-        setAudioStatus("音：有効化失敗。マナーモード解除・音量・Bluetooth接続を確認してください。", "warn");
-      }
-    }
-
-    async function testAudio() {
-      try {
-        await unlockAudio();
-
-        if (alarm.audio) {
-          alarm.audio.pause();
-          alarm.audio.currentTime = 0;
-        }
-
-        alarm.audio = new Audio("just-do-it.mp3");
-        alarm.audio.volume = 1.0;
-        alarm.audio.loop = false;
-
-        await alarm.audio.play();
-        setAudioStatus("音テスト：再生中。聞こえればOKです。", "ok");
-
-        alarm.audio.addEventListener("ended", () => {
-          setAudioStatus("音テスト：再生完了。", "ok");
-        }, { once: true });
-      } catch (error) {
-        console.error("音テストエラー", error);
-        setAudioStatus("音テスト：失敗。スマホのマナーモード・音量・Bluetoothを確認してください。", "warn");
-      }
-    }
-
     async function updateServiceWorkerAndReload() {
       setSyncStatus("アプリ更新：確認中...");
       try {
@@ -4107,8 +4054,6 @@
     $("resetDataBtn").addEventListener("click", resetAllData);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
     if ($("hardReloadBtn")) $("hardReloadBtn").addEventListener("click", hardReloadApp);
-    if ($("enableAudioBtn")) $("enableAudioBtn").addEventListener("click", unlockAudio);
-    if ($("testAudioBtn")) $("testAudioBtn").addEventListener("click", testAudio);
     registerServiceWorker();
 
 
