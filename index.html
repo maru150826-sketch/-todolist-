@@ -1350,6 +1350,17 @@
       }
     }
 
+
+    /* ===== 一番下の危険操作 ===== */
+    .bottom-danger-zone {
+      border-color: rgba(244,114,182,.22);
+      background: linear-gradient(180deg, rgba(30,41,59,.92), rgba(17,24,39,.96));
+    }
+
+    .bottom-danger-zone .danger {
+      min-width: 120px;
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -1374,7 +1385,6 @@
         <button class="ghost" id="allSyncBtn" type="button">同期</button>
         <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
         </div>
-        <button class="danger" id="resetDataBtn">全削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
       </div>
     </header>
@@ -1491,7 +1501,16 @@
           <div class="small" style="margin-bottom:10px;">毎日・平日・毎週のくり返し設定だけを表示します。将来の単発タスクはここには表示しません。</div>
           <div class="future-list" id="futureTaskList"></div>
         </section>
-      </main>
+      
+      <section class="panel bottom-danger-zone" style="margin-top:22px;">
+        <h2>危険操作</h2>
+        <div class="small" style="margin-bottom:12px;">
+          ここを押すと、タスク・履歴・設定などの保存データをすべて削除します。通常は使いません。
+        </div>
+        <button class="danger" id="resetDataBtn">全削除</button>
+      </section>
+
+    </main>
 
       <aside>
         <section class="panel">
