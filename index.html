@@ -1361,6 +1361,165 @@
       min-width: 120px;
     }
 
+
+    /* ===== スマホは完全1列表示 ===== */
+    @media (max-width: 720px) {
+      html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .app {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      header {
+        display: block;
+      }
+
+      header > div:first-child {
+        margin-bottom: 12px;
+      }
+
+      .top-actions {
+        width: 100%;
+        max-width: none;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        justify-content: stretch;
+      }
+
+      .top-actions button,
+      .top-actions .log-link {
+        width: 100%;
+        min-width: 0;
+        font-size: 13px;
+        padding: 9px 8px;
+      }
+
+      .pwa-tools {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .pwa-tools button {
+        width: 100%;
+      }
+
+      .sync-status {
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: none;
+        justify-self: stretch;
+      }
+
+      .grid,
+      .main-grid,
+      .dashboard-grid,
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr !important;
+        width: 100%;
+      }
+
+      .panel {
+        width: 100%;
+        max-width: 100%;
+        padding: 12px;
+        border-radius: 16px;
+      }
+
+      .quick-task-box,
+      .add-task,
+      .manual-log,
+      .history-controls,
+      .review-controls,
+      .settings,
+      .summary-cards,
+      .stats,
+      .review-tabs {
+        display: grid;
+        grid-template-columns: 1fr !important;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      input[type="date"] {
+        min-width: 0;
+      }
+
+      .quick-buttons,
+      .timer-actions,
+      .task-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .quick-buttons button,
+      .timer-actions button,
+      .task-actions button {
+        width: 100%;
+      }
+
+      .task {
+        grid-template-columns: auto 1fr !important;
+      }
+
+      .task-actions {
+        grid-column: 1 / -1;
+      }
+
+      .time {
+        font-size: clamp(42px, 17vw, 64px);
+      }
+
+      .history-item,
+      .task,
+      .future-task-mini,
+      .debt,
+      .debt-summary,
+      .bottom-danger-zone {
+        overflow-wrap: anywhere;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .top-actions,
+      .quick-buttons,
+      .timer-actions,
+      .task-actions {
+        grid-template-columns: 1fr !important;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">

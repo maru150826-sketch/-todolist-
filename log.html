@@ -350,6 +350,49 @@
       }
     }
 
+
+    /* ===== カレンダー側スマホ1列表示 ===== */
+    @media (max-width: 720px) {
+      html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .app,
+      .panel {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .calendar-head {
+        grid-template-columns: 1fr !important;
+      }
+
+      .calendar-grid,
+      .weekday-row {
+        gap: 4px;
+      }
+
+      .day-cell {
+        min-width: 0;
+        padding: 6px;
+      }
+
+      .group-item {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
