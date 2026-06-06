@@ -962,6 +962,30 @@
       color: #bbf7d0;
     }
 
+
+    .sync-status {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: #d1d5db;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      max-width: 240px;
+    }
+
+    .sync-status.ok {
+      border-color: rgba(52,211,153,.35);
+      color: #bbf7d0;
+      background: rgba(52,211,153,.08);
+    }
+
+    .sync-status.warn {
+      border-color: rgba(251,191,36,.35);
+      color: #fde68a;
+      background: rgba(251,191,36,.08);
+    }
+
 </style>
 </head>
 <body>
@@ -976,6 +1000,8 @@
         <button class="log-link" id="showCalendarTab" type="button">カレンダーを見る</button>
       <button class="ghost" id="exportBtn">データ出力</button>
         <button class="ghost" id="importBtn">データ読込</button>
+        <button class="ghost" id="supabaseSyncBtn" type="button">履歴同期</button>
+        <div class="sync-status" id="syncStatus">同期：未実行</div>
         <button class="danger" id="resetDataBtn">全データ削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
       </div>
@@ -1210,8 +1236,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
+
+    const SUPABASE_URL = "https://ghmitazvjjmeaydofflq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_IybzaBZwFUjd3PwMphyLGQ_D-edtZwv";
+    const SUPABASE_USER_ID = "default-user";
+    const supabaseClient = window.supabase
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
 
     const quotes = [
           "誰にも負けない努力をする　〜稲盛和夫〜",
@@ -2288,6 +2322,7 @@
 
       state.sessions = state.sessions.filter(s => s.id !== sessionId);
       saveState();
+      deleteSessionFromSupabase(sessionId);
       render();
     }
 
@@ -2653,7 +2688,7 @@
       const task = currentTask();
       const safeMinutes = clamp(Math.round(minutes), 1, 600);
 
-      state.sessions.push({
+      const session = {
         id: crypto.randomUUID(),
         date: todayKey(),
         taskId: task ? task.id : null,
@@ -2663,9 +2698,11 @@
         plannedMinutes: state.settings.focusMin,
         reason,
         endedAt: new Date().toISOString()
-      });
+      };
 
+      state.sessions.push(session);
       saveState();
+      saveSessionToSupabase(session);
     }
 
     function getElapsedFocusMinutes() {
@@ -2799,7 +2836,7 @@
       const title = $("manualTitleInput").value.trim() || `${category} 手動記録`;
       const note = $("manualNoteInput").value.trim();
 
-      state.sessions.push({
+      const session = {
         id: crypto.randomUUID(),
         date,
         taskId: null,
@@ -2809,14 +2846,171 @@
         note,
         type: "manual",
         endedAt: new Date().toISOString()
-      });
+      };
+
+      state.sessions.push(session);
 
       $("manualMinutesInput").value = "";
       $("manualTitleInput").value = "";
       $("manualNoteInput").value = "";
 
       saveState();
+      saveSessionToSupabase(session);
       render();
+    }
+
+
+
+    function setSyncStatus(message, type = "") {
+      const el = $("syncStatus");
+      if (!el) return;
+      el.textContent = message;
+      el.classList.remove("ok", "warn");
+      if (type) el.classList.add(type);
+    }
+
+    function normalizeSessionForCloud(session) {
+      return {
+        id: session.id,
+        user_id: SUPABASE_USER_ID,
+        date: session.date || todayKey(),
+        task_title: session.taskTitle || session.task_title || "未選択",
+        category: session.category || "その他",
+        minutes: Number(session.minutes || 0),
+        note: session.note || null,
+        type: session.type || session.reason || "pomodoro",
+        ended_at: session.endedAt || session.ended_at || new Date().toISOString()
+      };
+    }
+
+    function sessionFromCloud(row) {
+      return {
+        id: row.id,
+        date: row.date,
+        taskId: null,
+        taskTitle: row.task_title || "未選択",
+        category: row.category || "その他",
+        minutes: Number(row.minutes || 0),
+        note: row.note || "",
+        type: row.type || "cloud",
+        endedAt: row.ended_at || row.created_at || new Date().toISOString(),
+        syncedFromSupabase: true
+      };
+    }
+
+    async function saveSessionToSupabase(session) {
+      if (!supabaseClient || !session || !session.id) return;
+
+      try {
+        const row = normalizeSessionForCloud(session);
+        const { error } = await supabaseClient
+          .from("sessions")
+          .upsert(row, { onConflict: "id" });
+
+        if (error) throw error;
+        setSyncStatus("同期：保存OK", "ok");
+      } catch (error) {
+        console.error("Supabase保存エラー", error);
+        setSyncStatus("同期：保存失敗。localStorageには保存済み", "warn");
+      }
+    }
+
+    async function deleteSessionFromSupabase(sessionId) {
+      if (!supabaseClient || !sessionId) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from("sessions")
+          .delete()
+          .eq("id", sessionId)
+          .eq("user_id", SUPABASE_USER_ID);
+
+        if (error) throw error;
+        setSyncStatus("同期：削除OK", "ok");
+      } catch (error) {
+        console.error("Supabase削除エラー", error);
+        setSyncStatus("同期：削除失敗。localStorageからは削除済み", "warn");
+      }
+    }
+
+    async function pushLocalSessionsToSupabase() {
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
+        return;
+      }
+
+      const rows = (state.sessions || [])
+        .filter(s => s && s.id && s.date && Number(s.minutes || 0) > 0)
+        .map(normalizeSessionForCloud);
+
+      if (rows.length === 0) return;
+
+      const { error } = await supabaseClient
+        .from("sessions")
+        .upsert(rows, { onConflict: "id" });
+
+      if (error) throw error;
+    }
+
+    async function pullSessionsFromSupabase() {
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
+        return 0;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("sessions")
+        .select("*")
+        .eq("user_id", SUPABASE_USER_ID)
+        .order("ended_at", { ascending: false });
+
+      if (error) throw error;
+
+      const existingIds = new Set((state.sessions || []).map(s => s.id));
+      let added = 0;
+
+      for (const row of data || []) {
+        if (!existingIds.has(row.id)) {
+          state.sessions.push(sessionFromCloud(row));
+          existingIds.add(row.id);
+          added += 1;
+        }
+      }
+
+      if (added > 0) {
+        saveState();
+        render();
+      }
+
+      return added;
+    }
+
+    async function syncSessionsWithSupabase() {
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
+        return;
+      }
+
+      setSyncStatus("同期：実行中...");
+      try {
+        await pushLocalSessionsToSupabase();
+        const added = await pullSessionsFromSupabase();
+        setSyncStatus(`同期：完了（取得 ${added}件）`, "ok");
+
+        const frame = $("calendarFrame");
+        if (frame && frame.contentWindow) {
+          try { frame.contentWindow.location.reload(); } catch {}
+        }
+      } catch (error) {
+        console.error("Supabase同期エラー", error);
+        setSyncStatus("同期：失敗。Supabase設定かRLSを確認", "warn");
+      }
+    }
+
+    function startInitialSupabaseSync() {
+      setTimeout(() => {
+        syncSessionsWithSupabase();
+      }, 700);
     }
 
 
@@ -3106,6 +3300,7 @@
     if ($("historyTodayBtn")) $("historyTodayBtn").addEventListener("click", () => setHistoryDate(todayKey()));
     if ($("historyYesterdayBtn")) $("historyYesterdayBtn").addEventListener("click", setHistoryYesterday);
     if ($("historyAllBtn")) $("historyAllBtn").addEventListener("click", () => setHistoryDate("all"));
+    if ($("supabaseSyncBtn")) $("supabaseSyncBtn").addEventListener("click", syncSessionsWithSupabase);
     $("exportBtn").addEventListener("click", exportData);
     $("importBtn").addEventListener("click", () => $("importFile").click());
     $("importFile").addEventListener("change", (e) => {
@@ -3116,6 +3311,7 @@
 
     migrateDateIfNeeded();
     render();
+    startInitialSupabaseSync();
   </script>
 </body>
 </html>

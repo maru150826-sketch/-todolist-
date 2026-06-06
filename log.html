@@ -365,13 +365,73 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
+    const SUPABASE_URL = "https://ghmitazvjjmeaydofflq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_IybzaBZwFUjd3PwMphyLGQ_D-edtZwv";
+    const SUPABASE_USER_ID = "default-user";
+    const supabaseClient = window.supabase
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
     const $ = (id) => document.getElementById(id);
 
     let visibleMonth = new Date();
     visibleMonth.setDate(1);
     let selectedDate = todayKey();
+
+
+    function sessionFromCloud(row) {
+      return {
+        id: row.id,
+        date: row.date,
+        taskId: null,
+        taskTitle: row.task_title || "未選択",
+        category: row.category || "その他",
+        minutes: Number(row.minutes || 0),
+        note: row.note || "",
+        type: row.type || "cloud",
+        endedAt: row.ended_at || row.created_at || new Date().toISOString(),
+        syncedFromSupabase: true
+      };
+    }
+
+    async function pullSessionsFromSupabaseForLog() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("sessions")
+          .select("*")
+          .eq("user_id", SUPABASE_USER_ID)
+          .order("ended_at", { ascending: false });
+
+        if (error) throw error;
+
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const state = raw ? JSON.parse(raw) : { tasks: [], sessions: [], reviews: {} };
+        if (!Array.isArray(state.sessions)) state.sessions = [];
+
+        const existingIds = new Set(state.sessions.map(s => s.id));
+        let added = 0;
+
+        for (const row of data || []) {
+          if (!existingIds.has(row.id)) {
+            state.sessions.push(sessionFromCloud(row));
+            existingIds.add(row.id);
+            added += 1;
+          }
+        }
+
+        if (added > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          render();
+        }
+      } catch (error) {
+        console.error("Supabase log sync error", error);
+      }
+    }
+
 
     function loadState() {
       try {
@@ -652,6 +712,7 @@
     });
 
     render();
+    pullSessionsFromSupabaseForLog();
   </script>
 </body>
 </html>
