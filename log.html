@@ -401,7 +401,7 @@
 
       try {
         const { data, error } = await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .select("*")
           .eq("user_id", SUPABASE_USER_ID)
           .order("ended_at", { ascending: false });

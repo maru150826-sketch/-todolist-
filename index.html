@@ -2903,7 +2903,7 @@
         };
 
         const insertResult = await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .insert(testRow)
           .select();
 
@@ -2912,7 +2912,7 @@
         }
 
         const selectResult = await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .select("*")
           .eq("id", testRow.id)
           .single();
@@ -2922,11 +2922,11 @@
         }
 
         await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .delete()
           .eq("id", testRow.id);
 
-        setSyncStatus("接続テスト：成功\nSupabaseへの insert / select / delete が通りました。", "ok");
+        setSyncStatus("接続テスト：成功\nSupabaseの study_sessions への insert / select / delete が通りました。", "ok");
       } catch (error) {
         console.error("Supabase接続テストエラー", error);
         setSyncStatus("接続テスト：失敗\n" + describeSupabaseError(error), "warn");
@@ -2977,7 +2977,7 @@
       try {
         const row = normalizeSessionForCloud(session);
         const { error } = await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .upsert(row, { onConflict: "id" });
 
         if (error) throw error;
@@ -2993,7 +2993,7 @@
 
       try {
         const { error } = await supabaseClient
-          .from("sessions")
+          .from("study_sessions")
           .delete()
           .eq("id", sessionId)
           .eq("user_id", SUPABASE_USER_ID);
@@ -3019,7 +3019,7 @@
       if (rows.length === 0) return;
 
       const { error } = await supabaseClient
-        .from("sessions")
+        .from("study_sessions")
         .upsert(rows, { onConflict: "id" });
 
       if (error) throw error;
@@ -3032,7 +3032,7 @@
       }
 
       const { data, error } = await supabaseClient
-        .from("sessions")
+        .from("study_sessions")
         .select("*")
         .eq("user_id", SUPABASE_USER_ID)
         .order("ended_at", { ascending: false });
