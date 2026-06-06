@@ -986,6 +986,13 @@
       background: rgba(251,191,36,.08);
     }
 
+
+    .sync-status {
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-width: 260px;
+    }
+
 </style>
 </head>
 <body>
@@ -1001,6 +1008,7 @@
       <button class="ghost" id="exportBtn">データ出力</button>
         <button class="ghost" id="importBtn">データ読込</button>
         <button class="ghost" id="supabaseSyncBtn" type="button">履歴同期</button>
+        <button class="ghost" id="supabaseTestBtn" type="button">接続テスト</button>
         <div class="sync-status" id="syncStatus">同期：未実行</div>
         <button class="danger" id="resetDataBtn">全データ削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
@@ -2861,6 +2869,71 @@
 
 
 
+
+    function describeSupabaseError(error) {
+      if (!error) return "不明なエラー";
+      const parts = [];
+      if (error.name) parts.push(`name=${error.name}`);
+      if (error.message) parts.push(`message=${error.message}`);
+      if (error.code) parts.push(`code=${error.code}`);
+      if (error.details) parts.push(`details=${error.details}`);
+      if (error.hint) parts.push(`hint=${error.hint}`);
+      if (error.status) parts.push(`status=${error.status}`);
+      return parts.length ? parts.join("\n") : JSON.stringify(error, null, 2);
+    }
+
+    async function testSupabaseConnection() {
+      if (!supabaseClient) {
+        setSyncStatus("接続テスト：Supabaseライブラリ未読込", "warn");
+        return;
+      }
+
+      setSyncStatus("接続テスト：実行中...");
+      try {
+        const testRow = {
+          id: crypto.randomUUID(),
+          user_id: SUPABASE_USER_ID,
+          date: todayKey(),
+          task_title: "接続テスト",
+          category: "その他",
+          minutes: 1,
+          note: "GitHub Pagesからの接続テスト",
+          type: "test",
+          ended_at: new Date().toISOString()
+        };
+
+        const insertResult = await supabaseClient
+          .from("sessions")
+          .insert(testRow)
+          .select();
+
+        if (insertResult.error) {
+          throw insertResult.error;
+        }
+
+        const selectResult = await supabaseClient
+          .from("sessions")
+          .select("*")
+          .eq("id", testRow.id)
+          .single();
+
+        if (selectResult.error) {
+          throw selectResult.error;
+        }
+
+        await supabaseClient
+          .from("sessions")
+          .delete()
+          .eq("id", testRow.id);
+
+        setSyncStatus("接続テスト：成功\nSupabaseへの insert / select / delete が通りました。", "ok");
+      } catch (error) {
+        console.error("Supabase接続テストエラー", error);
+        setSyncStatus("接続テスト：失敗\n" + describeSupabaseError(error), "warn");
+      }
+    }
+
+
     function setSyncStatus(message, type = "") {
       const el = $("syncStatus");
       if (!el) return;
@@ -2911,7 +2984,7 @@
         setSyncStatus("同期：保存OK", "ok");
       } catch (error) {
         console.error("Supabase保存エラー", error);
-        setSyncStatus("同期：保存失敗。localStorageには保存済み", "warn");
+        setSyncStatus("同期：保存失敗。localStorageには保存済み\n" + describeSupabaseError(error), "warn");
       }
     }
 
@@ -2929,7 +3002,7 @@
         setSyncStatus("同期：削除OK", "ok");
       } catch (error) {
         console.error("Supabase削除エラー", error);
-        setSyncStatus("同期：削除失敗。localStorageからは削除済み", "warn");
+        setSyncStatus("同期：削除失敗。localStorageからは削除済み\n" + describeSupabaseError(error), "warn");
       }
     }
 
@@ -3003,7 +3076,7 @@
         }
       } catch (error) {
         console.error("Supabase同期エラー", error);
-        setSyncStatus("同期：失敗。Supabase設定かRLSを確認", "warn");
+        setSyncStatus("同期：失敗\n" + describeSupabaseError(error), "warn");
       }
     }
 
@@ -3301,6 +3374,7 @@
     if ($("historyYesterdayBtn")) $("historyYesterdayBtn").addEventListener("click", setHistoryYesterday);
     if ($("historyAllBtn")) $("historyAllBtn").addEventListener("click", () => setHistoryDate("all"));
     if ($("supabaseSyncBtn")) $("supabaseSyncBtn").addEventListener("click", syncSessionsWithSupabase);
+    if ($("supabaseTestBtn")) $("supabaseTestBtn").addEventListener("click", testSupabaseConnection);
     $("exportBtn").addEventListener("click", exportData);
     $("importBtn").addEventListener("click", () => $("importFile").click());
     $("importFile").addEventListener("change", (e) => {
