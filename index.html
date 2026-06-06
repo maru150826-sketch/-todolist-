@@ -1054,7 +1054,7 @@
       .top-actions {
         width: 100%;
         max-width: none;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         justify-content: stretch;
       }
 
@@ -1302,7 +1302,7 @@
 
     @media (max-width: 980px) {
       .pwa-tools {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         justify-content: stretch;
       }
 
@@ -1322,28 +1322,9 @@
       }
     }
 
-
-    /* ===== PWA・PC音声運用 ===== */
-    .pc-audio-note {
-      grid-column: 1 / -1;
-      justify-self: end;
-      width: 100%;
-      max-width: 620px;
-      border: 1px solid rgba(56,189,248,.25);
-      background: rgba(56,189,248,.07);
-      color: #dbeafe;
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-size: 12px;
-      line-height: 1.45;
-      text-align: left;
-    }
-
-    @media (max-width: 980px) {
-      .pc-audio-note {
-        justify-self: stretch;
-        max-width: none;
-      }
+    /* ===== くり返し設定欄：単発の将来タスクは非表示 ===== */
+    .future-list {
+      max-height: none;
     }
 
 </style>
@@ -1372,9 +1353,7 @@
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
           <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
-          <button class="ghost" id="hardReloadBtn" type="button">強制再読込</button>
         </div>
-        <div class="pc-audio-note">音：PCでの使用を想定。アラームは「音を止める」を押すまで鳴ります。スマホでは音なし運用でOKです。</div>
         <button class="danger" id="resetDataBtn">全削除</button>
         <input class="hidden" type="file" id="importFile" accept=".json" />
       </div>
@@ -1488,8 +1467,8 @@
         </section>
 
         <section style="margin-top:18px;">
-          <h2>今後のタスク</h2>
-          <div class="small" style="margin-bottom:10px;">今日以外に入れた予定と、くり返しタスクを表示します。</div>
+          <h2>くり返し設定</h2>
+          <div class="small" style="margin-bottom:10px;">毎日・平日・毎週のくり返し設定だけを表示します。将来の単発タスクはここには表示しません。</div>
           <div class="future-list" id="futureTaskList"></div>
         </section>
       </main>
@@ -2313,89 +2292,22 @@
       const box = $("futureTaskList");
       if (!box) return;
 
-      const today = todayKey();
-      generateRecurringPreview(30);
-
-      const futureTasks = state.tasks
-        .filter(t => t.date > today && !t.done)
-        .sort((a, b) => {
-          const dateOrder = a.date.localeCompare(b.date);
-          if (dateOrder !== 0) return dateOrder;
-          const priorityOrder = { high: 0, normal: 1, low: 2 };
-          const p = (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9);
-          if (p !== 0) return p;
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        })
-        .slice(0, 40);
-
       const activeTemplates = (state.recurringTemplates || []).filter(t => t.active);
 
-      if (futureTasks.length === 0 && activeTemplates.length === 0) {
-        box.innerHTML = `<div class="small">今後のタスクはありません。</div>`;
+      if (activeTemplates.length === 0) {
+        box.innerHTML = `<div class="small">くり返し設定はありません。通常入力の「くり返し」で、毎日・平日・毎週を選ぶとここに表示されます。</div>`;
         return;
       }
 
-      const recurringHtml = activeTemplates.length ? `
-        <details class="future-day">
-          <summary>
-            <span>くり返し設定</span>
-            <span class="future-day-count">${activeTemplates.length}件</span>
-          </summary>
-          <div class="future-day-body">
-            ${activeTemplates.map(t => `
-              <div class="future-task-mini">
-                <strong>${escapeHtml(t.title)}</strong><br>
-                ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
-                <button class="ghost" style="margin-left:6px; padding:5px 8px; font-size:12px;" onclick="stopRecurringTemplate('${t.id}')">停止</button>
-              </div>
-            `).join("")}
+      box.innerHTML = activeTemplates.map(t => `
+        <div class="future-task-mini">
+          <strong>${escapeHtml(t.title)}</strong><br>
+          ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
+          <div class="future-task-actions">
+            <button class="ghost" onclick="stopRecurringTemplate('${t.id}')">停止</button>
           </div>
-        </details>
-      ` : "";
-
-      const grouped = futureTasks.reduce((acc, task) => {
-        if (!acc[task.date]) acc[task.date] = [];
-        acc[task.date].push(task);
-        return acc;
-      }, {});
-
-      const futureHtml = Object.entries(grouped).map(([date, tasks], index) => {
-        const openAttr = index < 3 ? " open" : "";
-        const dayTotal = tasks.length;
-        const taskRows = tasks.map(t => {
-          const pinnedToday = t.doTodayDate === today;
-          const canPullToday = Boolean(t.deadline) && !t.done;
-          const actionHtml = canPullToday
-            ? `<div class="future-task-actions">
-                ${pinnedToday
-                  ? `<button class="ghost" onclick="removeTaskFromToday('${t.id}')">今日から外す</button>`
-                  : `<button class="ok" onclick="startTaskToday('${t.id}')">今日やるに追加</button>`}
-              </div>`
-            : "";
-
-          return `
-            <div class="future-task-mini">
-              <strong>${escapeHtml(t.title)}</strong><br>
-              ${escapeHtml(t.category)} / ${t.priority === "high" ? "最重要" : t.priority === "normal" ? "普通" : "軽め"}${t.repeat && t.repeat !== "none" ? " / " + repeatLabel(t.repeat) : ""}
-              ${pinnedToday ? `<div class="today-pin-badge">今日やるに追加済み</div>` : ""}
-              ${t.deadline ? `<div class="deadline ${deadlineClass(t.deadline)}">${deadlineLabel(t.deadline)}</div>` : ""}
-              ${actionHtml}
-            </div>
-          `;
-        }).join("");
-
-        return `
-          <details class="future-day"${openAttr}>
-            <summary>
-              <span>${date}</span>
-              <span class="future-day-count">${dayTotal}件</span>
-            </summary>
-            <div class="future-day-body">${taskRows}</div>
-          </details>
-        `;
-      }).join("");
-
-      box.innerHTML = recurringHtml + futureHtml;
+        </div>
+      `).join("");
     }
 
 
@@ -3959,12 +3871,6 @@
       }
     }
 
-    function hardReloadApp() {
-      const url = new URL(window.location.href);
-      url.searchParams.set("reload", Date.now().toString());
-      window.location.replace(url.toString());
-    }
-
     function registerServiceWorker() {
       if (!("serviceWorker" in navigator)) return;
 
@@ -4053,7 +3959,6 @@
     });
     $("resetDataBtn").addEventListener("click", resetAllData);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
-    if ($("hardReloadBtn")) $("hardReloadBtn").addEventListener("click", hardReloadApp);
     registerServiceWorker();
 
 
