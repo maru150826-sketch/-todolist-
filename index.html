@@ -1520,6 +1520,77 @@
       }
     }
 
+
+    /* ===== くり返し廃止・クイック追加重視 ===== */
+    .repeat-removed-note {
+      border: 1px solid rgba(56,189,248,.25);
+      background: rgba(56,189,248,.07);
+      color: #dbeafe;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-top: 10px;
+    }
+
+    #repeatInput,
+    label[for="repeatInput"],
+    .repeat-input,
+    .repeat-setting,
+    .recurring-template-area {
+      display: none !important;
+    }
+
+    .quick-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .quick-buttons button {
+      width: 100%;
+      min-height: 44px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .quick-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .quick-buttons {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+
+    /* ===== クイック追加ボタン ===== */
+    .quick-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .quick-buttons button {
+      width: 100%;
+      min-height: 44px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .quick-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .quick-buttons {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -1617,13 +1688,13 @@
               <button id="quickAddTaskBtn" class="ok">今日に追加</button>
             </div>
             <div class="quick-buttons">
-              <button class="ghost" data-template="TOEIC単語100問" data-category="TOEIC" data-priority="high">TOEIC単語</button>
-              <button class="ghost" data-template="TOEIC Part 7 精読" data-category="TOEIC" data-priority="high">TOEIC精読</button>
-              <button class="ghost" data-template="ジム" data-category="筋トレ" data-priority="normal">ジム</button>
-              <button class="ghost" data-template="ITパスポート 過去問" data-category="ITパスポート" data-priority="high">IT過去問</button>
-              <button class="ghost" data-template="大学の課題" data-category="大学課題" data-priority="high">大学課題</button>
-              <button class="ghost" data-template="読書" data-category="読書" data-priority="low">読書</button>
-            </div>
+            <button type="button" onclick="setQuickTaskText('英語')">英語</button>
+            <button type="button" onclick="setQuickTaskText('中国語')">中国語</button>
+            <button type="button" onclick="setQuickTaskText('大学の課題')">大学の課題</button>
+            <button type="button" onclick="setQuickTaskText('ジム')">ジム</button>
+            <button type="button" onclick="setQuickTaskText('新聞')">新聞</button>
+            <button type="button" onclick="setQuickTaskText('ITパスポート')">ITパスポート</button>
+          </div>
             <div class="small">クイック入力は、文字からカテゴリを自動判定します。細かく設定したい場合は下の通常入力を使ってください。</div>
           </div>
 
@@ -1654,11 +1725,11 @@
           </div>
           <div class="task-list" id="taskList"></div>
         </section>
-
         <section style="margin-top:18px;">
-          <h2>くり返し設定</h2>
-          <div class="small" style="margin-bottom:10px;">毎日・平日・毎週のくり返し設定だけを表示します。将来の単発タスクはここには表示しません。</div>
-          <div class="future-list" id="futureTaskList"></div>
+          <h2>クイック追加の使い方</h2>
+          <div class="repeat-removed-note">
+            くり返し設定は増殖の原因になるため廃止しました。毎週やるものは、必要な日にクイック追加で入れてください。
+          </div>
         </section>
       
       <section class="panel bottom-danger-zone" style="margin-top:22px;">
@@ -2079,29 +2150,8 @@
       if (changed) saveState();
     }
 
-    function generateRecurringPreview(daysAhead = 30) {
-      if (!Array.isArray(state.recurringTemplates)) state.recurringTemplates = [];
-      const today = parseDateKey(todayKey());
-      const end = new Date(today);
-      end.setDate(end.getDate() + daysAhead);
-
-      let changed = false;
-      for (const template of state.recurringTemplates) {
-        if (!template.active) continue;
-        const startDate = parseDateKey(template.startDate);
-        const d = new Date(startDate > today ? startDate : today);
-
-        while (d <= end) {
-          const key = toDateKey(d);
-          if (shouldTemplateOccur(template, key) && !taskExistsForTemplate(template.id, key)) {
-            state.tasks.push(createTaskFromTemplate(template, key));
-            changed = true;
-          }
-          d.setDate(d.getDate() + 1);
-        }
-      }
-
-      if (changed) saveState();
+    function generateRecurringPreview(days = 30) {
+      return;
     }
 
     function formatTime(seconds) {
@@ -2168,6 +2218,15 @@
 
     function currentTask() {
       return ensureCurrentTask();
+    }
+
+
+    function setQuickTaskText(text) {
+      const input = $("quickTaskInput") || $("taskInput");
+      if (input) {
+        input.value = text;
+        input.focus();
+      }
     }
 
     function addTask() {
@@ -2487,27 +2546,8 @@
     }
 
     function renderFutureTasks() {
-      const box = $("futureTaskList");
-      if (!box) return;
-
-      const activeTemplates = (state.recurringTemplates || []).filter(t => t.active);
-
-      if (activeTemplates.length === 0) {
-        box.innerHTML = `<div class="small">くり返し設定はありません。通常入力の「くり返し」で、毎日・平日・毎週を選ぶとここに表示されます。</div>`;
-        return;
-      }
-
-      box.innerHTML = activeTemplates.map(t => `
-        <div class="future-task-mini">
-          <strong>${escapeHtml(t.title)}</strong><br>
-          ${escapeHtml(t.category)} / ${repeatLabel(t.repeat)} / ${t.startDate}開始${t.deadline ? " / " + deadlineLabel(t.deadline) : ""}
-          <div class="future-task-actions">
-            <button class="ghost" onclick="stopRecurringTemplate('${t.id}')">停止</button>
-          </div>
-        </div>
-      `).join("");
+      return;
     }
-
 
     function getTaskMinutes(taskId, date = todayKey()) {
       return state.sessions
@@ -3836,6 +3876,86 @@
     }
 
 
+
+    function isRecurringTask(task) {
+      if (!task) return false;
+      const repeat = String(task.repeat || "none");
+      if (repeat && repeat !== "none" && repeat !== "1回だけ") return true;
+      if (task.recurringTemplateId) return true;
+      if (task.generatedFromRecurring) return true;
+      return false;
+    }
+
+    function removeRecurringLocalData() {
+      let changed = false;
+
+      if (Array.isArray(state.recurringTemplates) && state.recurringTemplates.length > 0) {
+        state.recurringTemplates = [];
+        changed = true;
+      }
+
+      if (Array.isArray(state.tasks)) {
+        const before = state.tasks.length;
+        state.tasks = state.tasks.filter(task => !isRecurringTask(task));
+        if (state.tasks.length !== before) changed = true;
+      }
+
+      if (state.settings) {
+        state.settings.repeatDisabled = true;
+      }
+
+      if (changed) {
+        saveState();
+      }
+
+      return changed;
+    }
+
+    async function removeRecurringCloudData() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("study_tasks")
+          .select("id, task_data")
+          .eq("user_id", SUPABASE_USER_ID);
+
+        if (error) throw error;
+
+        const ids = (data || [])
+          .filter(row => isRecurringTask(row.task_data || {}))
+          .map(row => row.id);
+
+        if (ids.length > 0) {
+          const result = await supabaseClient
+            .from("study_tasks")
+            .delete()
+            .in("id", ids);
+
+          if (result.error) throw result.error;
+          setSyncStatus(`くり返しタスク削除：${ids.length}件`, "ok");
+        }
+      } catch (error) {
+        console.error("くり返しクラウド削除エラー", error);
+      }
+    }
+
+    function disableRepeatInputs() {
+      const repeatInput = $("repeatInput");
+      if (repeatInput) {
+        repeatInput.value = "none";
+        repeatInput.disabled = true;
+      }
+    }
+
+    async function cleanupRecurringEverywhere() {
+      removeRecurringLocalData();
+      disableRepeatInputs();
+      await removeRecurringCloudData();
+      render();
+    }
+
+
     function showAlarm(title, message, soundOverride = null) {
       $("alarmTitle").textContent = title;
       $("alarmMessage").textContent = message + " ボタンを押すまで音は止まりません。";
@@ -4184,7 +4304,10 @@
 
 
     migrateDateIfNeeded();
+    removeRecurringLocalData();
+    disableRepeatInputs();
     render();
+    cleanupRecurringEverywhere();
     startInitialSupabaseSync();
     startInitialTaskSync();
   </script>
