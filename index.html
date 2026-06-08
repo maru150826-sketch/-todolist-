@@ -1737,7 +1737,13 @@
         <div class="small" style="margin-bottom:12px;">
           ここを押すと、タスク・履歴・設定などの保存データをすべて削除します。通常は使いません。
         </div>
-        <button class="danger" id="resetDataBtn">全削除</button>
+        <div class="row wrap">
+          <button class="warn" id="safetyCleanupBtn" type="button">安全掃除</button>
+          <button class="danger" id="resetDataBtn">全削除</button>
+        </div>
+        <div class="small" style="margin-top:10px;">
+          安全掃除：くり返しタスク、タジゼミを含むタスク、古い自動生成データだけを削除します。履歴・手動ログは消しません。
+        </div>
       </section>
 
     </main>
@@ -2022,7 +2028,7 @@
 
     function migrateDateIfNeeded() {
       const today = todayKey();
-      generateRecurringTasksUntil(today);
+      // 安全方針：くり返しタスクは増殖事故の原因になるため、日付変更時にも自動生成しない。
 
       if (state.lastOpenedDate !== today) {
         state.lastOpenedDate = today;
@@ -2127,7 +2133,12 @@
     }
 
     function generateRecurringTasksUntil(endDateKey) {
+      // 安全方針：くり返しタスクは完全停止。過去データからも新規生成しない。
       if (!Array.isArray(state.recurringTemplates)) state.recurringTemplates = [];
+      state.recurringTemplates = [];
+      saveState();
+      return;
+
       let changed = false;
 
       for (const template of state.recurringTemplates) {
@@ -3678,6 +3689,10 @@
 
     async function saveTaskToSupabase(task) {
       if (!supabaseClient || !task || !task.id) return;
+      if (isUnsafeTask(task)) {
+        console.warn("安全処理：保存しないタスクを検出", task);
+        return;
+      }
 
       try {
         touchTask(task);
@@ -3728,8 +3743,10 @@
         return;
       }
 
+      sanitizeStateData("pushLocalTasksToSupabase前");
+
       const rows = (state.tasks || [])
-        .filter(t => t && t.id)
+        .filter(t => t && t.id && !isUnsafeTask(t))
         .map(t => {
           if (!t.updatedAt) t.updatedAt = t.completedAt || t.createdAt || new Date().toISOString();
           return normalizeTaskForCloud(t);
@@ -3784,6 +3801,23 @@
 
         const cloudTask = taskFromCloud(row);
         if (!cloudTask.id) continue;
+
+        if (isUnsafeTask(cloudTask)) {
+          deleted += 1;
+          try {
+            await supabaseClient
+              .from("study_tasks")
+              .delete()
+              .eq("id", row.id)
+              .eq("user_id", SUPABASE_USER_ID);
+          } catch (e) {
+            console.warn("安全処理：クラウド上の危険タスク削除に失敗", e);
+          }
+          if (local) {
+            state.tasks = state.tasks.filter(t => t.id !== row.id);
+          }
+          continue;
+        }
 
         if (!local) {
           state.tasks.push(cloudTask);
@@ -3877,6 +3911,50 @@
 
 
 
+    // ===== 安全処理：くり返し復活・特定ゴミタスクの再混入を防止 =====
+    const BLOCKED_TASK_KEYWORDS = ["タジゼミ"];
+
+    function isBlockedTaskTitle(task) {
+      const title = String((task && (task.title || task.taskTitle || task.task_title)) || "");
+      return BLOCKED_TASK_KEYWORDS.some(word => title.includes(word));
+    }
+
+    function isUnsafeTask(task) {
+      return isRecurringTask(task) || isBlockedTaskTitle(task);
+    }
+
+    function sanitizeStateData(reason = "manual") {
+      let changed = false;
+      const beforeTasks = Array.isArray(state.tasks) ? state.tasks.length : 0;
+      const beforeTemplates = Array.isArray(state.recurringTemplates) ? state.recurringTemplates.length : 0;
+
+      if (!Array.isArray(state.tasks)) state.tasks = [];
+      if (!Array.isArray(state.sessions)) state.sessions = [];
+      if (!state.reviews || typeof state.reviews !== "object") state.reviews = {};
+
+      state.tasks = state.tasks.filter(task => !isUnsafeTask(task));
+      state.recurringTemplates = [];
+
+      if (state.currentTaskId && !state.tasks.some(t => t.id === state.currentTaskId)) {
+        state.currentTaskId = null;
+        changed = true;
+      }
+
+      if (state.settings) {
+        state.settings.repeatDisabled = true;
+      }
+
+      if (state.tasks.length !== beforeTasks || beforeTemplates > 0) changed = true;
+
+      if (changed) {
+        saveState();
+        console.log(`安全処理：${reason}`, { beforeTasks, afterTasks: state.tasks.length, beforeTemplates });
+      }
+
+      return changed;
+    }
+
+
     function isRecurringTask(task) {
       if (!task) return false;
       const repeat = String(task.repeat || "none");
@@ -3896,7 +3974,7 @@
 
       if (Array.isArray(state.tasks)) {
         const before = state.tasks.length;
-        state.tasks = state.tasks.filter(task => !isRecurringTask(task));
+        state.tasks = state.tasks.filter(task => !isUnsafeTask(task));
         if (state.tasks.length !== before) changed = true;
       }
 
@@ -3923,7 +4001,7 @@
         if (error) throw error;
 
         const ids = (data || [])
-          .filter(row => isRecurringTask(row.task_data || {}))
+          .filter(row => isUnsafeTask(row.task_data || {}))
           .map(row => row.id);
 
         if (ids.length > 0) {
@@ -3949,10 +4027,25 @@
     }
 
     async function cleanupRecurringEverywhere() {
+      sanitizeStateData("cleanupRecurringEverywhere");
       removeRecurringLocalData();
       disableRepeatInputs();
       await removeRecurringCloudData();
       render();
+    }
+
+    async function runSafetyCleanupNow() {
+      const ok = confirm("安全掃除を実行します。くり返しタスクとタジゼミ系タスクだけを削除します。履歴・手動ログは消しません。実行しますか？");
+      if (!ok) return;
+
+      setSyncStatus("安全掃除：実行中...");
+      sanitizeStateData("手動安全掃除");
+      removeRecurringLocalData();
+      disableRepeatInputs();
+      await removeRecurringCloudData();
+      saveState();
+      render();
+      setSyncStatus("安全掃除：完了。履歴・手動ログは残しています。", "ok");
     }
 
 
@@ -4297,6 +4390,7 @@
       const file = e.target.files[0];
       if (file) importData(file);
     });
+    if ($("safetyCleanupBtn")) $("safetyCleanupBtn").addEventListener("click", runSafetyCleanupNow);
     $("resetDataBtn").addEventListener("click", resetAllData);
     if ($("allSyncBtn")) $("allSyncBtn").addEventListener("click", syncAllWithSupabase);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
@@ -4304,6 +4398,7 @@
 
 
     migrateDateIfNeeded();
+    sanitizeStateData("起動時");
     removeRecurringLocalData();
     disableRepeatInputs();
     render();
