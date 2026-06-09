@@ -1737,13 +1737,7 @@
         <div class="small" style="margin-bottom:12px;">
           ここを押すと、タスク・履歴・設定などの保存データをすべて削除します。通常は使いません。
         </div>
-        <div class="row wrap">
-          <button class="warn" id="safetyCleanupBtn" type="button">安全掃除</button>
-          <button class="danger" id="resetDataBtn">全削除</button>
-        </div>
-        <div class="small" style="margin-top:10px;">
-          安全掃除：くり返しタスク、タジゼミを含むタスク、古い自動生成データだけを削除します。履歴・手動ログは消しません。
-        </div>
+        <button class="danger" id="resetDataBtn">全削除</button>
       </section>
 
     </main>
@@ -1875,66 +1869,66 @@
       : null;
 
     const quotes = [
-          "誰にも負けない努力をする　〜稲盛和夫〜",
-          "一日一日を、ど真剣に生きる　〜稲盛和夫〜",
-          "地味な仕事を一歩一歩堅実に、弛まぬ努力を続ける　〜稲盛和夫〜",
-          "能力を未来進行形でとらえる　〜稲盛和夫〜",
-          "ものごとをシンプルにとらえる　〜稲盛和夫〜",
-          "思いは必ず実現する　〜稲盛和夫〜",
-          "有意注意で仕事にあたる　〜稲盛和夫〜",
-          "成功するまで、あきらめない　〜稲盛和夫〜",
-          "今の能力で、自分の限界を決めるな　〜稲盛和夫〜",
-          "今日の一瞬を、ど真剣にやれ　〜稲盛和夫〜",
-          "地味な一歩を、軽く見るな　〜稲盛和夫〜",
-          "熱意と執念が、結果を変える　〜稲盛和夫〜",
-          "複雑に考えるな。本質を見ろ　〜稲盛和夫〜",
-          "強い思いを持ち、行動で近づけ　〜稲盛和夫〜",
-          "道をひらくには、まず歩まねばならぬ　〜松下幸之助〜",
-          "心を定め、懸命に歩まねばならぬ　〜松下幸之助〜",
-          "自分だけの道を、休まず歩む　〜松下幸之助〜",
-          "雨が降れば傘をさす　〜松下幸之助〜",
-          "素直な心は、人を強く正しく聡明にする　〜松下幸之助〜",
-          "日に新た　〜松下幸之助〜",
-          "きのうよりきょう、きょうよりあす　〜松下幸之助〜",
-          "成功するまで続けるところに、成功の要諦がある　〜松下幸之助〜",
-          "一歩一歩、牛歩であっても前へ進め　〜松下幸之助〜",
-          "他人の道に心を奪われるな　〜松下幸之助〜",
-          "遠い道でも、歩み続ければ道はひらける　〜松下幸之助〜",
-          "当たり前のことを、着実にやれ　〜松下幸之助〜",
-          "素直に見て、素直に学べ　〜松下幸之助〜",
-          "迷って立ち止まるより、まず歩め　〜松下幸之助〜",
-          "すぐやる、必ずやる、出来るまでやる　〜永守重信〜",
-          "情熱、熱意、執念　〜永守重信〜",
-          "知的ハードワーキング　〜永守重信〜",
-          "できない理由より、できる方法を探せ　〜永守重信〜",
-          "速く動け。動きながら直せ　〜永守重信〜",
-          "やると決めたら、出来るまでやれ　〜永守重信〜",
-          "結果が出るまで、執念を切らすな　〜永守重信〜",
-          "今日やることを、今日終わらせろ　〜永守重信〜",
-          "困った時、苦しい時の知恵が尊い　〜本田宗一郎〜",
-          "苦しむ経験が、発明の条件になる　〜本田宗一郎〜",
-          "失敗を恐れるな。手を動かせ　〜本田宗一郎〜",
-          "挑戦しない技術に、進歩はない　〜本田宗一郎〜",
-          "現場で考え、現場で直せ　〜本田宗一郎〜",
-          "人の真似ではなく、自分の道具を作れ　〜本田宗一郎〜",
-          "できるかどうかより、やって確かめろ　〜本田宗一郎〜",
-          "一勝九敗　〜柳井正〜",
-          "10回新しいことを始めれば、9回は失敗する　〜柳井正〜",
-          "失敗に学ぶことと、リカバリーのスピードが大切　〜柳井正〜",
-          "失敗を隠すな。次の改善に使え　〜柳井正〜",
-          "挑戦しないことが、いちばん悔いを残す　〜柳井正〜",
-          "昨日の正解に、今日も頼るな　〜柳井正〜",
-          "運は創るもの　〜似鳥昭雄〜",
-          "ロマンとビジョンを持て　〜似鳥昭雄〜",
-          "五年先を見て、今日の手を打て　〜似鳥昭雄〜",
-          "現場を見て、数字で振り返れ　〜似鳥昭雄〜",
-          "小さな改善を、仕組みに変えろ　〜似鳥昭雄〜",
-          "人のやらないことに集中せよ　〜井深大〜",
-          "自由闊達にして愉快に挑め　〜井深大〜",
-          "近道より、独自の道を選べ　〜井深大〜",
-          "常識を疑い、世界に出せ　〜盛田昭夫〜",
-          "学歴ではなく、何を生み出すかで勝負せよ　〜盛田昭夫〜",
-          "消費者に聞くだけでなく、新しい価値を作れ　〜盛田昭夫〜"
+          "今日一日、怒らず、恐れず、悲しまず。〜中村天風〜",
+          "心を積極的に使え。〜中村天風〜",
+          "宿命は、自分の力で切り拓ける。〜中村天風〜",
+          "できないと思う心が、力を止める。〜中村天風〜",
+          "弱い心に、人生の主導権を渡すな。〜中村天風〜",
+          "まず心を整えよ。行動はそこから変わる。〜中村天風〜",
+          "どんな時も、心を暗く使うな。〜中村天風〜",
+          "消極的な言葉を、口に出すな。〜中村天風〜",
+          "今日の心の持ち方が、明日の運命を変える。〜中村天風〜",
+          "人生は心一つの置きどころ。〜中村天風〜",
+          "勇気を持って、今日を押し切れ。〜中村天風〜",
+          "不平不満より、まず自分の心を鍛えよ。〜中村天風〜",
+          "恐れる前に、心を強く持て。〜中村天風〜",
+          "愚痴を捨て、建設的に考えよ。〜中村天風〜",
+          "心が変われば、運命への向き合い方も変わる。〜中村天風〜",
+          "弱気になった時ほど、心を明るく使え。〜中村天風〜",
+          "自分の心を、自分で支配せよ。〜中村天風〜",
+          "運命を嘆く前に、今日の心を正せ。〜中村天風〜",
+          "信念を持て。心が行動を支える。〜中村天風〜",
+          "積極的な心で、目の前の一日を生きよ。〜中村天風〜",
+          "道をひらくには、まず歩まねばならぬ。〜松下幸之助〜",
+          "自分には、自分に与えられた道がある。〜松下幸之助〜",
+          "休まず歩む姿から、新たな道はひらける。〜松下幸之助〜",
+          "他人の道に心を奪われるな。〜松下幸之助〜",
+          "心を定め、懸命に歩め。〜松下幸之助〜",
+          "責任は自分にあると考えよ。〜松下幸之助〜",
+          "不景気の時こそ、向上発展の基礎を固めよ。〜松下幸之助〜",
+          "失敗しても、簡単にあきらめてはいけない。〜松下幸之助〜",
+          "もう一度やってみよう、そこから道は開ける。〜松下幸之助〜",
+          "辛抱強く、地道な努力を重ねよ。〜松下幸之助〜",
+          "雨が降れば傘をさす。自然に、素直に考えよ。〜松下幸之助〜",
+          "きのうよりきょう、きょうよりあす。〜松下幸之助〜",
+          "素直な心で見れば、学ぶものは多い。〜松下幸之助〜",
+          "迷って立ち止まるより、まず一歩進め。〜松下幸之助〜",
+          "成功するまで続けるところに、成功がある。〜松下幸之助〜",
+          "人生・仕事の結果は、考え方で大きく変わる。〜稲盛和夫〜",
+          "能力よりも、誰にも負けない努力を重ねよ。〜稲盛和夫〜",
+          "熱意と考え方が、人生の結果を決める。〜稲盛和夫〜",
+          "もうダメだという時が、本当の仕事の始まり。〜稲盛和夫〜",
+          "才能より、情熱と執念でやり抜け。〜稲盛和夫〜",
+          "最後まであきらめず、粘り抜け。〜稲盛和夫〜",
+          "善き思いを持ち、善き行動をせよ。〜稲盛和夫〜",
+          "試練をどう受け止めるかで、人生は変わる。〜稲盛和夫〜",
+          "才能を私物化せず、世のため人のために使え。〜稲盛和夫〜",
+          "一日一日を、ど真剣に生きよ。〜稲盛和夫〜",
+          "地味な努力を、軽く見るな。〜稲盛和夫〜",
+          "強い願望は、行動を変える。〜稲盛和夫〜",
+          "能力を未来進行形でとらえよ。〜稲盛和夫〜",
+          "複雑に考えず、本質を見よ。〜稲盛和夫〜",
+          "人間として正しい考え方を持て。〜稲盛和夫〜",
+          "すぐやる、必ずやる、出来るまでやる。〜永守重信〜",
+          "情熱、熱意、執念。〜永守重信〜",
+          "知的ハードワーキングで勝て。〜永守重信〜",
+          "できない理由より、できる方法を探せ。〜永守重信〜",
+          "動きながら考え、考えながら動け。〜永守重信〜",
+          "普通の努力では、普通の結果しか出ない。〜永守重信〜",
+          "苦しい時こそ、執念を切らすな。〜永守重信〜",
+          "目標は高く、行動は今日から始めよ。〜永守重信〜",
+          "まず一番を目指せ。意識が行動を変える。〜永守重信〜",
+          "結果が出るまで、やり方を変えて続けよ。〜永守重信〜"
     ];
 
     let state = loadState();
@@ -2028,7 +2022,7 @@
 
     function migrateDateIfNeeded() {
       const today = todayKey();
-      // 安全方針：くり返しタスクは増殖事故の原因になるため、日付変更時にも自動生成しない。
+      generateRecurringTasksUntil(today);
 
       if (state.lastOpenedDate !== today) {
         state.lastOpenedDate = today;
@@ -2133,12 +2127,7 @@
     }
 
     function generateRecurringTasksUntil(endDateKey) {
-      // 安全方針：くり返しタスクは完全停止。過去データからも新規生成しない。
       if (!Array.isArray(state.recurringTemplates)) state.recurringTemplates = [];
-      state.recurringTemplates = [];
-      saveState();
-      return;
-
       let changed = false;
 
       for (const template of state.recurringTemplates) {
@@ -3689,10 +3678,6 @@
 
     async function saveTaskToSupabase(task) {
       if (!supabaseClient || !task || !task.id) return;
-      if (isUnsafeTask(task)) {
-        console.warn("安全処理：保存しないタスクを検出", task);
-        return;
-      }
 
       try {
         touchTask(task);
@@ -3743,10 +3728,8 @@
         return;
       }
 
-      sanitizeStateData("pushLocalTasksToSupabase前");
-
       const rows = (state.tasks || [])
-        .filter(t => t && t.id && !isUnsafeTask(t))
+        .filter(t => t && t.id)
         .map(t => {
           if (!t.updatedAt) t.updatedAt = t.completedAt || t.createdAt || new Date().toISOString();
           return normalizeTaskForCloud(t);
@@ -3801,23 +3784,6 @@
 
         const cloudTask = taskFromCloud(row);
         if (!cloudTask.id) continue;
-
-        if (isUnsafeTask(cloudTask)) {
-          deleted += 1;
-          try {
-            await supabaseClient
-              .from("study_tasks")
-              .delete()
-              .eq("id", row.id)
-              .eq("user_id", SUPABASE_USER_ID);
-          } catch (e) {
-            console.warn("安全処理：クラウド上の危険タスク削除に失敗", e);
-          }
-          if (local) {
-            state.tasks = state.tasks.filter(t => t.id !== row.id);
-          }
-          continue;
-        }
 
         if (!local) {
           state.tasks.push(cloudTask);
@@ -3911,50 +3877,6 @@
 
 
 
-    // ===== 安全処理：くり返し復活・特定ゴミタスクの再混入を防止 =====
-    const BLOCKED_TASK_KEYWORDS = ["タジゼミ"];
-
-    function isBlockedTaskTitle(task) {
-      const title = String((task && (task.title || task.taskTitle || task.task_title)) || "");
-      return BLOCKED_TASK_KEYWORDS.some(word => title.includes(word));
-    }
-
-    function isUnsafeTask(task) {
-      return isRecurringTask(task) || isBlockedTaskTitle(task);
-    }
-
-    function sanitizeStateData(reason = "manual") {
-      let changed = false;
-      const beforeTasks = Array.isArray(state.tasks) ? state.tasks.length : 0;
-      const beforeTemplates = Array.isArray(state.recurringTemplates) ? state.recurringTemplates.length : 0;
-
-      if (!Array.isArray(state.tasks)) state.tasks = [];
-      if (!Array.isArray(state.sessions)) state.sessions = [];
-      if (!state.reviews || typeof state.reviews !== "object") state.reviews = {};
-
-      state.tasks = state.tasks.filter(task => !isUnsafeTask(task));
-      state.recurringTemplates = [];
-
-      if (state.currentTaskId && !state.tasks.some(t => t.id === state.currentTaskId)) {
-        state.currentTaskId = null;
-        changed = true;
-      }
-
-      if (state.settings) {
-        state.settings.repeatDisabled = true;
-      }
-
-      if (state.tasks.length !== beforeTasks || beforeTemplates > 0) changed = true;
-
-      if (changed) {
-        saveState();
-        console.log(`安全処理：${reason}`, { beforeTasks, afterTasks: state.tasks.length, beforeTemplates });
-      }
-
-      return changed;
-    }
-
-
     function isRecurringTask(task) {
       if (!task) return false;
       const repeat = String(task.repeat || "none");
@@ -3974,7 +3896,7 @@
 
       if (Array.isArray(state.tasks)) {
         const before = state.tasks.length;
-        state.tasks = state.tasks.filter(task => !isUnsafeTask(task));
+        state.tasks = state.tasks.filter(task => !isRecurringTask(task));
         if (state.tasks.length !== before) changed = true;
       }
 
@@ -4001,7 +3923,7 @@
         if (error) throw error;
 
         const ids = (data || [])
-          .filter(row => isUnsafeTask(row.task_data || {}))
+          .filter(row => isRecurringTask(row.task_data || {}))
           .map(row => row.id);
 
         if (ids.length > 0) {
@@ -4027,25 +3949,10 @@
     }
 
     async function cleanupRecurringEverywhere() {
-      sanitizeStateData("cleanupRecurringEverywhere");
       removeRecurringLocalData();
       disableRepeatInputs();
       await removeRecurringCloudData();
       render();
-    }
-
-    async function runSafetyCleanupNow() {
-      const ok = confirm("安全掃除を実行します。くり返しタスクとタジゼミ系タスクだけを削除します。履歴・手動ログは消しません。実行しますか？");
-      if (!ok) return;
-
-      setSyncStatus("安全掃除：実行中...");
-      sanitizeStateData("手動安全掃除");
-      removeRecurringLocalData();
-      disableRepeatInputs();
-      await removeRecurringCloudData();
-      saveState();
-      render();
-      setSyncStatus("安全掃除：完了。履歴・手動ログは残しています。", "ok");
     }
 
 
@@ -4390,7 +4297,6 @@
       const file = e.target.files[0];
       if (file) importData(file);
     });
-    if ($("safetyCleanupBtn")) $("safetyCleanupBtn").addEventListener("click", runSafetyCleanupNow);
     $("resetDataBtn").addEventListener("click", resetAllData);
     if ($("allSyncBtn")) $("allSyncBtn").addEventListener("click", syncAllWithSupabase);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
@@ -4398,7 +4304,6 @@
 
 
     migrateDateIfNeeded();
-    sanitizeStateData("起動時");
     removeRecurringLocalData();
     disableRepeatInputs();
     render();
