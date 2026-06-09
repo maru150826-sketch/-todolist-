@@ -1770,6 +1770,12 @@
         </section>
 
         <section class="panel" style="margin-top:18px;">
+          <h2>今後のタスク</h2>
+          <div class="small" style="margin-bottom:10px;">明日以降に設定した単発タスクだけを表示します。今日やる必要が出たものは「今日やるに追加」で今日のタスク欄へ移せます。</div>
+          <div class="future-list" id="futureTaskList"></div>
+        </section>
+
+        <section class="panel" style="margin-top:18px;">
           <h2>今日の振り返り</h2>
           <div class="review">
             <textarea id="reviewText" placeholder="例：今日はPart 7を逃げずにできた。明日は最初にITパスポートをやる。"></textarea>
@@ -2545,8 +2551,87 @@
       render();
     }
 
+    function isBlockedFutureTask(task) {
+      if (!task) return true;
+      const title = String(task.title || task.taskTitle || "");
+      if (title.includes("タジゼミ")) return true;
+      if (typeof isRecurringTask === "function" && isRecurringTask(task)) return true;
+      return false;
+    }
+
     function renderFutureTasks() {
-      return;
+      const box = $("futureTaskList");
+      if (!box) return;
+
+      const today = todayKey();
+      const priorityRank = { high: 0, normal: 1, low: 2 };
+
+      const futureTasks = (state.tasks || [])
+        .filter(task => task && !task.done)
+        .filter(task => task.date && task.date > today)
+        .filter(task => !isBlockedFutureTask(task))
+        .sort((a, b) => {
+          const dateOrder = String(a.date).localeCompare(String(b.date));
+          if (dateOrder !== 0) return dateOrder;
+
+          const aDeadline = a.deadline || "9999-12-31";
+          const bDeadline = b.deadline || "9999-12-31";
+          const deadlineOrder = String(aDeadline).localeCompare(String(bDeadline));
+          if (deadlineOrder !== 0) return deadlineOrder;
+
+          const pa = priorityRank[a.priority] ?? 1;
+          const pb = priorityRank[b.priority] ?? 1;
+          if (pa !== pb) return pa - pb;
+
+          const ao = Number.isFinite(a.order) ? a.order : 999999;
+          const bo = Number.isFinite(b.order) ? b.order : 999999;
+          return ao - bo;
+        });
+
+      if (futureTasks.length === 0) {
+        box.innerHTML = `<div class="small">明日以降の単発タスクはありません。</div>`;
+        return;
+      }
+
+      const groupedByDate = futureTasks.reduce((map, task) => {
+        if (!map[task.date]) map[task.date] = [];
+        map[task.date].push(task);
+        return map;
+      }, {});
+
+      const dateKeys = Object.keys(groupedByDate).sort();
+      const visibleDateKeys = dateKeys.slice(0, 14);
+      const hiddenDateCount = Math.max(0, dateKeys.length - visibleDateKeys.length);
+
+      box.innerHTML = visibleDateKeys.map(dateKey => {
+        const tasks = groupedByDate[dateKey];
+        return `
+          <details class="future-day" open>
+            <summary>
+              <span>${escapeHtml(dateKey)}</span>
+              <span class="future-day-count">${tasks.length}件</span>
+            </summary>
+            <div class="future-day-body">
+              ${tasks.map(task => {
+                const priorityText = task.priority === "high" ? "最重要" : task.priority === "low" ? "軽め" : "普通";
+                return `
+                  <div class="future-task-mini">
+                    <strong>${escapeHtml(task.title)}</strong><br />
+                    ${escapeHtml(task.category || "その他")} / ${priorityText}
+                    ${task.deadline ? `<br /><span class="deadline ${deadlineClass(task.deadline)}">${deadlineLabel(task.deadline)}</span>` : ""}
+                    <div class="future-task-actions">
+                      <button class="ok" onclick="startTaskToday('${task.id}')">今日やるに追加</button>
+                      <button class="danger" onclick="deleteTask('${task.id}')">削除</button>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </details>
+        `;
+      }).join("") + (hiddenDateCount > 0
+        ? `<div class="small">さらに${hiddenDateCount}日分の未来タスクがあります。近い日付から14日分だけ表示しています。</div>`
+        : "");
     }
 
     function getTaskMinutes(taskId, date = todayKey()) {
