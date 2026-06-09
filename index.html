@@ -1361,6 +1361,11 @@
       min-width: 120px;
     }
 
+    .bottom-danger-zone {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+    }
+
 
     /* ===== スマホは完全1列表示 ===== */
     @media (max-width: 720px) {
@@ -1732,13 +1737,6 @@
           </div>
         </section>
       
-      <section class="panel bottom-danger-zone" style="margin-top:22px;">
-        <h2>危険操作</h2>
-        <div class="small" style="margin-bottom:12px;">
-          ここを押すと、タスク・履歴・設定などの保存データをすべて削除します。通常は使いません。
-        </div>
-        <button class="danger" id="resetDataBtn">全削除</button>
-      </section>
 
     </main>
 
@@ -1838,6 +1836,18 @@
           </div>
         </section>
       </aside>
+
+      <!-- スマホでもPCでも、危険操作は本体表示の一番下に固定 -->
+      <section class="panel bottom-danger-zone" style="margin-top:22px;">
+        <h2>危険操作</h2>
+        <div class="small" style="margin-bottom:12px;">
+          ここを押すと、タスク・履歴・設定などの保存データをすべて削除します。通常は使いません。
+        </div>
+        <button class="danger" id="resetDataBtn">全削除</button>
+      </section>
+
+
+
     </div>
 
     <section class="calendar-view" id="calendarView">
