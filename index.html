@@ -1596,6 +1596,224 @@
       }
     }
 
+
+    /* ===== 株式会社たろちゃん：株価・会社育成カード ===== */
+    .taro-card {
+      border: 1px solid rgba(56,189,248,.34);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.16), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+      border-radius: 18px;
+      padding: 14px;
+      margin: 0 0 16px;
+      box-shadow: 0 16px 42px rgba(0,0,0,.22);
+    }
+
+    .taro-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .taro-title {
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: .02em;
+    }
+
+    .taro-stage {
+      color: #bae6fd;
+      font-size: 13px;
+      margin-top: 3px;
+      line-height: 1.45;
+    }
+
+    .taro-stock {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .taro-stock-price {
+      font-size: 26px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .taro-change {
+      display: inline-block;
+      margin-top: 3px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .taro-change.up {
+      color: #bbf7d0;
+      background: rgba(52,211,153,.10);
+      border-color: rgba(52,211,153,.28);
+    }
+
+    .taro-change.down {
+      color: #fecdd3;
+      background: rgba(251,113,133,.10);
+      border-color: rgba(251,113,133,.28);
+    }
+
+    .taro-change.flat {
+      color: #e5e7eb;
+      background: rgba(255,255,255,.06);
+    }
+
+    .taro-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .taro-metric {
+      background: rgba(15,23,42,.55);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .taro-metric-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .taro-metric-value {
+      margin-top: 3px;
+      font-size: 17px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .taro-progress {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+      margin: 8px 0 10px;
+    }
+
+    .taro-progress > div {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(56,189,248,.95), rgba(52,211,153,.95));
+    }
+
+    .taro-business-status {
+      border: 1px solid rgba(52,211,153,.24);
+      background: rgba(52,211,153,.08);
+      color: #d1fae5;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .taro-segments {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .taro-segment {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      padding: 8px 9px;
+      min-width: 0;
+    }
+
+    .taro-segment-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .taro-segment-bar {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .taro-segment-bar > div {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .taro-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .taro-actions button {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .taro-report {
+      display: none;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(15,23,42,.62);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .taro-report.show {
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .taro-head {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .taro-stock {
+        text-align: left;
+      }
+
+      .taro-metrics,
+      .taro-segments {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .taro-metrics,
+      .taro-segments {
+        grid-template-columns: 1fr;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -1632,6 +1850,45 @@
         </section>
 
         <div class="quote" id="quoteBox"></div>
+
+        <section class="taro-card" id="taroCompanyCard">
+          <div class="taro-head">
+            <div>
+              <div class="taro-title">🏢 株式会社たろちゃん</div>
+              <div class="taro-stage" id="taroStageText">集計中</div>
+            </div>
+            <div class="taro-stock">
+              <div class="small">現在株価</div>
+              <div class="taro-stock-price" id="taroStockPrice">100円</div>
+              <div class="taro-change flat" id="taroStockChange">±0円</div>
+            </div>
+          </div>
+          <div class="taro-business-status" id="taroBusinessStatus">本日の業績：集計中</div>
+          <div class="taro-progress"><div id="taroLevelProgress"></div></div>
+          <div class="taro-metrics">
+            <div class="taro-metric">
+              <div class="taro-metric-label">今日の出来高</div>
+              <div class="taro-metric-value" id="taroTodayExp">0分</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">総資産EXP</div>
+              <div class="taro-metric-value" id="taroTotalExp">0</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">次のLvまで</div>
+              <div class="taro-metric-value" id="taroNextLevel">100分</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">主力事業</div>
+              <div class="taro-metric-value" id="taroMainSegment">未定</div>
+            </div>
+          </div>
+          <div class="taro-segments" id="taroSegments"></div>
+          <div class="taro-actions">
+            <button class="ghost" id="taroWeeklyReportBtn" type="button">週次決算を見る</button>
+          </div>
+          <div class="taro-report" id="taroWeeklyReport"></div>
+        </section>
 
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
@@ -3192,6 +3449,249 @@
       }).join("");
     }
 
+
+    function getTaroDateOffsetKey(offsetDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return toDateKey(d);
+    }
+
+    function getTaroDateRange(startKey, endKey) {
+      const result = [];
+      const d = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      while (d <= end) {
+        result.push(toDateKey(d));
+        d.setDate(d.getDate() + 1);
+      }
+      return result;
+    }
+
+    function getTaroSegment(session) {
+      const category = String(session.category || "その他");
+      const title = String(session.taskTitle || session.title || "");
+      const text = `${category} ${title}`.toLowerCase();
+
+      if (text.includes("中国語") || text.includes("hsk") || text.includes("chinese")) {
+        return { key: "asia", label: "🐉 アジア展開力", short: "アジア" };
+      }
+      if (text.includes("toeic") || text.includes("英語") || text.includes("english") || text.includes("part 7") || text.includes("単語") || text.includes("精読")) {
+        return { key: "global", label: "🌏 海外展開力", short: "海外" };
+      }
+      if (text.includes("itパスポート") || text.includes("it") || text.includes("過去問") || text.includes("情報")) {
+        return { key: "it", label: "💻 IT基礎力", short: "IT" };
+      }
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) {
+        return { key: "academic", label: "🎓 学術力", short: "学術" };
+      }
+      if (text.includes("筋トレ") || text.includes("ジム") || text.includes("胸") || text.includes("背中") || text.includes("脚") || text.includes("肩") || text.includes("腕")) {
+        return { key: "body", label: "💪 社長体力", short: "体力" };
+      }
+      if (text.includes("新聞") || text.includes("読書") || text.includes("本") || text.includes("ニュース")) {
+        return { key: "management", label: "📰 経営判断力", short: "経営" };
+      }
+      return { key: "action", label: "⚡ 行動力", short: "行動" };
+    }
+
+    function getTaroSegments() {
+      return [
+        { key: "global", label: "🌏 海外展開力", short: "海外", minutes: 0 },
+        { key: "asia", label: "🐉 アジア展開力", short: "アジア", minutes: 0 },
+        { key: "it", label: "💻 IT基礎力", short: "IT", minutes: 0 },
+        { key: "academic", label: "🎓 学術力", short: "学術", minutes: 0 },
+        { key: "body", label: "💪 社長体力", short: "体力", minutes: 0 },
+        { key: "management", label: "📰 経営判断力", short: "経営", minutes: 0 },
+        { key: "action", label: "⚡ 行動力", short: "行動", minutes: 0 }
+      ];
+    }
+
+    function sumTaroMinutes(filterFn) {
+      return (state.sessions || [])
+        .filter(s => s && Number(s.minutes || 0) > 0)
+        .filter(filterFn)
+        .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+    }
+
+    function calculateTaroStock(endDateKey = todayKey()) {
+      const end = parseDateKey(endDateKey);
+      const start7 = new Date(end);
+      start7.setDate(start7.getDate() - 6);
+      const start7Key = toDateKey(start7);
+
+      const totalUntil = sumTaroMinutes(s => s.date <= endDateKey);
+      const last7 = sumTaroMinutes(s => s.date >= start7Key && s.date <= endDateKey);
+      return Math.max(100, Math.round(100 + totalUntil * 0.5 + last7 * 2));
+    }
+
+    function getTaroTitle(level) {
+      if (level >= 50) return "覇王企業";
+      if (level >= 30) return "グローバル企業CEO";
+      if (level >= 20) return "全国展開企業";
+      if (level >= 15) return "地方有力企業";
+      if (level >= 10) return "成長企業CEO";
+      if (level >= 5) return "駆け出し社長";
+      if (level >= 3) return "株式会社たろちゃん設立";
+      if (level >= 2) return "個人事業主";
+      return "起業準備中";
+    }
+
+    function getTaroStageIcon(level) {
+      if (level >= 50) return "👑";
+      if (level >= 30) return "🌏";
+      if (level >= 20) return "🏙️";
+      if (level >= 10) return "🏬";
+      if (level >= 5) return "🏢";
+      if (level >= 3) return "🏠";
+      return "🌱";
+    }
+
+    function getTaroBusinessStatus(todayExp) {
+      if (todayExp <= 0) return "本日の業績：売上ゼロ。まだ市場は開いている。";
+      if (todayExp < 25) return "本日の業績：小さく稼働開始";
+      if (todayExp < 50) return "本日の業績：黒字化ライン突破";
+      if (todayExp < 100) return "本日の業績：堅実に成長中";
+      if (todayExp < 180) return "本日の業績：事業拡大中";
+      return "本日の業績：爆伸び決算";
+    }
+
+    function getTaroWeeklyData(offsetWeeks = 0) {
+      const base = new Date();
+      base.setDate(base.getDate() + offsetWeeks * 7);
+      const baseKey = toDateKey(base);
+      const start = getWeekStartKeySafe(baseKey);
+      const end = getWeekEndKeySafe(start);
+      const dates = getTaroDateRange(start, end);
+      const sessions = (state.sessions || []).filter(s => dates.includes(s.date));
+      const total = sessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const days = new Set(sessions.filter(s => Number(s.minutes || 0) > 0).map(s => s.date)).size;
+      const byDay = {};
+      for (const s of sessions) byDay[s.date] = (byDay[s.date] || 0) + Number(s.minutes || 0);
+      const best = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0] || null;
+
+      const segments = getTaroSegments();
+      const segMap = new Map(segments.map(s => [s.key, s]));
+      for (const session of sessions) {
+        const seg = getTaroSegment(session);
+        const row = segMap.get(seg.key);
+        if (row) row.minutes += Number(session.minutes || 0);
+      }
+      const sortedSegments = segments.sort((a, b) => b.minutes - a.minutes);
+
+      return { start, end, dates, sessions, total, days, best, segments: sortedSegments };
+    }
+
+    function buildTaroWeeklyReport() {
+      const current = getTaroWeeklyData(0);
+      const previous = getTaroWeeklyData(-1);
+      const diff = current.total - previous.total;
+      const diffText = diff >= 0 ? `+${formatMinutes(diff)}` : `-${formatMinutes(Math.abs(diff))}`;
+      const bestText = current.best ? `${current.best[0]} ${formatMinutes(current.best[1])}` : "なし";
+      const activeSegments = current.segments.filter(s => s.minutes > 0);
+      const top = activeSegments[0];
+      const weak = current.segments.slice().reverse().find(s => s.minutes === 0) || current.segments[current.segments.length - 1];
+
+      const segmentLines = current.segments
+        .filter(s => s.minutes > 0)
+        .map(s => `・${s.label}：${formatMinutes(s.minutes)}`)
+        .join("\n") || "・稼働なし";
+
+      const comment = top
+        ? `今週は${top.label}への投資が最大でした。株式会社たろちゃんの主力事業として伸長しています。`
+        : "今週はまだ稼働がありません。まず1セット記録して、決算を黒字化してください。";
+
+      const issue = weak
+        ? `一方で、${weak.label}は伸ばす余地があります。来週は15分だけでも投資するとバランスが改善します。`
+        : "全セグメントで稼働があり、事業ポートフォリオは良好です。";
+
+      return `株式会社たろちゃん 週次決算短信
+対象期間：${current.start} 〜 ${current.end}
+
+【業績概要】
+今週の総稼働時間：${formatMinutes(current.total)}
+前週比：${diffText}
+営業日数：${current.days}日
+最高稼働日：${bestText}
+
+【セグメント別業績】
+${segmentLines}
+
+【経営コメント】
+${comment}
+${issue}
+
+【来週の重点施策】
+1. 主力事業を25分だけ継続する
+2. 稼働ゼロの事業に15分だけ投資する
+3. 週の途中で一度この決算を確認する`;
+    }
+
+    function renderTaroCompany() {
+      if (!$('taroCompanyCard')) return;
+
+      const today = todayKey();
+      const yesterday = getTaroDateOffsetKey(-1);
+      const totalExp = sumTaroMinutes(() => true);
+      const todayExp = sumTaroMinutes(s => s.date === today);
+      const level = Math.floor(totalExp / 100) + 1;
+      const currentLevelBase = (level - 1) * 100;
+      const nextLevelAt = level * 100;
+      const nextExp = Math.max(0, nextLevelAt - totalExp);
+      const progressPct = Math.min(100, Math.round(((totalExp - currentLevelBase) / 100) * 100));
+
+      const stock = calculateTaroStock(today);
+      const prevStock = calculateTaroStock(yesterday);
+      const change = stock - prevStock;
+      const changePct = prevStock > 0 ? (change / prevStock) * 100 : 0;
+      const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
+      const changeText = `${change >= 0 ? "+" : ""}${change}円（${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}%）`;
+
+      const segments = getTaroSegments();
+      const segMap = new Map(segments.map(s => [s.key, s]));
+      for (const session of state.sessions || []) {
+        const seg = getTaroSegment(session);
+        const row = segMap.get(seg.key);
+        if (row) row.minutes += Number(session.minutes || 0);
+      }
+      const maxSeg = Math.max(60, ...segments.map(s => s.minutes));
+      const sortedSegments = segments.sort((a, b) => b.minutes - a.minutes);
+      const mainSegment = sortedSegments.find(s => s.minutes > 0);
+
+      $('taroStageText').textContent = `${getTaroStageIcon(level)} Lv.${level}　${getTaroTitle(level)}`;
+      $('taroStockPrice').textContent = `${stock.toLocaleString('ja-JP')}円`;
+      $('taroStockChange').textContent = changeText;
+      $('taroStockChange').className = `taro-change ${changeClass}`;
+      $('taroBusinessStatus').textContent = getTaroBusinessStatus(todayExp);
+      $('taroLevelProgress').style.width = `${progressPct}%`;
+      $('taroTodayExp').textContent = formatMinutes(todayExp);
+      $('taroTotalExp').textContent = `${totalExp.toLocaleString('ja-JP')}`;
+      $('taroNextLevel').textContent = formatMinutes(nextExp);
+      $('taroMainSegment').textContent = mainSegment ? mainSegment.short : "未定";
+
+      $('taroSegments').innerHTML = sortedSegments.slice(0, 6).map(seg => {
+        const pct = Math.min(100, Math.round((seg.minutes / maxSeg) * 100));
+        return `
+          <div class="taro-segment">
+            <div class="taro-segment-line">
+              <span>${escapeHtml(seg.label)}</span>
+              <span>${formatMinutes(seg.minutes)}</span>
+            </div>
+            <div class="taro-segment-bar"><div style="width:${pct}%"></div></div>
+          </div>
+        `;
+      }).join("");
+
+      const report = $('taroWeeklyReport');
+      if (report) report.textContent = buildTaroWeeklyReport();
+    }
+
+    function toggleTaroWeeklyReport() {
+      const report = $('taroWeeklyReport');
+      const btn = $('taroWeeklyReportBtn');
+      if (!report) return;
+      report.classList.toggle('show');
+      if (btn) btn.textContent = report.classList.contains('show') ? '週次決算を閉じる' : '週次決算を見る';
+    }
+
     function renderQuote() {
       const start = new Date("2026-01-01T00:00:00");
       const today = new Date();
@@ -3227,6 +3727,7 @@
       renderHistory();
       renderReviewDashboard();
       renderQuote();
+      renderTaroCompany();
       renderTimer();
       renderSettings();
     }
@@ -4395,6 +4896,7 @@
     $("resetDataBtn").addEventListener("click", resetAllData);
     if ($("allSyncBtn")) $("allSyncBtn").addEventListener("click", syncAllWithSupabase);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
+    if ($("taroWeeklyReportBtn")) $("taroWeeklyReportBtn").addEventListener("click", toggleTaroWeeklyReport);
     registerServiceWorker();
 
 
