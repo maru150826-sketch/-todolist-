@@ -4253,15 +4253,27 @@
       return toDateKey(new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0));
     }
 
+    function getTaroFirstSessionDateKey() {
+      const dates = (state.sessions || [])
+        .filter(s => s && s.date && Number(s.minutes || 0) > 0)
+        .map(s => s.date)
+        .sort((a, b) => a.localeCompare(b));
+      return dates[0] || todayKey();
+    }
+
     function getTaroStockSeries(mode = "day") {
       const today = todayKey();
+      const firstDateKey = getTaroFirstSessionDateKey();
       const rows = [];
 
       if (mode === "week") {
-        for (let i = 7; i >= 0; i--) {
-          const base = new Date();
-          base.setDate(base.getDate() - i * 7);
-          const start = getWeekStartKeySafe(toDateKey(base));
+        const startWeek = getWeekStartKeySafe(firstDateKey);
+        const currentWeek = getWeekStartKeySafe(today);
+        const d = parseDateKey(startWeek);
+        const endWeekDate = parseDateKey(currentWeek);
+
+        while (d <= endWeekDate) {
+          const start = toDateKey(d);
           const rawEnd = getWeekEndKeySafe(start);
           const end = rawEnd > today ? today : rawEnd;
           const weekLabel = `${Number(start.slice(5,7))}/${Number(start.slice(8,10))}週`;
@@ -4272,30 +4284,37 @@
             start,
             end
           });
+          d.setDate(d.getDate() + 7);
         }
         return rows;
       }
 
       if (mode === "month") {
+        const first = parseDateKey(firstDateKey);
         const now = new Date();
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const d = new Date(first.getFullYear(), first.getMonth(), 1);
+        const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        while (d <= endMonth) {
           const start = getMonthStartKey(d);
           const rawEnd = getMonthEndKey(d);
           const end = rawEnd > today ? today : rawEnd;
           rows.push({
-            label: `${d.getMonth() + 1}月`,
+            label: `${d.getFullYear()}/${d.getMonth() + 1}`,
             value: calculateTaroStock(end),
             volume: getTaroRangeMinutes(start, end),
             start,
             end
           });
+          d.setMonth(d.getMonth() + 1);
         }
         return rows;
       }
 
-      for (let i = 13; i >= 0; i--) {
-        const key = getTaroDateOffsetKey(-i);
+      const d = parseDateKey(firstDateKey);
+      const endDate = parseDateKey(today);
+      while (d <= endDate) {
+        const key = toDateKey(d);
         rows.push({
           label: `${Number(key.slice(5,7))}/${Number(key.slice(8,10))}`,
           value: calculateTaroStock(key),
@@ -4303,6 +4322,7 @@
           start: key,
           end: key
         });
+        d.setDate(d.getDate() + 1);
       }
       return rows;
     }
@@ -4329,7 +4349,7 @@
       const areaPoints = `${padL},${h-padB} ${points} ${w-padR},${h-padB}`;
       const last = rows[rows.length - 1];
       const first = rows[0];
-      const labelStep = rows.length > 10 ? 3 : rows.length > 7 ? 2 : 1;
+      const labelStep = rows.length > 10 ? Math.ceil(rows.length / 6) : rows.length > 7 ? 2 : 1;
       const xLabels = rows.map((r, i) => {
         if (i !== 0 && i !== rows.length - 1 && i % labelStep !== 0) return "";
         return `<text x="${x(i).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="9" fill="#9ca3af">${escapeHtml(r.label)}</text>`;
@@ -4365,7 +4385,7 @@
       const totalVolume = rows.reduce((sum, r) => sum + Number(r.volume || 0), 0);
       const modeLabel = mode === "week" ? "週次" : mode === "month" ? "月次" : "日次";
 
-      summary.textContent = `${modeLabel}チャート：${first.label} → ${last.label} / 変動 ${diffText} / 対象出来高 ${formatMinutes(totalVolume)}`;
+      summary.textContent = `${modeLabel}チャート：保存済み履歴の全期間（${first.start} → ${last.end}）/ 変動 ${diffText} / 対象出来高 ${formatMinutes(totalVolume)}`;
       chart.innerHTML = buildTaroStockChartSvg(rows);
 
       const btns = {
