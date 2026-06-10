@@ -1764,6 +1764,63 @@
     }
 
 
+    .taro-rating-panel {
+      display: grid;
+      grid-template-columns: .72fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .taro-rating-main,
+    .taro-rating-reason {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.52);
+      border-radius: 12px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .taro-rating-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      margin-bottom: 3px;
+    }
+
+    .taro-rating-value {
+      font-size: 22px;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: .02em;
+    }
+
+    .taro-rating-outlook {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.055);
+      color: #dbeafe;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .taro-rating-reason {
+      color: #e5e7eb;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .taro-project-plan-name {
+      color: #fef3c7;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.45;
+      margin: 4px 0 6px;
+    }
+
+
 
     .taro-project {
       margin-top: 12px;
@@ -1951,7 +2008,8 @@
       }
 
       .taro-metrics,
-      .taro-segments {
+      .taro-segments,
+      .taro-rating-panel {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -1973,6 +2031,7 @@
     @media (max-width: 420px) {
       .taro-metrics,
       .taro-segments,
+      .taro-rating-panel,
       .taro-project-grid {
         grid-template-columns: 1fr;
       }
@@ -2028,6 +2087,17 @@
             </div>
           </div>
           <div class="taro-business-status" id="taroBusinessStatus">本日の業績：集計中</div>
+          <div class="taro-rating-panel" id="taroRatingPanel">
+            <div class="taro-rating-main">
+              <div class="taro-rating-label">信用格付け</div>
+              <div class="taro-rating-value" id="taroCreditRating">BBB</div>
+              <div class="taro-rating-outlook" id="taroRatingOutlook">見通し：安定的</div>
+            </div>
+            <div class="taro-rating-reason">
+              <div class="taro-rating-label">格付け理由</div>
+              <div id="taroRatingReason">直近の業績と中期経営計画を集計中。</div>
+            </div>
+          </div>
           <div class="taro-progress"><div id="taroLevelProgress"></div></div>
           <div class="taro-metrics">
             <div class="taro-metric">
@@ -2061,9 +2131,10 @@
           </div>
           <div class="taro-project" id="taroProjectCard">
             <div class="taro-project-head">
-              <div class="taro-project-title">🎯 ITパスポート合格PJ</div>
+              <div class="taro-project-title">📌 中期経営計画</div>
               <div class="taro-project-badge" id="taroProjectBadge">計画集計中</div>
             </div>
+            <div class="taro-project-plan-name">重点PJ：ITパスポート合格 / 2026年7月末 / 必要投資120時間</div>
             <div class="taro-project-progress"><div id="taroProjectProgress"></div></div>
             <div class="taro-project-grid">
               <div class="taro-project-cell">
@@ -3802,6 +3873,82 @@
       return `${data.project.rivalName}に${varianceAbs}遅れ。残り${formatMinutes(data.remaining)}、今日から1日あたり${formatMinutes(data.dailyNeed)}が必要。`;
     }
 
+
+    function countRecentZeroDays(days = 3) {
+      let zero = 0;
+      for (let i = 0; i < days; i++) {
+        const key = getTaroDateOffsetKey(-i);
+        const min = sumTaroMinutes(s => s.date === key);
+        if (min <= 0) zero += 1;
+      }
+      return zero;
+    }
+
+    function getTaroCreditRating() {
+      const projectData = getTaroProjectProgress();
+      const currentWeek = getTaroWeeklyData(0);
+      const previousWeek = getTaroWeeklyData(-1);
+      const todayExp = sumTaroMinutes(s => s.date === todayKey());
+      const zeroDays = countRecentZeroDays(3);
+
+      let score = 0;
+      if (currentWeek.total >= 800) score += 4;
+      else if (currentWeek.total >= 500) score += 3;
+      else if (currentWeek.total >= 300) score += 2;
+      else if (currentWeek.total >= 100) score += 1;
+
+      if (currentWeek.days >= 5) score += 2;
+      else if (currentWeek.days >= 3) score += 1;
+
+      if (projectData.variance >= 180) score += 2;
+      else if (projectData.variance >= 0) score += 1;
+      else if (projectData.variance < -480) score -= 2;
+      else if (projectData.variance < -180) score -= 1;
+
+      if (todayExp >= 100) score += 1;
+      if (zeroDays >= 3) score -= 2;
+
+      let rating = "BBB";
+      if (score >= 8) rating = "AAA";
+      else if (score >= 6) rating = "AA";
+      else if (score >= 4) rating = "A";
+      else if (score >= 2) rating = "BBB+";
+      else if (score >= 0) rating = "BBB";
+      else if (score >= -1) rating = "BBB-";
+      else if (score >= -3) rating = "BB";
+      else rating = "B";
+
+      let outlook = "安定的";
+      if (projectData.variance >= 0 && currentWeek.total >= previousWeek.total && currentWeek.total > 0) outlook = "ポジティブ";
+      else if (projectData.variance < -480 || zeroDays >= 3) outlook = "ネガティブ";
+      else if (projectData.variance < -180) outlook = "要改善";
+
+      const reasonParts = [];
+      reasonParts.push(`今週出来高${formatMinutes(currentWeek.total)}、営業日数${currentWeek.days}日。`);
+      const varianceText = `${projectData.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(projectData.variance))}`;
+      reasonParts.push(`中期経営計画は計画比${varianceText}。`);
+      if (todayExp > 0) reasonParts.push(`本日出来高${formatMinutes(todayExp)}を計上。`);
+      else reasonParts.push("本日出来高はまだゼロ。");
+
+      return {
+        rating,
+        outlook,
+        reason: reasonParts.join(" "),
+        score,
+        projectData,
+        currentWeek,
+        previousWeek
+      };
+    }
+
+    function renderTaroCreditRating() {
+      if (!$('taroCreditRating')) return;
+      const data = getTaroCreditRating();
+      $('taroCreditRating').textContent = data.rating;
+      $('taroRatingOutlook').textContent = `見通し：${data.outlook}`;
+      $('taroRatingReason').textContent = data.reason;
+    }
+
     function renderTaroProject() {
       if (!$('taroProjectCard')) return;
       const data = getTaroProjectProgress();
@@ -3819,8 +3966,8 @@
     function buildTaroProjectReportLine() {
       const data = getTaroProjectProgress();
       const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
-      return `【重点プロジェクト】
-ITパスポート合格PJ：必要総時間120時間 / 実績${formatMinutes(data.actual)} / 計画比${varianceText}
+      return `【中期経営計画】
+重点PJ：ITパスポート合格 / 必要総時間120時間 / 実績${formatMinutes(data.actual)} / 計画比${varianceText}
 期限：${data.project.deadline} / 今日から必要：${formatMinutes(data.dailyNeed)}/日 / 判定：${getTaroProjectBadge(data)}`;
     }
 
@@ -4082,6 +4229,11 @@ ITパスポート合格PJ：必要総時間120時間 / 実績${formatMinutes(dat
 
 ${buildTaroProjectReportLine()}
 
+【信用格付け】
+格付け：${getTaroCreditRating().rating}
+見通し：${getTaroCreditRating().outlook}
+理由：${getTaroCreditRating().reason}
+
 【セグメント別業績】
 ${segmentLines}
 
@@ -4150,6 +4302,7 @@ ${issue}
         `;
       }).join("");
 
+      renderTaroCreditRating();
       renderTaroProject();
       renderTaroStockChart();
 
