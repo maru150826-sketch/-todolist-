@@ -1901,6 +1901,18 @@
       background: var(--warn);
     }
 
+    .taro-project-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .taro-project-item {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.32);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
 
     .taro-chart-box {
       border: 1px solid rgba(255,255,255,.08);
@@ -2132,29 +2144,9 @@
           <div class="taro-project" id="taroProjectCard">
             <div class="taro-project-head">
               <div class="taro-project-title">📌 中期経営計画</div>
-              <div class="taro-project-badge" id="taroProjectBadge">計画集計中</div>
+              <div class="taro-project-badge" id="taroProjectSummaryBadge">複数PJ集計中</div>
             </div>
-            <div class="taro-project-plan-name">重点PJ：ITパスポート合格 / 2026年7月末 / 必要投資120時間</div>
-            <div class="taro-project-progress"><div id="taroProjectProgress"></div></div>
-            <div class="taro-project-grid">
-              <div class="taro-project-cell">
-                <div class="taro-project-label">必要総時間</div>
-                <div class="taro-project-value">120時間</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">実績</div>
-                <div class="taro-project-value" id="taroProjectActual">0分</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">計画比</div>
-                <div class="taro-project-value" id="taroProjectVariance">±0分</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">今日から必要</div>
-                <div class="taro-project-value" id="taroProjectDailyNeed">0分/日</div>
-              </div>
-            </div>
-            <div class="taro-project-status" id="taroProjectStatus">合格ペースくんと比較中。</div>
+            <div class="taro-project-list" id="taroProjectList"></div>
           </div>
           <div class="taro-segments" id="taroSegments"></div>
           <div class="taro-actions">
@@ -2202,6 +2194,7 @@
             <input type="date" id="manualDateInput" title="日付" />
             <select id="manualCategoryInput">
               <option value="TOEIC">TOEIC</option>
+              <option value="中国語">中国語</option>
               <option value="ITパスポート">ITパスポート</option>
               <option value="大学課題">大学課題</option>
               <option value="筋トレ">筋トレ</option>
@@ -2237,6 +2230,7 @@
             <input id="taskInput" placeholder="例：TOEIC Part 7 精読" />
             <select id="categoryInput">
               <option value="TOEIC">TOEIC</option>
+              <option value="中国語">中国語</option>
               <option value="ITパスポート">ITパスポート</option>
               <option value="大学課題">大学課題</option>
               <option value="筋トレ">筋トレ</option>
@@ -2340,6 +2334,7 @@
               <select id="reviewCategory">
                 <option value="all">全カテゴリ</option>
                 <option value="TOEIC">TOEIC</option>
+                <option value="中国語">中国語</option>
                 <option value="ITパスポート">ITパスポート</option>
                 <option value="大学課題">大学課題</option>
                 <option value="筋トレ">筋トレ</option>
@@ -2533,6 +2528,7 @@
         reviewMode: "daily",
         weeklyGoals: {
           TOEIC: 600,
+          "中国語": 180,
           "ITパスポート": 300,
           "大学課題": 180,
           "筋トレ": 240,
@@ -2840,6 +2836,9 @@
     function inferTaskCategory(title) {
       const text = title.toLowerCase();
 
+      if (text.includes("中国語") || text.includes("hsk") || text.includes("中検") || text.includes("chinese") || text.includes("duolingo") || text.includes("hello chinese") || text.includes("ハローチャイニーズ")) {
+        return "中国語";
+      }
       if (text.includes("toeic") || text.includes("トイック") || text.includes("英語") || text.includes("part") || text.includes("単語") || text.includes("精読")) {
         return "TOEIC";
       }
@@ -2861,7 +2860,7 @@
     function inferTaskPriority(category, title) {
       const text = title.toLowerCase();
       if (text.includes("最重要") || text.includes("締切") || text.includes("今日中") || text.includes("課題")) return "high";
-      if (category === "TOEIC" || category === "ITパスポート" || category === "大学課題") return "high";
+      if (category === "TOEIC" || category === "中国語" || category === "ITパスポート" || category === "大学課題") return "high";
       if (category === "筋トレ") return "normal";
       return "normal";
     }
@@ -3187,6 +3186,7 @@
     function ensureWeeklyGoals() {
       const defaults = {
         TOEIC: 600,
+        "中国語": 180,
         "ITパスポート": 300,
         "大学課題": 180,
         "筋トレ": 240,
@@ -3246,7 +3246,7 @@
 
       ensureWeeklyGoals();
 
-      const categories = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const categories = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
 
       const rows = categories
         .map(cat => {
@@ -3303,7 +3303,7 @@
       $("doneCount").textContent = String(done);
       $("streakCount").textContent = `${calculateStreak()}日`;
 
-      const categories = ["TOEIC", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const categories = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
       const max = Math.max(60, ...categories.map(cat =>
         sessions.filter(s => s.category === cat).reduce((sum, s) => sum + s.minutes, 0)
       ));
@@ -3791,6 +3791,24 @@
         startDate: "2026-06-10",
         deadline: "2026-07-31",
         requiredMinutes: 120 * 60
+      },
+      {
+        id: "toeic-900-2026-10",
+        name: "TOEIC 900超えPJ",
+        rivalName: "900超えペースくん",
+        category: "TOEIC",
+        startDate: "2026-08-01",
+        deadline: "2026-10-25",
+        requiredMinutes: 300 * 60
+      },
+      {
+        id: "chinese-hsk3-2026-11",
+        name: "中国語 HSK3級PJ",
+        rivalName: "HSK3級ペースくん",
+        category: "中国語",
+        startDate: "2026-08-01",
+        deadline: "2026-11-07",
+        requiredMinutes: 150 * 60
       }
     ];
 
@@ -3815,8 +3833,15 @@
       const category = String(session.category || "");
       const title = String(session.taskTitle || session.title || "");
       const text = `${category} ${title}`.toLowerCase();
+
       if (project.category === "ITパスポート") {
-        return text.includes("itパスポート") || text.includes("it") || text.includes("過去問") || text.includes("情報");
+        return category === "ITパスポート" || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報");
+      }
+      if (project.category === "TOEIC") {
+        return category === "TOEIC" || text.includes("toeic") || text.includes("トイック") || text.includes("英語") || text.includes("part 7") || text.includes("単語") || text.includes("精読");
+      }
+      if (project.category === "中国語") {
+        return category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("中検") || text.includes("chinese") || text.includes("duolingo") || text.includes("hello chinese") || text.includes("ハローチャイニーズ");
       }
       return category === project.category;
     }
@@ -3865,7 +3890,7 @@
     function getTaroProjectStatus(data) {
       const varianceAbs = formatMinutes(Math.abs(data.variance));
       if (data.actual >= data.project.requiredMinutes) {
-        return `必要総時間120時間を達成済み。ここからは過去問演習と弱点補強で合格確度を上げるフェーズ。`;
+        return `必要総時間を達成済み。ここからは演習と弱点補強で達成確度を上げるフェーズ。`;
       }
       if (data.variance >= 0) {
         return `${data.project.rivalName}に${formatMinutes(data.variance)}先行中。残り${formatMinutes(data.remaining)}、期限まで1日あたり${formatMinutes(data.dailyNeed)}で到達ペース。`;
@@ -3884,8 +3909,14 @@
       return zero;
     }
 
+    function getMainTaroProjectData() {
+      const rows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
+      return rows.sort((a, b) => a.variance - b.variance)[0] || getTaroProjectProgress(TARO_PROJECT_GOALS[0]);
+    }
+
     function getTaroCreditRating() {
-      const projectData = getTaroProjectProgress();
+      const projectRows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
+      const focusProject = projectRows.sort((a, b) => a.variance - b.variance)[0] || getTaroProjectProgress(TARO_PROJECT_GOALS[0]);
       const currentWeek = getTaroWeeklyData(0);
       const previousWeek = getTaroWeeklyData(-1);
       const todayExp = sumTaroMinutes(s => s.date === todayKey());
@@ -3900,10 +3931,15 @@
       if (currentWeek.days >= 5) score += 2;
       else if (currentWeek.days >= 3) score += 1;
 
-      if (projectData.variance >= 180) score += 2;
-      else if (projectData.variance >= 0) score += 1;
-      else if (projectData.variance < -480) score -= 2;
-      else if (projectData.variance < -180) score -= 1;
+      const aheadCount = projectRows.filter(p => p.variance >= 0).length;
+      const seriousDelayCount = projectRows.filter(p => p.variance < -480).length;
+      if (aheadCount >= 2) score += 2;
+      else if (aheadCount >= 1) score += 1;
+      if (seriousDelayCount >= 2) score -= 2;
+      else if (seriousDelayCount >= 1) score -= 1;
+
+      if (focusProject.variance >= 180) score += 1;
+      else if (focusProject.variance < -480) score -= 1;
 
       if (todayExp >= 100) score += 1;
       if (zeroDays >= 3) score -= 2;
@@ -3919,14 +3955,15 @@
       else rating = "B";
 
       let outlook = "安定的";
-      if (projectData.variance >= 0 && currentWeek.total >= previousWeek.total && currentWeek.total > 0) outlook = "ポジティブ";
-      else if (projectData.variance < -480 || zeroDays >= 3) outlook = "ネガティブ";
-      else if (projectData.variance < -180) outlook = "要改善";
+      if (aheadCount >= 1 && currentWeek.total >= previousWeek.total && currentWeek.total > 0) outlook = "ポジティブ";
+      else if (seriousDelayCount >= 1 || zeroDays >= 3) outlook = "ネガティブ";
+      else if (focusProject.variance < -180) outlook = "要改善";
 
       const reasonParts = [];
       reasonParts.push(`今週出来高${formatMinutes(currentWeek.total)}、営業日数${currentWeek.days}日。`);
-      const varianceText = `${projectData.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(projectData.variance))}`;
-      reasonParts.push(`中期経営計画は計画比${varianceText}。`);
+      const focusVarianceText = `${focusProject.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(focusProject.variance))}`;
+      reasonParts.push(`最も厳しいPJは${focusProject.project.name}で計画比${focusVarianceText}。`);
+      reasonParts.push(`計画先行PJ ${aheadCount}/${projectRows.length}件。`);
       if (todayExp > 0) reasonParts.push(`本日出来高${formatMinutes(todayExp)}を計上。`);
       else reasonParts.push("本日出来高はまだゼロ。");
 
@@ -3935,7 +3972,8 @@
         outlook,
         reason: reasonParts.join(" "),
         score,
-        projectData,
+        projectData: focusProject,
+        projectRows,
         currentWeek,
         previousWeek
       };
@@ -3950,25 +3988,56 @@
     }
 
     function renderTaroProject() {
-      if (!$('taroProjectCard')) return;
-      const data = getTaroProjectProgress();
-      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
-      const badge = getTaroProjectBadge(data);
+      const list = $('taroProjectList');
+      if (!list) return;
+      const rows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
+      const worst = rows.slice().sort((a, b) => a.variance - b.variance)[0];
+      const ahead = rows.filter(row => row.variance >= 0).length;
+      const summaryBadge = $('taroProjectSummaryBadge');
+      if (summaryBadge) summaryBadge.textContent = worst ? `${ahead}/${rows.length}件 計画先行` : "計画なし";
 
-      $('taroProjectBadge').textContent = badge;
-      $('taroProjectActual').textContent = formatMinutes(data.actual);
-      $('taroProjectVariance').textContent = varianceText;
-      $('taroProjectDailyNeed').textContent = `${formatMinutes(data.dailyNeed)}/日`;
-      $('taroProjectStatus').textContent = getTaroProjectStatus(data);
-      $('taroProjectProgress').style.width = `${data.progressPct}%`;
+      list.innerHTML = rows.map(data => {
+        const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+        const badge = getTaroProjectBadge(data);
+        return `
+          <div class="taro-project-item">
+            <div class="taro-project-head">
+              <div class="taro-project-title">${escapeHtml(data.project.name)}</div>
+              <div class="taro-project-badge">${escapeHtml(badge)}</div>
+            </div>
+            <div class="taro-project-plan-name">${escapeHtml(data.project.category)} / 期限 ${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
+            <div class="taro-project-progress"><div style="width:${data.progressPct}%"></div></div>
+            <div class="taro-project-grid">
+              <div class="taro-project-cell">
+                <div class="taro-project-label">進捗率</div>
+                <div class="taro-project-value">${data.progressPct}%</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">実績</div>
+                <div class="taro-project-value">${formatMinutes(data.actual)}</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">計画比</div>
+                <div class="taro-project-value">${varianceText}</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">今日から必要</div>
+                <div class="taro-project-value">${formatMinutes(data.dailyNeed)}/日</div>
+              </div>
+            </div>
+            <div class="taro-project-status">${escapeHtml(getTaroProjectStatus(data))}</div>
+          </div>
+        `;
+      }).join("");
     }
 
     function buildTaroProjectReportLine() {
-      const data = getTaroProjectProgress();
-      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
-      return `【中期経営計画】
-重点PJ：ITパスポート合格 / 必要総時間120時間 / 実績${formatMinutes(data.actual)} / 計画比${varianceText}
-期限：${data.project.deadline} / 今日から必要：${formatMinutes(data.dailyNeed)}/日 / 判定：${getTaroProjectBadge(data)}`;
+      const lines = TARO_PROJECT_GOALS.map(project => {
+        const data = getTaroProjectProgress(project);
+        const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+        return `・${project.name}：必要${formatMinutes(project.requiredMinutes)} / 実績${formatMinutes(data.actual)} / 進捗${data.progressPct}% / 計画比${varianceText} / 今日から${formatMinutes(data.dailyNeed)}/日 / ${getTaroProjectBadge(data)}`;
+      }).join("\n");
+      return `【中期経営計画】\n${lines}`;
     }
 
     function sumTaroMinutes(filterFn) {
