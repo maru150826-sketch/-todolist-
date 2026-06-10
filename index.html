@@ -1844,6 +1844,74 @@
       background: var(--warn);
     }
 
+
+    .taro-chart-box {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.52);
+      border-radius: 14px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .taro-chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .taro-chart-title {
+      font-weight: 900;
+      font-size: 13px;
+      color: #e5e7eb;
+    }
+
+    .taro-chart-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .taro-chart-tabs button {
+      padding: 6px 9px;
+      font-size: 12px;
+      min-height: auto;
+    }
+
+    .taro-chart-tabs button.active {
+      background: var(--accent);
+      color: #07111f;
+      border-color: transparent;
+    }
+
+    .taro-chart-summary {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 6px;
+    }
+
+    .taro-chart {
+      width: 100%;
+      min-height: 145px;
+      overflow: hidden;
+    }
+
+    .taro-chart svg {
+      width: 100%;
+      height: 145px;
+      display: block;
+    }
+
+    .taro-chart-empty {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 10px 0;
+    }
+
     .taro-actions {
       display: flex;
       gap: 8px;
@@ -1885,6 +1953,20 @@
       .taro-metrics,
       .taro-segments {
         grid-template-columns: 1fr 1fr;
+      }
+
+      .taro-chart-head {
+        align-items: flex-start;
+      }
+
+      .taro-chart-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .taro-chart-tabs button {
+        width: 100%;
       }
     }
 
@@ -1964,6 +2046,18 @@
               <div class="taro-metric-label">主力事業</div>
               <div class="taro-metric-value" id="taroMainSegment">未定</div>
             </div>
+          </div>
+          <div class="taro-chart-box">
+            <div class="taro-chart-head">
+              <div class="taro-chart-title">📈 株価推移</div>
+              <div class="taro-chart-tabs">
+                <button class="ghost active" id="taroChartDayBtn" type="button">日次</button>
+                <button class="ghost" id="taroChartWeekBtn" type="button">週次</button>
+                <button class="ghost" id="taroChartMonthBtn" type="button">月次</button>
+              </div>
+            </div>
+            <div class="taro-chart-summary" id="taroChartSummary">株価データを集計中</div>
+            <div class="taro-chart" id="taroStockChart"></div>
           </div>
           <div class="taro-project" id="taroProjectCard">
             <div class="taro-project-head">
@@ -3805,6 +3899,155 @@ ITパスポート合格PJ：必要総時間120時間 / 実績${formatMinutes(dat
       return { start, end, dates, sessions, total, days, best, segments: sortedSegments };
     }
 
+
+    function getTaroDayMinutes(dateKey) {
+      return sumTaroMinutes(s => s.date === dateKey);
+    }
+
+    function getTaroRangeMinutes(startKey, endKey) {
+      return sumTaroMinutes(s => s.date >= startKey && s.date <= endKey);
+    }
+
+    function getMonthStartKey(dateObj) {
+      return toDateKey(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+    }
+
+    function getMonthEndKey(dateObj) {
+      return toDateKey(new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0));
+    }
+
+    function getTaroStockSeries(mode = "day") {
+      const today = todayKey();
+      const rows = [];
+
+      if (mode === "week") {
+        for (let i = 7; i >= 0; i--) {
+          const base = new Date();
+          base.setDate(base.getDate() - i * 7);
+          const start = getWeekStartKeySafe(toDateKey(base));
+          const rawEnd = getWeekEndKeySafe(start);
+          const end = rawEnd > today ? today : rawEnd;
+          const weekLabel = `${Number(start.slice(5,7))}/${Number(start.slice(8,10))}週`;
+          rows.push({
+            label: weekLabel,
+            value: calculateTaroStock(end),
+            volume: getTaroRangeMinutes(start, end),
+            start,
+            end
+          });
+        }
+        return rows;
+      }
+
+      if (mode === "month") {
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const start = getMonthStartKey(d);
+          const rawEnd = getMonthEndKey(d);
+          const end = rawEnd > today ? today : rawEnd;
+          rows.push({
+            label: `${d.getMonth() + 1}月`,
+            value: calculateTaroStock(end),
+            volume: getTaroRangeMinutes(start, end),
+            start,
+            end
+          });
+        }
+        return rows;
+      }
+
+      for (let i = 13; i >= 0; i--) {
+        const key = getTaroDateOffsetKey(-i);
+        rows.push({
+          label: `${Number(key.slice(5,7))}/${Number(key.slice(8,10))}`,
+          value: calculateTaroStock(key),
+          volume: getTaroDayMinutes(key),
+          start: key,
+          end: key
+        });
+      }
+      return rows;
+    }
+
+    function buildTaroStockChartSvg(rows) {
+      if (!rows || rows.length === 0) return `<div class="taro-chart-empty">株価データがありません。</div>`;
+
+      const w = 360;
+      const h = 145;
+      const padL = 34;
+      const padR = 12;
+      const padT = 12;
+      const padB = 28;
+      const values = rows.map(r => Number(r.value || 0));
+      let min = Math.min(...values);
+      let max = Math.max(...values);
+      if (min === max) {
+        min = Math.max(0, min - 50);
+        max = max + 50;
+      }
+      const x = (i) => padL + (rows.length === 1 ? 0 : i * ((w - padL - padR) / (rows.length - 1)));
+      const y = (v) => padT + (max - v) * ((h - padT - padB) / (max - min));
+      const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.value).toFixed(1)}`).join(" ");
+      const areaPoints = `${padL},${h-padB} ${points} ${w-padR},${h-padB}`;
+      const last = rows[rows.length - 1];
+      const first = rows[0];
+      const labelStep = rows.length > 10 ? 3 : rows.length > 7 ? 2 : 1;
+      const xLabels = rows.map((r, i) => {
+        if (i !== 0 && i !== rows.length - 1 && i % labelStep !== 0) return "";
+        return `<text x="${x(i).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="9" fill="#9ca3af">${escapeHtml(r.label)}</text>`;
+      }).join("");
+      const dots = rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.value).toFixed(1)}" r="2.4" fill="#34d399"><title>${escapeHtml(r.label)}：${Number(r.value).toLocaleString('ja-JP')}円 / 出来高 ${formatMinutes(r.volume)}</title></circle>`).join("");
+
+      return `
+        <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="株式会社たろちゃん株価推移">
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
+          <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
+          <text x="4" y="${padT+4}" font-size="9" fill="#9ca3af">${Math.round(max).toLocaleString('ja-JP')}</text>
+          <text x="4" y="${h-padB}" font-size="9" fill="#9ca3af">${Math.round(min).toLocaleString('ja-JP')}</text>
+          <polygon points="${areaPoints}" fill="rgba(56,189,248,.12)"></polygon>
+          <polyline points="${points}" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          ${dots}
+          ${xLabels}
+          <text x="${w-padR}" y="${padT+4}" text-anchor="end" font-size="10" fill="#bbf7d0">終値 ${Number(last.value).toLocaleString('ja-JP')}円</text>
+          <text x="${padL}" y="${padT+4}" font-size="10" fill="#e5e7eb">始値 ${Number(first.value).toLocaleString('ja-JP')}円</text>
+        </svg>`;
+    }
+
+    function renderTaroStockChart() {
+      const chart = $('taroStockChart');
+      const summary = $('taroChartSummary');
+      if (!chart || !summary) return;
+
+      const mode = state.taroChartMode || "day";
+      const rows = getTaroStockSeries(mode);
+      const first = rows[0];
+      const last = rows[rows.length - 1];
+      const diff = last.value - first.value;
+      const diffText = `${diff >= 0 ? "+" : ""}${diff.toLocaleString('ja-JP')}円`;
+      const totalVolume = rows.reduce((sum, r) => sum + Number(r.volume || 0), 0);
+      const modeLabel = mode === "week" ? "週次" : mode === "month" ? "月次" : "日次";
+
+      summary.textContent = `${modeLabel}チャート：${first.label} → ${last.label} / 変動 ${diffText} / 対象出来高 ${formatMinutes(totalVolume)}`;
+      chart.innerHTML = buildTaroStockChartSvg(rows);
+
+      const btns = {
+        day: $('taroChartDayBtn'),
+        week: $('taroChartWeekBtn'),
+        month: $('taroChartMonthBtn')
+      };
+      Object.entries(btns).forEach(([key, btn]) => {
+        if (!btn) return;
+        btn.classList.toggle('active', key === mode);
+      });
+    }
+
+    function setTaroChartMode(mode) {
+      state.taroChartMode = mode;
+      saveState();
+      renderTaroStockChart();
+    }
+
     function buildTaroWeeklyReport() {
       const current = getTaroWeeklyData(0);
       const previous = getTaroWeeklyData(-1);
@@ -3908,6 +4151,7 @@ ${issue}
       }).join("");
 
       renderTaroProject();
+      renderTaroStockChart();
 
       const report = $('taroWeeklyReport');
       if (report) report.textContent = buildTaroWeeklyReport();
@@ -5181,6 +5425,9 @@ ${issue}
     if ($("allSyncBtn")) $("allSyncBtn").addEventListener("click", syncAllWithSupabase);
     if ($("appRefreshBtn")) $("appRefreshBtn").addEventListener("click", updateServiceWorkerAndReload);
     if ($("taroWeeklyReportBtn")) $("taroWeeklyReportBtn").addEventListener("click", toggleTaroWeeklyReport);
+    if ($("taroChartDayBtn")) $("taroChartDayBtn").addEventListener("click", () => setTaroChartMode("day"));
+    if ($("taroChartWeekBtn")) $("taroChartWeekBtn").addEventListener("click", () => setTaroChartMode("week"));
+    if ($("taroChartMonthBtn")) $("taroChartMonthBtn").addEventListener("click", () => setTaroChartMode("month"));
     registerServiceWorker();
 
 

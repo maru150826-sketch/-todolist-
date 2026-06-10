@@ -393,6 +393,36 @@
       }
     }
 
+
+    /* ===== カレンダーの横ズレ・右端切れ対策 ===== */
+    .grid {
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+      min-width: 0;
+    }
+
+    .calendar-grid,
+    .weekday-row {
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    .day-cell,
+    .weekday {
+      min-width: 0;
+    }
+
+    .day-total,
+    .day-mini,
+    .day-num {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1100px) {
+      .grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
