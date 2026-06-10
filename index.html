@@ -2218,7 +2218,10 @@
     let alarm = {
       audioContext: null,
       intervalId: null,
-      audio: null
+      audio: null,
+      pendingRetry: false,
+      lastSoundOverride: null,
+      unlocked: false
     };
 
     const customAlarmSounds = {
@@ -3777,6 +3780,7 @@ ${issue}
         return;
       }
 
+      unlockAlarmAudio();
       timer.running = true;
       requestWakeLock();
       timer.startedAt = new Date();
@@ -4556,7 +4560,39 @@ ${issue}
       $("alarmTitle").textContent = title;
       $("alarmMessage").textContent = message + " ボタンを押すまで音は止まりません。";
       $("alarmOverlay").classList.add("show");
+      alarm.lastSoundOverride = soundOverride;
       startAlarmSound(soundOverride);
+    }
+
+    async function unlockAlarmAudio() {
+      if (alarm.unlocked) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ctx.createGain();
+        const osc = ctx.createOscillator();
+        gain.gain.value = 0.0001;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.03);
+        if (ctx.state === "suspended") await ctx.resume();
+        setTimeout(() => ctx.close().catch(() => {}), 80);
+        alarm.unlocked = true;
+      } catch {
+        alarm.unlocked = false;
+      }
+    }
+
+    function markAlarmRetryNeeded() {
+      alarm.pendingRetry = true;
+      setSyncStatus("音声：再生が保留されました。画面に戻った時に再試行します。", "warn");
+    }
+
+    function retryPendingAlarmSound() {
+      const overlay = $("alarmOverlay");
+      if (!overlay || !overlay.classList.contains("show")) return;
+      if (!alarm.pendingRetry) return;
+      startAlarmSound(alarm.lastSoundOverride);
     }
 
     function startAlarmSound(soundOverride = null) {
@@ -4574,13 +4610,25 @@ ${issue}
           alert(`音源ファイル「${audioFile}」を読み込めません。index.html と同じ場所に音源ファイルをアップロードしてください。`);
         });
 
-        alarm.audio.play().catch(() => {
-          alert("音声を再生できませんでした。PCの音量、ブラウザの音声許可、音源ファイルの配置を確認してください。");
-        });
+        alarm.audio.play()
+          .then(() => {
+            alarm.pendingRetry = false;
+          })
+          .catch(() => {
+            markAlarmRetryNeeded();
+          });
         return;
       }
 
-      alarm.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        alarm.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (alarm.audioContext.state === "suspended") {
+          alarm.audioContext.resume().catch(() => markAlarmRetryNeeded());
+        }
+      } catch {
+        markAlarmRetryNeeded();
+        return;
+      }
 
       const playTone = (frequency, startOffset, duration, wave = "square", volume = 0.35) => {
         const ctx = alarm.audioContext;
@@ -4644,13 +4692,19 @@ ${issue}
       };
 
       const play = patterns[type] || patterns.urgent;
-      play();
-      alarm.intervalId = setInterval(play, type === "soft" ? 1800 : 1100);
+      try {
+        play();
+        alarm.pendingRetry = false;
+        alarm.intervalId = setInterval(play, type === "soft" ? 1800 : 1100);
+      } catch {
+        markAlarmRetryNeeded();
+      }
     }
 
     function stopAlarmSound() {
       if (alarm.intervalId) clearInterval(alarm.intervalId);
       alarm.intervalId = null;
+      alarm.pendingRetry = false;
 
       if (alarm.audio) {
         alarm.audio.pause();
@@ -4832,12 +4886,16 @@ ${issue}
       if (!document.hidden && timer.running) {
         tick();
       }
+      if (!document.hidden) {
+        retryPendingAlarmSound();
+      }
     });
 
     window.addEventListener("focus", () => {
       if (timer.running) {
         tick();
       }
+      retryPendingAlarmSound();
     });
 
 
