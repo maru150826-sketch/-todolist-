@@ -1763,6 +1763,87 @@
       background: var(--accent);
     }
 
+
+
+    .taro-project {
+      margin-top: 12px;
+      border: 1px solid rgba(251,191,36,.28);
+      background: rgba(251,191,36,.075);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .taro-project-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .taro-project-title {
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .taro-project-badge {
+      color: #fde68a;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .taro-project-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .taro-project-cell {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.42);
+      border-radius: 12px;
+      padding: 9px;
+      min-width: 0;
+    }
+
+    .taro-project-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .taro-project-value {
+      margin-top: 3px;
+      font-size: 15px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .taro-project-status {
+      margin-top: 9px;
+      color: #fef3c7;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .taro-project-progress {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .taro-project-progress > div {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: var(--warn);
+    }
+
     .taro-actions {
       display: flex;
       gap: 8px;
@@ -1809,7 +1890,8 @@
 
     @media (max-width: 420px) {
       .taro-metrics,
-      .taro-segments {
+      .taro-segments,
+      .taro-project-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -1882,6 +1964,32 @@
               <div class="taro-metric-label">主力事業</div>
               <div class="taro-metric-value" id="taroMainSegment">未定</div>
             </div>
+          </div>
+          <div class="taro-project" id="taroProjectCard">
+            <div class="taro-project-head">
+              <div class="taro-project-title">🎯 ITパスポート合格PJ</div>
+              <div class="taro-project-badge" id="taroProjectBadge">計画集計中</div>
+            </div>
+            <div class="taro-project-progress"><div id="taroProjectProgress"></div></div>
+            <div class="taro-project-grid">
+              <div class="taro-project-cell">
+                <div class="taro-project-label">必要総時間</div>
+                <div class="taro-project-value">120時間</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">実績</div>
+                <div class="taro-project-value" id="taroProjectActual">0分</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">計画比</div>
+                <div class="taro-project-value" id="taroProjectVariance">±0分</div>
+              </div>
+              <div class="taro-project-cell">
+                <div class="taro-project-label">今日から必要</div>
+                <div class="taro-project-value" id="taroProjectDailyNeed">0分/日</div>
+              </div>
+            </div>
+            <div class="taro-project-status" id="taroProjectStatus">合格ペースくんと比較中。</div>
           </div>
           <div class="taro-segments" id="taroSegments"></div>
           <div class="taro-actions">
@@ -3508,6 +3616,120 @@
       ];
     }
 
+
+    const TARO_PROJECT_GOALS = [
+      {
+        id: "itpassport-2026-07",
+        name: "ITパスポート合格PJ",
+        rivalName: "合格ペースくん",
+        category: "ITパスポート",
+        startDate: "2026-06-10",
+        deadline: "2026-07-31",
+        requiredMinutes: 120 * 60
+      }
+    ];
+
+    function daysBetweenInclusive(startKey, endKey) {
+      const start = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      if (end < start) return 0;
+      return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    function clampDateKey(key, minKey, maxKey) {
+      if (key < minKey) return minKey;
+      if (key > maxKey) return maxKey;
+      return key;
+    }
+
+    function isProjectSession(session, project) {
+      if (!session || Number(session.minutes || 0) <= 0) return false;
+      const date = session.date || "";
+      if (date < project.startDate || date > project.deadline) return false;
+
+      const category = String(session.category || "");
+      const title = String(session.taskTitle || session.title || "");
+      const text = `${category} ${title}`.toLowerCase();
+      if (project.category === "ITパスポート") {
+        return text.includes("itパスポート") || text.includes("it") || text.includes("過去問") || text.includes("情報");
+      }
+      return category === project.category;
+    }
+
+    function getTaroProjectProgress(project = TARO_PROJECT_GOALS[0]) {
+      const today = todayKey();
+      const effectiveToday = clampDateKey(today, project.startDate, project.deadline);
+      const totalDays = Math.max(1, daysBetweenInclusive(project.startDate, project.deadline));
+      const elapsedDays = Math.max(0, daysBetweenInclusive(project.startDate, effectiveToday));
+      const remainingDays = Math.max(1, daysBetweenInclusive(today, project.deadline));
+      const actual = (state.sessions || [])
+        .filter(s => isProjectSession(s, project))
+        .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const planned = Math.round(project.requiredMinutes * Math.min(1, elapsedDays / totalDays));
+      const variance = actual - planned;
+      const remaining = Math.max(0, project.requiredMinutes - actual);
+      const dailyNeed = Math.ceil(remaining / remainingDays);
+      const progressPct = Math.min(100, Math.round((actual / project.requiredMinutes) * 100));
+      const plannedPct = Math.min(100, Math.round((planned / project.requiredMinutes) * 100));
+
+      return {
+        project,
+        today,
+        effectiveToday,
+        totalDays,
+        elapsedDays,
+        remainingDays,
+        actual,
+        planned,
+        variance,
+        remaining,
+        dailyNeed,
+        progressPct,
+        plannedPct
+      };
+    }
+
+    function getTaroProjectBadge(data) {
+      if (data.actual >= data.project.requiredMinutes) return "合格投資 達成";
+      if (data.variance >= 0) return "計画先行";
+      if (data.variance >= -60) return "ほぼ計画通り";
+      if (data.variance >= -180) return "軽微な遅れ";
+      return "リカバリー必要";
+    }
+
+    function getTaroProjectStatus(data) {
+      const varianceAbs = formatMinutes(Math.abs(data.variance));
+      if (data.actual >= data.project.requiredMinutes) {
+        return `必要総時間120時間を達成済み。ここからは過去問演習と弱点補強で合格確度を上げるフェーズ。`;
+      }
+      if (data.variance >= 0) {
+        return `${data.project.rivalName}に${formatMinutes(data.variance)}先行中。残り${formatMinutes(data.remaining)}、期限まで1日あたり${formatMinutes(data.dailyNeed)}で到達ペース。`;
+      }
+      return `${data.project.rivalName}に${varianceAbs}遅れ。残り${formatMinutes(data.remaining)}、今日から1日あたり${formatMinutes(data.dailyNeed)}が必要。`;
+    }
+
+    function renderTaroProject() {
+      if (!$('taroProjectCard')) return;
+      const data = getTaroProjectProgress();
+      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+      const badge = getTaroProjectBadge(data);
+
+      $('taroProjectBadge').textContent = badge;
+      $('taroProjectActual').textContent = formatMinutes(data.actual);
+      $('taroProjectVariance').textContent = varianceText;
+      $('taroProjectDailyNeed').textContent = `${formatMinutes(data.dailyNeed)}/日`;
+      $('taroProjectStatus').textContent = getTaroProjectStatus(data);
+      $('taroProjectProgress').style.width = `${data.progressPct}%`;
+    }
+
+    function buildTaroProjectReportLine() {
+      const data = getTaroProjectProgress();
+      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+      return `【重点プロジェクト】
+ITパスポート合格PJ：必要総時間120時間 / 実績${formatMinutes(data.actual)} / 計画比${varianceText}
+期限：${data.project.deadline} / 今日から必要：${formatMinutes(data.dailyNeed)}/日 / 判定：${getTaroProjectBadge(data)}`;
+    }
+
     function sumTaroMinutes(filterFn) {
       return (state.sessions || [])
         .filter(s => s && Number(s.minutes || 0) > 0)
@@ -3615,6 +3837,8 @@
 営業日数：${current.days}日
 最高稼働日：${bestText}
 
+${buildTaroProjectReportLine()}
+
 【セグメント別業績】
 ${segmentLines}
 
@@ -3682,6 +3906,8 @@ ${issue}
           </div>
         `;
       }).join("");
+
+      renderTaroProject();
 
       const report = $('taroWeeklyReport');
       if (report) report.textContent = buildTaroWeeklyReport();
