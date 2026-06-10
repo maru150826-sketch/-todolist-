@@ -1913,6 +1913,63 @@
       padding: 10px;
     }
 
+    .taro-project-item.primary {
+      border-color: rgba(251,191,36,.45);
+      background: rgba(251,191,36,.09);
+    }
+
+    .taro-sub-projects {
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.28);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .taro-sub-projects summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 11px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      color: #e5e7eb;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .taro-sub-projects summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .taro-sub-projects summary::after {
+      content: "開く";
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .taro-sub-projects[open] summary::after {
+      content: "閉じる";
+    }
+
+    .taro-sub-project-body {
+      display: grid;
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+
+    .taro-project-item.compact .taro-project-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .taro-project-item.compact .taro-project-status {
+      color: #d1d5db;
+      font-size: 12px;
+    }
+
 
     .taro-chart-box {
       border: 1px solid rgba(255,255,255,.08);
@@ -3914,6 +3971,62 @@
       return rows.sort((a, b) => a.variance - b.variance)[0] || getTaroProjectProgress(TARO_PROJECT_GOALS[0]);
     }
 
+    function getPrimaryTaroProjectData() {
+      const today = todayKey();
+      const rows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
+      const active = rows
+        .filter(row => today >= row.project.startDate && today <= row.project.deadline)
+        .sort((a, b) => a.project.deadline.localeCompare(b.project.deadline));
+      if (active.length > 0) return active[0];
+
+      const future = rows
+        .filter(row => today < row.project.startDate)
+        .sort((a, b) => a.project.startDate.localeCompare(b.project.startDate));
+      if (future.length > 0) return future[0];
+
+      return rows.sort((a, b) => b.project.deadline.localeCompare(a.project.deadline))[0] || getTaroProjectProgress(TARO_PROJECT_GOALS[0]);
+    }
+
+    function getSubTaroProjectData(primaryId) {
+      return TARO_PROJECT_GOALS
+        .map(project => getTaroProjectProgress(project))
+        .filter(row => row.project.id !== primaryId);
+    }
+
+    function renderTaroProjectItem(data, extraClass = "") {
+      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+      const badge = getTaroProjectBadge(data);
+      return `
+        <div class="taro-project-item ${extraClass}">
+          <div class="taro-project-head">
+            <div class="taro-project-title">${escapeHtml(data.project.name)}</div>
+            <div class="taro-project-badge">${escapeHtml(badge)}</div>
+          </div>
+          <div class="taro-project-plan-name">${escapeHtml(data.project.category)} / ${escapeHtml(data.project.startDate)}〜${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
+          <div class="taro-project-progress"><div style="width:${data.progressPct}%"></div></div>
+          <div class="taro-project-grid">
+            <div class="taro-project-cell">
+              <div class="taro-project-label">進捗率</div>
+              <div class="taro-project-value">${data.progressPct}%</div>
+            </div>
+            <div class="taro-project-cell">
+              <div class="taro-project-label">実績</div>
+              <div class="taro-project-value">${formatMinutes(data.actual)}</div>
+            </div>
+            <div class="taro-project-cell">
+              <div class="taro-project-label">計画比</div>
+              <div class="taro-project-value">${varianceText}</div>
+            </div>
+            <div class="taro-project-cell">
+              <div class="taro-project-label">今日から必要</div>
+              <div class="taro-project-value">${formatMinutes(data.dailyNeed)}/日</div>
+            </div>
+          </div>
+          <div class="taro-project-status">${escapeHtml(getTaroProjectStatus(data))}</div>
+        </div>
+      `;
+    }
+
     function getTaroCreditRating() {
       const projectRows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
       const focusProject = projectRows.sort((a, b) => a.variance - b.variance)[0] || getTaroProjectProgress(TARO_PROJECT_GOALS[0]);
@@ -3990,45 +4103,30 @@
     function renderTaroProject() {
       const list = $('taroProjectList');
       if (!list) return;
-      const rows = TARO_PROJECT_GOALS.map(project => getTaroProjectProgress(project));
-      const worst = rows.slice().sort((a, b) => a.variance - b.variance)[0];
-      const ahead = rows.filter(row => row.variance >= 0).length;
-      const summaryBadge = $('taroProjectSummaryBadge');
-      if (summaryBadge) summaryBadge.textContent = worst ? `${ahead}/${rows.length}件 計画先行` : "計画なし";
 
-      list.innerHTML = rows.map(data => {
-        const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
-        const badge = getTaroProjectBadge(data);
-        return `
-          <div class="taro-project-item">
-            <div class="taro-project-head">
-              <div class="taro-project-title">${escapeHtml(data.project.name)}</div>
-              <div class="taro-project-badge">${escapeHtml(badge)}</div>
+      const primary = getPrimaryTaroProjectData();
+      const subRows = getSubTaroProjectData(primary.project.id);
+      const allRows = [primary, ...subRows];
+      const ahead = allRows.filter(row => row.variance >= 0).length;
+      const summaryBadge = $('taroProjectSummaryBadge');
+      if (summaryBadge) {
+        summaryBadge.textContent = `主力：${primary.project.name}`;
+      }
+
+      const subSummary = subRows.length
+        ? `<details class="taro-sub-projects">
+            <summary>サブPJ ${subRows.length}件を見る</summary>
+            <div class="taro-sub-project-body">
+              ${subRows.map(data => renderTaroProjectItem(data, "compact")).join("")}
             </div>
-            <div class="taro-project-plan-name">${escapeHtml(data.project.category)} / 期限 ${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
-            <div class="taro-project-progress"><div style="width:${data.progressPct}%"></div></div>
-            <div class="taro-project-grid">
-              <div class="taro-project-cell">
-                <div class="taro-project-label">進捗率</div>
-                <div class="taro-project-value">${data.progressPct}%</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">実績</div>
-                <div class="taro-project-value">${formatMinutes(data.actual)}</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">計画比</div>
-                <div class="taro-project-value">${varianceText}</div>
-              </div>
-              <div class="taro-project-cell">
-                <div class="taro-project-label">今日から必要</div>
-                <div class="taro-project-value">${formatMinutes(data.dailyNeed)}/日</div>
-              </div>
-            </div>
-            <div class="taro-project-status">${escapeHtml(getTaroProjectStatus(data))}</div>
-          </div>
-        `;
-      }).join("");
+          </details>`
+        : "";
+
+      list.innerHTML = `
+        <div class="small" style="margin-bottom:8px; color:#fde68a;">現在の主力PJを大きく表示します。TOEIC・中国語などのサブPJは折りたたんで確認できます。</div>
+        ${renderTaroProjectItem(primary, "primary")}
+        ${subSummary}
+      `;
     }
 
     function buildTaroProjectReportLine() {
