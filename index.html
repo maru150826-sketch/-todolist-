@@ -3854,7 +3854,8 @@
         name: "TOEIC 900超えPJ",
         rivalName: "900超えペースくん",
         category: "TOEIC",
-        startDate: "2026-08-01",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
         deadline: "2026-10-25",
         requiredMinutes: 300 * 60
       },
@@ -3863,7 +3864,8 @@
         name: "中国語 HSK3級PJ",
         rivalName: "HSK3級ペースくん",
         category: "中国語",
-        startDate: "2026-08-01",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
         deadline: "2026-11-07",
         requiredMinutes: 150 * 60
       }
@@ -3903,11 +3905,21 @@
       return category === project.category;
     }
 
+    function getProjectPlanStartDate(project) {
+      return project.planStartDate || project.startDate;
+    }
+
+    function isBeforeProjectPlanStart(project, today = todayKey()) {
+      return today < getProjectPlanStartDate(project);
+    }
+
     function getTaroProjectProgress(project = TARO_PROJECT_GOALS[0]) {
       const today = todayKey();
-      const effectiveToday = clampDateKey(today, project.startDate, project.deadline);
-      const totalDays = Math.max(1, daysBetweenInclusive(project.startDate, project.deadline));
-      const elapsedDays = Math.max(0, daysBetweenInclusive(project.startDate, effectiveToday));
+      const actualStartDate = project.startDate;
+      const planStartDate = getProjectPlanStartDate(project);
+      const effectivePlanToday = clampDateKey(today, planStartDate, project.deadline);
+      const totalDays = Math.max(1, daysBetweenInclusive(planStartDate, project.deadline));
+      const elapsedDays = today < planStartDate ? 0 : Math.max(0, daysBetweenInclusive(planStartDate, effectivePlanToday));
       const remainingDays = Math.max(1, daysBetweenInclusive(today, project.deadline));
       const actual = (state.sessions || [])
         .filter(s => isProjectSession(s, project))
@@ -3922,7 +3934,9 @@
       return {
         project,
         today,
-        effectiveToday,
+        actualStartDate,
+        planStartDate,
+        effectiveToday: effectivePlanToday,
         totalDays,
         elapsedDays,
         remainingDays,
@@ -3932,12 +3946,15 @@
         remaining,
         dailyNeed,
         progressPct,
-        plannedPct
+        plannedPct,
+        beforePlanStart: today < planStartDate
       };
     }
 
     function getTaroProjectBadge(data) {
       if (data.actual >= data.project.requiredMinutes) return "合格投資 達成";
+      if (data.beforePlanStart && data.actual > 0) return "先行投資中";
+      if (data.beforePlanStart) return "本格開始前";
       if (data.variance >= 0) return "計画先行";
       if (data.variance >= -60) return "ほぼ計画通り";
       if (data.variance >= -180) return "軽微な遅れ";
@@ -3948,6 +3965,12 @@
       const varianceAbs = formatMinutes(Math.abs(data.variance));
       if (data.actual >= data.project.requiredMinutes) {
         return `必要総時間を達成済み。ここからは演習と弱点補強で達成確度を上げるフェーズ。`;
+      }
+      if (data.beforePlanStart) {
+        if (data.actual > 0) {
+          return `本格開始前の先行投資が${formatMinutes(data.actual)}あります。計画ラインは${data.planStartDate}から動きます。残り${formatMinutes(data.remaining)}。`;
+        }
+        return `本格開始は${data.planStartDate}です。今から記録した分は先行投資として実績に入ります。`;
       }
       if (data.variance >= 0) {
         return `${data.project.rivalName}に${formatMinutes(data.variance)}先行中。残り${formatMinutes(data.remaining)}、期限まで1日あたり${formatMinutes(data.dailyNeed)}で到達ペース。`;
@@ -4002,7 +4025,7 @@
             <div class="taro-project-title">${escapeHtml(data.project.name)}</div>
             <div class="taro-project-badge">${escapeHtml(badge)}</div>
           </div>
-          <div class="taro-project-plan-name">${escapeHtml(data.project.category)} / ${escapeHtml(data.project.startDate)}〜${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
+          <div class="taro-project-plan-name">${escapeHtml(data.project.category)} / 実績集計 ${escapeHtml(data.actualStartDate)}〜 / 計画開始 ${escapeHtml(data.planStartDate)}〜${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
           <div class="taro-project-progress"><div style="width:${data.progressPct}%"></div></div>
           <div class="taro-project-grid">
             <div class="taro-project-cell">
