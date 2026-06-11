@@ -1764,6 +1764,112 @@
     }
 
 
+
+    .taro-market-panel {
+      border: 1px solid rgba(56,189,248,.26);
+      background: rgba(15,23,42,.50);
+      border-radius: 14px;
+      padding: 11px;
+      margin: 10px 0;
+      display: grid;
+      gap: 9px;
+    }
+
+    .taro-market-top {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .taro-market-main,
+    .taro-market-sub {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      border-radius: 12px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .taro-market-rank {
+      font-size: 24px;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: .02em;
+      margin-top: 3px;
+    }
+
+    .taro-market-rank.rank-closed { color: #d1d5db; }
+    .taro-market-rank.rank-c { color: #e5e7eb; }
+    .taro-market-rank.rank-b { color: #bae6fd; }
+    .taro-market-rank.rank-bbb { color: #bfdbfe; }
+    .taro-market-rank.rank-a { color: #bbf7d0; }
+    .taro-market-rank.rank-aa { color: #fde68a; }
+    .taro-market-rank.rank-aa-plus { color: #fef3c7; }
+    .taro-market-rank.rank-aaa { color: #facc15; }
+
+    .taro-market-next {
+      margin-top: 6px;
+      color: #dbeafe;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
+    .taro-market-sub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .taro-market-mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .taro-market-mini-value {
+      margin-top: 3px;
+      font-size: 15px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .taro-market-comment {
+      border: 1px solid rgba(52,211,153,.22);
+      background: rgba(52,211,153,.075);
+      color: #d1fae5;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .taro-next-materials {
+      border: 1px solid rgba(251,191,36,.24);
+      background: rgba(251,191,36,.07);
+      color: #fef3c7;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .taro-next-materials-title {
+      font-weight: 950;
+      margin-bottom: 4px;
+    }
+
+    .taro-next-materials ul {
+      margin: 0;
+      padding-left: 1.15em;
+    }
+
+    .taro-next-materials li {
+      margin: 2px 0;
+    }
+
     .taro-rating-panel {
       display: grid;
       grid-template-columns: .72fr 1fr;
@@ -2106,6 +2212,14 @@
       }
     }
 
+
+    @media (max-width: 720px) {
+      .taro-market-top,
+      .taro-market-sub-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -2156,6 +2270,32 @@
             </div>
           </div>
           <div class="taro-business-status" id="taroBusinessStatus">本日の業績：集計中</div>
+          <div class="taro-market-panel" id="taroMarketPanel">
+            <div class="taro-market-top">
+              <div class="taro-market-main">
+                <div class="taro-rating-label">本日の市場ランク</div>
+                <div class="taro-market-rank rank-closed" id="taroMarketRank">市場未稼働</div>
+                <div class="taro-market-next" id="taroMarketNext">まず25分で市場評価が動きます。</div>
+              </div>
+              <div class="taro-market-sub">
+                <div class="taro-market-sub-grid">
+                  <div>
+                    <div class="taro-market-mini-label">出来高</div>
+                    <div class="taro-market-mini-value" id="taroMarketVolume">0分</div>
+                  </div>
+                  <div>
+                    <div class="taro-market-mini-label">AAA条件</div>
+                    <div class="taro-market-mini-value" id="taroAaaCondition">240分 + 主力PJ60分</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="taro-market-comment" id="taroMarketComment">市場コメント：集計中</div>
+            <div class="taro-next-materials" id="taroNextMaterials">
+              <div class="taro-next-materials-title">次の材料</div>
+              <ul><li>記録を追加すると更新されます。</li></ul>
+            </div>
+          </div>
           <div class="taro-rating-panel" id="taroRatingPanel">
             <div class="taro-rating-main">
               <div class="taro-rating-label">信用格付け</div>
@@ -4210,6 +4350,172 @@
       return "本日の業績：大幅増収";
     }
 
+    function getTodayPrimaryProjectMinutes() {
+      const primary = getPrimaryTaroProjectData();
+      const minutes = (state.sessions || [])
+        .filter(s => s.date === todayKey())
+        .filter(s => isProjectSession(s, primary.project))
+        .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      return { primary, minutes };
+    }
+
+    function getTaroMarketRank(todayExp, primaryProjectMinutes) {
+      const conditionText = "240分 + 主力PJ60分";
+      const rankRows = [
+        { min: 1, label: "C", className: "rank-c" },
+        { min: 25, label: "B", className: "rank-b" },
+        { min: 50, label: "BBB", className: "rank-bbb" },
+        { min: 75, label: "A", className: "rank-a" },
+        { min: 100, label: "AA", className: "rank-aa" },
+        { min: 180, label: "AA+", className: "rank-aa-plus" }
+      ];
+
+      if (todayExp >= 240 && primaryProjectMinutes >= 60) {
+        return {
+          rank: "AAA",
+          className: "rank-aaa",
+          nextText: "AAA達成。かなり強い営業日です。",
+          conditionText,
+          nextRank: null,
+          missingMinutes: 0
+        };
+      }
+
+      if (todayExp >= 240 && primaryProjectMinutes < 60) {
+        const missingPrimary = Math.max(0, 60 - primaryProjectMinutes);
+        return {
+          rank: "AA+",
+          className: "rank-aa-plus",
+          nextText: `主力PJあと${formatMinutes(missingPrimary)}で AAA`,
+          conditionText,
+          nextRank: "AAA",
+          missingMinutes: 0,
+          missingPrimary
+        };
+      }
+
+      if (todayExp <= 0) {
+        return {
+          rank: "市場未稼働",
+          className: "rank-closed",
+          nextText: "あと25分で 市場ランクB",
+          conditionText,
+          nextRank: "B",
+          missingMinutes: 25
+        };
+      }
+
+      const current = rankRows.slice().reverse().find(row => todayExp >= row.min) || rankRows[0];
+      const next = rankRows.find(row => row.min > todayExp);
+      if (next) {
+        return {
+          rank: current.label,
+          className: current.className,
+          nextText: `あと${formatMinutes(next.min - todayExp)}で 市場ランク${next.label}`,
+          conditionText,
+          nextRank: next.label,
+          missingMinutes: next.min - todayExp
+        };
+      }
+
+      return {
+        rank: "AA+",
+        className: "rank-aa-plus",
+        nextText: `あと${formatMinutes(240 - todayExp)} + 主力PJ60分で AAA`,
+        conditionText,
+        nextRank: "AAA",
+        missingMinutes: 240 - todayExp
+      };
+    }
+
+    function getTaroMarketComment(todayExp, marketData, primaryData) {
+      if (marketData.rank === "AAA") {
+        return "市場コメント：高水準の出来高に加え、主力事業への投資も確認。たろちゃん社の成長期待は強い。";
+      }
+      if (todayExp <= 0) {
+        return "市場コメント：市場は様子見。まず25分の稼働で本日の評価が動きます。";
+      }
+      if (todayExp >= 180) {
+        return "市場コメント：高稼働を確認。AAAには主力PJへの追加投資が材料になります。";
+      }
+      if (primaryData.minutes >= 60 && todayExp >= 100) {
+        return "市場コメント：主力事業への投資が継続。短期の成長期待は維持。";
+      }
+      if (todayExp >= 100) {
+        return "市場コメント：出来高は堅調。もう一段の積み増しで高稼働日として記録されます。";
+      }
+      if (todayExp >= 75) {
+        return "市場コメント：稼働は安定圏。あと少しで市場ランクAAが見えてきます。";
+      }
+      if (todayExp >= 25) {
+        return "市場コメント：市場は開場済み。追加の25分で評価をもう一段押し上げられます。";
+      }
+      return "市場コメント：小幅に稼働開始。まずは25分到達で市場評価を切り替えたいところ。";
+    }
+
+    function getNextStockMilestone(stock) {
+      const milestones = [1000, 2000, 3000, 5000, 10000, 20000];
+      return milestones.find(v => stock < v) || null;
+    }
+
+    function getNextProjectDailyMilestone(minutes) {
+      const milestones = [60, 120, 180, 240, 300, 360];
+      return milestones.find(v => minutes < v) || null;
+    }
+
+    function buildTaroNextMaterials(todayExp, marketData, primaryData, stock) {
+      const materials = [];
+
+      if (marketData.nextRank) {
+        materials.push(marketData.nextText);
+      } else {
+        materials.push("AAA達成済み。ここからは質の高い復習で上振れ維持。");
+      }
+
+      const projectMilestone = getNextProjectDailyMilestone(primaryData.minutes);
+      if (projectMilestone) {
+        const missing = Math.max(0, projectMilestone - primaryData.minutes);
+        materials.push(`あと${formatMinutes(missing)}で ${primaryData.primary.project.name} 本日${formatMinutes(projectMilestone)}到達`);
+      }
+
+      const nextStock = getNextStockMilestone(stock);
+      if (nextStock) {
+        const estimatedMinutes = Math.max(1, Math.ceil((nextStock - stock) / 2.5));
+        if (estimatedMinutes <= 120) {
+          materials.push(`あと約${formatMinutes(estimatedMinutes)}で 株価${nextStock.toLocaleString('ja-JP')}円突破`);
+        }
+      }
+
+      const streak = calculateStreak();
+      if (todayExp > 0) {
+        materials.push(`あと1日記録で 連続稼働${streak + 1}日`);
+      } else if (streak > 0) {
+        materials.push("今日15分記録で 連続稼働を維持");
+      } else {
+        materials.push("まず25分記録で 初日稼働を確定");
+      }
+
+      return materials.slice(0, 3);
+    }
+
+    function renderTaroMarket(todayExp, stock) {
+      if (!$('taroMarketRank')) return;
+      const primaryData = getTodayPrimaryProjectMinutes();
+      const marketData = getTaroMarketRank(todayExp, primaryData.minutes);
+      const materials = buildTaroNextMaterials(todayExp, marketData, primaryData, stock);
+
+      $('taroMarketRank').textContent = marketData.rank;
+      $('taroMarketRank').className = `taro-market-rank ${marketData.className}`;
+      $('taroMarketNext').textContent = marketData.nextText;
+      $('taroMarketVolume').textContent = formatMinutes(todayExp);
+      $('taroAaaCondition').textContent = marketData.conditionText;
+      $('taroMarketComment').textContent = getTaroMarketComment(todayExp, marketData, primaryData);
+      $('taroNextMaterials').innerHTML = `
+        <div class="taro-next-materials-title">次の材料</div>
+        <ul>${materials.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      `;
+    }
+
     function getTaroWeeklyData(offsetWeeks = 0) {
       const base = new Date();
       base.setDate(base.getDate() + offsetWeeks * 7);
@@ -4493,6 +4799,7 @@ ${issue}
       $('taroStockChange').textContent = changeText;
       $('taroStockChange').className = `taro-change ${changeClass}`;
       $('taroBusinessStatus').textContent = getTaroBusinessStatus(todayExp);
+      renderTaroMarket(todayExp, stock);
       $('taroLevelProgress').style.width = `${progressPct}%`;
       $('taroTodayExp').textContent = formatMinutes(todayExp);
       $('taroTotalExp').textContent = `${totalExp.toLocaleString('ja-JP')}`;

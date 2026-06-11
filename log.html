@@ -423,6 +423,54 @@
       }
     }
 
+
+    .growth-events {
+      display: grid;
+      gap: 8px;
+    }
+
+    .growth-event {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 10px;
+      align-items: baseline;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.55);
+      border-radius: 12px;
+      padding: 9px 10px;
+      line-height: 1.45;
+    }
+
+    .growth-event-date {
+      color: var(--accent);
+      font-weight: 900;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .growth-event-body {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .growth-event-tag {
+      display: inline-block;
+      margin-right: 6px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: #e5e7eb;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .growth-event {
+        grid-template-columns: 1fr;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -482,6 +530,12 @@
         <section class="panel" style="margin-top:16px;">
           <h2>この週のサマリー</h2>
           <div id="weekSummary"></div>
+        </section>
+
+        <section class="panel" style="margin-top:16px;">
+          <h2>成長イベント</h2>
+          <div class="small" style="margin-bottom:10px;">日次・週次・PJ累計・株価の節目を、保存済み履歴から自動で表示します。</div>
+          <div class="growth-events" id="growthEvents"></div>
         </section>
       </aside>
     </div>
@@ -781,6 +835,237 @@
       return result;
     }
 
+    function sumSessionMinutesForLog(sessions, filterFn) {
+      return sessions
+        .filter(s => s && Number(s.minutes || 0) > 0)
+        .filter(filterFn)
+        .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+    }
+
+    function getFirstSessionDateKeyForLog(sessions) {
+      const dates = sessions
+        .filter(s => s && s.date && Number(s.minutes || 0) > 0)
+        .map(s => s.date)
+        .sort((a, b) => a.localeCompare(b));
+      return dates[0] || todayKey();
+    }
+
+    function calculateTaroStockForLog(sessions, endDateKey = todayKey()) {
+      const end = parseDateKey(endDateKey);
+      const start7 = new Date(end);
+      start7.setDate(start7.getDate() - 6);
+      const start7Key = toDateKey(start7);
+      const totalUntil = sumSessionMinutesForLog(sessions, s => s.date <= endDateKey);
+      const last7 = sumSessionMinutesForLog(sessions, s => s.date >= start7Key && s.date <= endDateKey);
+      return Math.max(100, Math.round(100 + totalUntil * 0.5 + last7 * 2));
+    }
+
+    const GROWTH_PROJECTS = [
+      {
+        name: "ITパスポートPJ",
+        category: "ITパスポート",
+        startDate: "2026-06-10",
+        deadline: "2026-07-31"
+      },
+      {
+        name: "TOEIC 900超えPJ",
+        category: "TOEIC",
+        startDate: "2026-06-10",
+        deadline: "2026-10-25"
+      },
+      {
+        name: "中国語 HSK3級PJ",
+        category: "中国語",
+        startDate: "2026-06-10",
+        deadline: "2026-11-07"
+      }
+    ];
+
+    function isGrowthProjectSession(session, project) {
+      if (!session || Number(session.minutes || 0) <= 0) return false;
+      const date = session.date || "";
+      if (date < project.startDate || date > project.deadline) return false;
+
+      const category = String(session.category || "");
+      const title = String(session.taskTitle || session.title || "");
+      const text = `${category} ${title}`.toLowerCase();
+
+      if (project.category === "ITパスポート") {
+        return category === "ITパスポート" || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報");
+      }
+      if (project.category === "TOEIC") {
+        return category === "TOEIC" || text.includes("toeic") || text.includes("トイック") || text.includes("英語") || text.includes("part 7") || text.includes("単語") || text.includes("精読");
+      }
+      if (project.category === "中国語") {
+        return category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("中検") || text.includes("chinese") || text.includes("duolingo") || text.includes("hello chinese") || text.includes("ハローチャイニーズ");
+      }
+      return category === project.category;
+    }
+
+    function formatEventDate(dateKey) {
+      return `${Number(dateKey.slice(5, 7))}/${Number(dateKey.slice(8, 10))}`;
+    }
+
+    function addGrowthEvent(events, date, tag, title, priority = 0) {
+      events.push({ date, tag, title, priority });
+    }
+
+    function buildDailyGrowthEvents(sessions) {
+      const events = [];
+      const thresholds = [100, 180, 240];
+      const totalsByDate = {};
+      for (const s of sessions) {
+        if (!s.date) continue;
+        totalsByDate[s.date] = (totalsByDate[s.date] || 0) + Number(s.minutes || 0);
+      }
+      const dates = Object.keys(totalsByDate).sort();
+
+      for (const threshold of thresholds) {
+        const hitDate = dates.find(date => totalsByDate[date] >= threshold);
+        if (hitDate) {
+          addGrowthEvent(events, hitDate, "日次", `初の本日出来高${threshold}分突破`, threshold);
+        }
+      }
+      return events;
+    }
+
+    function buildWeeklyGrowthEvents(sessions) {
+      const events = [];
+      const thresholds = [300, 500, 800, 1000];
+      const totalsByDate = {};
+      for (const s of sessions) {
+        if (!s.date) continue;
+        totalsByDate[s.date] = (totalsByDate[s.date] || 0) + Number(s.minutes || 0);
+      }
+      const dates = Object.keys(totalsByDate).sort();
+      const weekMap = {};
+      for (const date of dates) {
+        const start = getWeekStartKey(date);
+        if (!weekMap[start]) weekMap[start] = [];
+        weekMap[start].push(date);
+      }
+
+      for (const threshold of thresholds) {
+        let found = null;
+        for (const weekStart of Object.keys(weekMap).sort()) {
+          let running = 0;
+          for (const date of weekMap[weekStart].sort()) {
+            running += totalsByDate[date] || 0;
+            if (running >= threshold) {
+              found = date;
+              break;
+            }
+          }
+          if (found) break;
+        }
+        if (found) {
+          addGrowthEvent(events, found, "週次", `週間出来高${threshold}分突破`, threshold);
+        }
+      }
+      return events;
+    }
+
+    function buildProjectGrowthEvents(sessions) {
+      const events = [];
+      const thresholds = [60, 180, 300, 600, 1200, 1800, 3000];
+      const dates = Array.from(new Set(sessions.filter(s => s.date).map(s => s.date))).sort();
+
+      for (const project of GROWTH_PROJECTS) {
+        let running = 0;
+        const hitDates = new Map();
+        for (const date of dates) {
+          const dayMinutes = sessions
+            .filter(s => s.date === date)
+            .filter(s => isGrowthProjectSession(s, project))
+            .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+          running += dayMinutes;
+          for (const threshold of thresholds) {
+            if (!hitDates.has(threshold) && running >= threshold) {
+              hitDates.set(threshold, date);
+            }
+          }
+        }
+        for (const threshold of thresholds) {
+          const hitDate = hitDates.get(threshold);
+          if (hitDate) {
+            addGrowthEvent(events, hitDate, "PJ", `${project.name} 累計${formatMinutes(threshold)}到達`, threshold);
+          }
+        }
+      }
+      return events;
+    }
+
+    function buildStockGrowthEvents(sessions) {
+      const events = [];
+      if (!sessions.some(s => Number(s.minutes || 0) > 0)) return events;
+      const thresholds = [1000, 2000, 3000, 5000, 10000, 20000];
+      const first = getFirstSessionDateKeyForLog(sessions);
+      const d = parseDateKey(first);
+      const end = parseDateKey(todayKey());
+      const hitDates = new Map();
+
+      while (d <= end) {
+        const key = toDateKey(d);
+        const stock = calculateTaroStockForLog(sessions, key);
+        for (const threshold of thresholds) {
+          if (!hitDates.has(threshold) && stock >= threshold) {
+            hitDates.set(threshold, key);
+          }
+        }
+        d.setDate(d.getDate() + 1);
+      }
+
+      for (const threshold of thresholds) {
+        const hitDate = hitDates.get(threshold);
+        if (hitDate) {
+          addGrowthEvent(events, hitDate, "株価", `株価${threshold.toLocaleString("ja-JP")}円突破`, threshold);
+        }
+      }
+      return events;
+    }
+
+    function buildGrowthEvents() {
+      const state = loadState();
+      const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+      const events = [
+        ...buildDailyGrowthEvents(sessions),
+        ...buildWeeklyGrowthEvents(sessions),
+        ...buildProjectGrowthEvents(sessions),
+        ...buildStockGrowthEvents(sessions)
+      ];
+
+      const unique = new Map();
+      for (const event of events) {
+        const key = `${event.date}|${event.tag}|${event.title}`;
+        if (!unique.has(key)) unique.set(key, event);
+      }
+
+      return Array.from(unique.values()).sort((a, b) => {
+        const dateOrder = b.date.localeCompare(a.date);
+        if (dateOrder !== 0) return dateOrder;
+        return b.priority - a.priority;
+      });
+    }
+
+    function renderGrowthEvents() {
+      const box = $("growthEvents");
+      if (!box) return;
+      const events = buildGrowthEvents().slice(0, 20);
+      if (events.length === 0) {
+        box.innerHTML = `<div class="small">まだ成長イベントはありません。100分突破、PJ累計1時間、株価1,000円突破などで表示されます。</div>`;
+        return;
+      }
+
+      box.innerHTML = events.map(event => `
+        <div class="growth-event">
+          <div class="growth-event-date">${escapeHtml(formatEventDate(event.date))}</div>
+          <div class="growth-event-body">
+            <span class="growth-event-tag">${escapeHtml(event.tag)}</span>${escapeHtml(event.title)}
+          </div>
+        </div>
+      `).join("");
+    }
+
     function renderWeekSummary() {
       const state = loadState();
       const start = getWeekStartKey(selectedDate);
@@ -821,6 +1106,7 @@
       renderCalendar();
       renderSelectedDay();
       renderWeekSummary();
+      renderGrowthEvents();
     }
 
     $("prevMonthBtn").addEventListener("click", () => {
