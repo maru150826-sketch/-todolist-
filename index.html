@@ -4202,12 +4202,12 @@
     }
 
     function getTaroBusinessStatus(todayExp) {
-      if (todayExp <= 0) return "本日の業績：売上ゼロ。まだ市場は開いている。";
-      if (todayExp < 25) return "本日の業績：小さく稼働開始";
-      if (todayExp < 50) return "本日の業績：黒字化ライン突破";
-      if (todayExp < 100) return "本日の業績：堅実に成長中";
-      if (todayExp < 180) return "本日の業績：事業拡大中";
-      return "本日の業績：爆伸び決算";
+      if (todayExp <= 0) return "本日の業績：市場未稼働";
+      if (todayExp < 25) return "本日の業績：小幅稼働";
+      if (todayExp < 50) return "本日の業績：黒字転換";
+      if (todayExp < 100) return "本日の業績：堅調推移";
+      if (todayExp < 180) return "本日の業績：成長継続";
+      return "本日の業績：大幅増収";
     }
 
     function getTaroWeeklyData(offsetWeeks = 0) {
