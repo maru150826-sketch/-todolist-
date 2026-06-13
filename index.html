@@ -2220,6 +2220,27 @@
       }
     }
 
+
+    /* ===== 集中優先レイアウト ===== */
+    .company-moved-note {
+      border: 1px solid rgba(56,189,248,.22);
+      background: rgba(56,189,248,.07);
+      color: #dbeafe;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .main-task {
+      margin-bottom: 12px;
+    }
+
+    .timer {
+      margin-bottom: 16px;
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -2255,102 +2276,6 @@
           <div class="main-task-title" id="currentTaskTitle">今日のタスクはまだありません</div>
         </section>
 
-        <div class="quote" id="quoteBox"></div>
-
-        <section class="taro-card" id="taroCompanyCard">
-          <div class="taro-head">
-            <div>
-              <div class="taro-title">🏢 株式会社たろちゃん</div>
-              <div class="taro-stage" id="taroStageText">集計中</div>
-            </div>
-            <div class="taro-stock">
-              <div class="small">現在株価</div>
-              <div class="taro-stock-price" id="taroStockPrice">100円</div>
-              <div class="taro-change flat" id="taroStockChange">±0円</div>
-            </div>
-          </div>
-          <div class="taro-business-status" id="taroBusinessStatus">本日の業績：集計中</div>
-          <div class="taro-market-panel" id="taroMarketPanel">
-            <div class="taro-market-top">
-              <div class="taro-market-main">
-                <div class="taro-rating-label">本日の市場ランク</div>
-                <div class="taro-market-rank rank-closed" id="taroMarketRank">市場未稼働</div>
-                <div class="taro-market-next" id="taroMarketNext">まず25分で市場評価が動きます。</div>
-              </div>
-              <div class="taro-market-sub">
-                <div class="taro-market-sub-grid">
-                  <div>
-                    <div class="taro-market-mini-label">出来高</div>
-                    <div class="taro-market-mini-value" id="taroMarketVolume">0分</div>
-                  </div>
-                  <div>
-                    <div class="taro-market-mini-label">AAA条件</div>
-                    <div class="taro-market-mini-value" id="taroAaaCondition">240分 + 主力PJ60分</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="taro-market-comment" id="taroMarketComment">市場コメント：集計中</div>
-            <div class="taro-next-materials" id="taroNextMaterials">
-              <div class="taro-next-materials-title">次の材料</div>
-              <ul><li>記録を追加すると更新されます。</li></ul>
-            </div>
-          </div>
-          <div class="taro-rating-panel" id="taroRatingPanel">
-            <div class="taro-rating-main">
-              <div class="taro-rating-label">信用格付け</div>
-              <div class="taro-rating-value" id="taroCreditRating">BBB</div>
-              <div class="taro-rating-outlook" id="taroRatingOutlook">見通し：安定的</div>
-            </div>
-            <div class="taro-rating-reason">
-              <div class="taro-rating-label">格付け理由</div>
-              <div id="taroRatingReason">直近の業績と中期経営計画を集計中。</div>
-            </div>
-          </div>
-          <div class="taro-progress"><div id="taroLevelProgress"></div></div>
-          <div class="taro-metrics">
-            <div class="taro-metric">
-              <div class="taro-metric-label">今日の出来高</div>
-              <div class="taro-metric-value" id="taroTodayExp">0分</div>
-            </div>
-            <div class="taro-metric">
-              <div class="taro-metric-label">総資産EXP</div>
-              <div class="taro-metric-value" id="taroTotalExp">0</div>
-            </div>
-            <div class="taro-metric">
-              <div class="taro-metric-label">次のLvまで</div>
-              <div class="taro-metric-value" id="taroNextLevel">100分</div>
-            </div>
-            <div class="taro-metric">
-              <div class="taro-metric-label">主力事業</div>
-              <div class="taro-metric-value" id="taroMainSegment">未定</div>
-            </div>
-          </div>
-          <div class="taro-chart-box">
-            <div class="taro-chart-head">
-              <div class="taro-chart-title">📈 株価推移</div>
-              <div class="taro-chart-tabs">
-                <button class="ghost active" id="taroChartDayBtn" type="button">日次</button>
-                <button class="ghost" id="taroChartWeekBtn" type="button">週次</button>
-                <button class="ghost" id="taroChartMonthBtn" type="button">月次</button>
-              </div>
-            </div>
-            <div class="taro-chart-summary" id="taroChartSummary">株価データを集計中</div>
-            <div class="taro-chart" id="taroStockChart"></div>
-          </div>
-          <div class="taro-project" id="taroProjectCard">
-            <div class="taro-project-head">
-              <div class="taro-project-title">📌 中期経営計画</div>
-              <div class="taro-project-badge" id="taroProjectSummaryBadge">複数PJ集計中</div>
-            </div>
-            <div class="taro-project-list" id="taroProjectList"></div>
-          </div>
-          <div class="taro-segments" id="taroSegments"></div>
-          <div class="taro-actions">
-            <button class="ghost" id="taroWeeklyReportBtn" type="button">週次決算を見る</button>
-          </div>
-          <div class="taro-report" id="taroWeeklyReport"></div>
-        </section>
 
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
@@ -2384,6 +2309,9 @@
         </section>
 
 
+        <div class="quote" id="quoteBox"></div>
+
+        <div class="company-moved-note">株式会社たろちゃんの株価・市場ランク・中期経営計画・成長イベントは「カレンダー」で確認できます。</div>
         <section style="margin-top:18px;">
           <h2>手動ログ</h2>
           <div class="small" style="margin-bottom:10px;">ジム・読書・移動中の勉強など、ポモドーロを使わない活動を時間だけ記録します。</div>
@@ -3631,7 +3559,7 @@
 
       box.innerHTML = visibleHistory.map(s => `
         <div class="history-item">
-          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
+          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? ' <span class="mini-tag">手動</span>' : ""}${s.reason === "finished_early" ? ' <span class="mini-tag">途中終了</span>' : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
           ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
           <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">

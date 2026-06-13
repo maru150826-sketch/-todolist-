@@ -471,6 +471,375 @@
       }
     }
 
+    /* ===== 株式会社たろちゃん：カレンダー側会社情報 ===== */
+    .taro-card {
+      border: 1px solid rgba(56,189,248,.34);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,.16), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 16px 42px rgba(0,0,0,.22);
+    }
+
+    .taro-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .taro-title {
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: .02em;
+    }
+
+    .taro-stage {
+      color: #bae6fd;
+      font-size: 13px;
+      margin-top: 3px;
+      line-height: 1.45;
+    }
+
+    .taro-stock {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .taro-stock-price {
+      font-size: 26px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .taro-change {
+      display: inline-block;
+      margin-top: 3px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+
+    .taro-change.up {
+      color: #bbf7d0;
+      background: rgba(52,211,153,.10);
+      border-color: rgba(52,211,153,.28);
+    }
+
+    .taro-change.down {
+      color: #fecdd3;
+      background: rgba(251,113,133,.10);
+      border-color: rgba(251,113,133,.28);
+    }
+
+    .taro-change.flat {
+      color: #e5e7eb;
+      background: rgba(255,255,255,.06);
+    }
+
+    .taro-business-status {
+      border: 1px solid rgba(52,211,153,.24);
+      background: rgba(52,211,153,.08);
+      color: #d1fae5;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
+
+    .taro-market-panel,
+    .taro-rating-panel,
+    .taro-chart-box,
+    .taro-project,
+    .taro-report {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.52);
+      border-radius: 14px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .taro-market-top {
+      display: grid;
+      grid-template-columns: .78fr 1fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .taro-market-main,
+    .taro-market-sub {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      padding: 9px 10px;
+    }
+
+    .taro-rating-label,
+    .taro-market-mini-label,
+    .taro-metric-label,
+    .taro-project-label {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .taro-market-rank {
+      font-size: 24px;
+      font-weight: 950;
+      line-height: 1.1;
+      margin-top: 3px;
+    }
+
+    .taro-market-next,
+    .taro-market-comment,
+    .taro-next-materials,
+    .taro-rating-reason,
+    .taro-project-status {
+      color: #e5e7eb;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .taro-market-next {
+      margin-top: 5px;
+      color: #bae6fd;
+      font-weight: 850;
+    }
+
+    .taro-market-sub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .taro-market-mini-value {
+      font-size: 15px;
+      font-weight: 950;
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .taro-next-materials-title,
+    .taro-chart-title,
+    .taro-project-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: #e5e7eb;
+      margin-bottom: 5px;
+    }
+
+    .taro-next-materials ul {
+      margin: 6px 0 0 18px;
+      padding: 0;
+    }
+
+    .taro-metrics,
+    .taro-segments,
+    .taro-project-grid,
+    .taro-rating-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .taro-metric,
+    .taro-segment,
+    .taro-project-cell {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 9px 10px;
+      min-width: 0;
+    }
+
+    .taro-metric-value,
+    .taro-project-value {
+      margin-top: 3px;
+      font-size: 16px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .taro-progress,
+    .taro-segment-bar,
+    .taro-project-progress {
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .taro-progress > div,
+    .taro-segment-bar > div,
+    .taro-project-progress > div {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(56,189,248,.95), rgba(52,211,153,.95));
+    }
+
+    .taro-segment-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .taro-chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .taro-chart-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .taro-chart-tabs button {
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .taro-chart-tabs button.active {
+      background: var(--accent);
+      color: #07111f;
+      border-color: transparent;
+    }
+
+    .taro-chart-summary {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 6px;
+    }
+
+    .taro-chart svg {
+      width: 100%;
+      height: 145px;
+      display: block;
+    }
+
+    .taro-project-item {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .taro-project-item.primary {
+      border-color: rgba(251,191,36,.45);
+      background: rgba(251,191,36,.09);
+    }
+
+    .taro-project-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .taro-project-badge {
+      color: #fde68a;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .taro-sub-projects {
+      margin-top: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(15,23,42,.28);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .taro-sub-projects summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 11px;
+      color: #e5e7eb;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .taro-sub-projects summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .taro-sub-project-body {
+      display: grid;
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+
+    .taro-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .taro-actions button {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .taro-report {
+      display: none;
+      white-space: pre-wrap;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .taro-report.show {
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .taro-head,
+      .taro-market-top,
+      .taro-market-sub-grid,
+      .taro-metrics,
+      .taro-segments,
+      .taro-project-grid,
+      .taro-rating-panel {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .taro-stock {
+        text-align: left;
+      }
+
+      .taro-chart-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .taro-chart-tabs button {
+        width: 100%;
+      }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -513,6 +882,109 @@
       </section>
 
       <aside>
+        <section class="panel taro-card" style="margin-bottom:16px;">
+          <div class="taro-head">
+            <div>
+              <div class="taro-title">株式会社たろちゃん</div>
+              <div class="taro-stage" id="logTaroStageText">集計中</div>
+            </div>
+            <div class="taro-stock">
+              <div class="small">現在株価</div>
+              <div class="taro-stock-price" id="logTaroStockPrice">100円</div>
+              <div class="taro-change flat" id="logTaroStockChange">±0円</div>
+            </div>
+          </div>
+
+          <div class="taro-business-status" id="logTaroBusinessStatus">本日の業績：集計中</div>
+
+          <div class="taro-market-panel">
+            <div class="taro-market-top">
+              <div class="taro-market-main">
+                <div class="taro-rating-label">本日の市場ランク</div>
+                <div class="taro-market-rank" id="logTaroMarketRank">市場未稼働</div>
+                <div class="taro-market-next" id="logTaroMarketNext">まず25分で市場評価が動きます。</div>
+              </div>
+              <div class="taro-market-sub">
+                <div class="taro-market-sub-grid">
+                  <div>
+                    <div class="taro-market-mini-label">出来高</div>
+                    <div class="taro-market-mini-value" id="logTaroMarketVolume">0分</div>
+                  </div>
+                  <div>
+                    <div class="taro-market-mini-label">AAA条件</div>
+                    <div class="taro-market-mini-value" id="logTaroAaaCondition">240分 + 主力PJ60分</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="taro-market-comment" id="logTaroMarketComment">市場コメント：集計中</div>
+            <div class="taro-next-materials" id="logTaroNextMaterials">
+              <div class="taro-next-materials-title">次の材料</div>
+              <ul><li>記録を追加すると更新されます。</li></ul>
+            </div>
+          </div>
+
+          <div class="taro-rating-panel">
+            <div class="taro-metric">
+              <div class="taro-rating-label">信用格付け</div>
+              <div class="taro-market-rank" id="logTaroCreditRating">BBB</div>
+              <div class="taro-market-next" id="logTaroRatingOutlook">見通し：安定的</div>
+            </div>
+            <div class="taro-rating-reason">
+              <div class="taro-rating-label">格付け理由</div>
+              <div id="logTaroRatingReason">直近の業績と中期経営計画を集計中。</div>
+            </div>
+          </div>
+
+          <div class="taro-progress"><div id="logTaroLevelProgress"></div></div>
+          <div class="taro-metrics">
+            <div class="taro-metric">
+              <div class="taro-metric-label">今日の出来高</div>
+              <div class="taro-metric-value" id="logTaroTodayExp">0分</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">総資産EXP</div>
+              <div class="taro-metric-value" id="logTaroTotalExp">0</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">次のLvまで</div>
+              <div class="taro-metric-value" id="logTaroNextLevel">100分</div>
+            </div>
+            <div class="taro-metric">
+              <div class="taro-metric-label">主力事業</div>
+              <div class="taro-metric-value" id="logTaroMainSegment">未定</div>
+            </div>
+          </div>
+
+          <div class="taro-chart-box">
+            <div class="taro-chart-head">
+              <div class="taro-chart-title">株価推移</div>
+              <div class="taro-chart-tabs">
+                <button class="ghost active" id="logTaroChartDayBtn" type="button">日次</button>
+                <button class="ghost" id="logTaroChartWeekBtn" type="button">週次</button>
+                <button class="ghost" id="logTaroChartMonthBtn" type="button">月次</button>
+              </div>
+            </div>
+            <div class="taro-chart-summary" id="logTaroChartSummary">株価データを集計中</div>
+            <div class="taro-chart" id="logTaroStockChart"></div>
+          </div>
+
+          <div class="taro-project">
+            <div class="taro-project-head">
+              <div class="taro-project-title">中期経営計画</div>
+              <div class="taro-project-badge" id="logTaroProjectSummaryBadge">複数PJ集計中</div>
+            </div>
+            <div id="logTaroProjectList"></div>
+          </div>
+
+          <div class="taro-segments" id="logTaroSegments"></div>
+          <div class="taro-actions">
+            <button class="ghost" id="logTaroWeeklyReportBtn" type="button">週次決算を見る</button>
+          </div>
+          <div class="taro-report" id="logTaroWeeklyReport"></div>
+        </section>
+
+
         <section class="panel">
           <div class="selected-date" id="selectedDateTitle"></div>
           <div class="summary" id="daySummary"></div>
@@ -860,6 +1332,547 @@
       return Math.max(100, Math.round(100 + totalUntil * 0.5 + last7 * 2));
     }
 
+
+    let logTaroChartMode = "day";
+
+    const TARO_PROJECT_GOALS_FOR_LOG = [
+      {
+        id: "itpassport-2026-07",
+        name: "ITパスポート合格PJ",
+        rivalName: "合格ペースくん",
+        category: "ITパスポート",
+        startDate: "2026-06-10",
+        deadline: "2026-07-31",
+        requiredMinutes: 120 * 60
+      },
+      {
+        id: "toeic-900-2026-10",
+        name: "TOEIC 900超えPJ",
+        rivalName: "900超えペースくん",
+        category: "TOEIC",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-10-25",
+        requiredMinutes: 300 * 60
+      },
+      {
+        id: "chinese-hsk3-2026-11",
+        name: "中国語 HSK3級PJ",
+        rivalName: "HSK3級ペースくん",
+        category: "中国語",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-11-07",
+        requiredMinutes: 150 * 60
+      }
+    ];
+
+    function getDateOffsetKeyForLog(offsetDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return toDateKey(d);
+    }
+
+    function daysBetweenInclusiveForLog(startKey, endKey) {
+      const start = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      if (end < start) return 0;
+      return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    function clampDateKeyForLog(key, minKey, maxKey) {
+      if (key < minKey) return minKey;
+      if (key > maxKey) return maxKey;
+      return key;
+    }
+
+    function getTaroTitleForLog(level) {
+      if (level >= 50) return "覇王企業";
+      if (level >= 30) return "グローバル企業CEO";
+      if (level >= 20) return "全国展開企業";
+      if (level >= 15) return "地方有力企業";
+      if (level >= 10) return "成長企業CEO";
+      if (level >= 5) return "駆け出し社長";
+      if (level >= 3) return "株式会社たろちゃん設立";
+      if (level >= 2) return "個人事業主";
+      return "起業準備中";
+    }
+
+    function getTaroBusinessStatusForLog(todayExp) {
+      if (todayExp <= 0) return "本日の業績：市場未稼働";
+      if (todayExp < 25) return "本日の業績：小幅稼働";
+      if (todayExp < 50) return "本日の業績：黒字転換";
+      if (todayExp < 100) return "本日の業績：堅調推移";
+      if (todayExp < 180) return "本日の業績：成長継続";
+      return "本日の業績：大幅増収";
+    }
+
+    function getTaroSegmentForLog(session) {
+      const category = String(session.category || "その他");
+      const title = String(session.taskTitle || session.title || "");
+      const text = `${category} ${title}`.toLowerCase();
+      if (text.includes("中国語") || text.includes("hsk") || text.includes("chinese")) return { key: "asia", label: "アジア展開力", short: "アジア" };
+      if (text.includes("toeic") || text.includes("英語") || text.includes("english") || text.includes("part 7") || text.includes("単語") || text.includes("精読")) return { key: "global", label: "海外展開力", short: "海外" };
+      if (text.includes("itパスポート") || text.includes("it") || text.includes("過去問") || text.includes("情報")) return { key: "it", label: "IT基礎力", short: "IT" };
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) return { key: "academic", label: "学術力", short: "学術" };
+      if (text.includes("筋トレ") || text.includes("ジム") || text.includes("胸") || text.includes("背中") || text.includes("脚") || text.includes("肩") || text.includes("腕")) return { key: "body", label: "社長体力", short: "体力" };
+      if (text.includes("新聞") || text.includes("読書") || text.includes("本") || text.includes("ニュース")) return { key: "management", label: "経営判断力", short: "経営" };
+      return { key: "action", label: "行動力", short: "行動" };
+    }
+
+    function getTaroSegmentsForLog() {
+      return [
+        { key: "global", label: "海外展開力", short: "海外", minutes: 0 },
+        { key: "asia", label: "アジア展開力", short: "アジア", minutes: 0 },
+        { key: "it", label: "IT基礎力", short: "IT", minutes: 0 },
+        { key: "academic", label: "学術力", short: "学術", minutes: 0 },
+        { key: "body", label: "社長体力", short: "体力", minutes: 0 },
+        { key: "management", label: "経営判断力", short: "経営", minutes: 0 },
+        { key: "action", label: "行動力", short: "行動", minutes: 0 }
+      ];
+    }
+
+    function isTaroProjectSessionForLog(session, project) {
+      if (!session || Number(session.minutes || 0) <= 0) return false;
+      const date = session.date || "";
+      if (date < project.startDate || date > project.deadline) return false;
+      const category = String(session.category || "");
+      const title = String(session.taskTitle || session.title || "");
+      const text = `${category} ${title}`.toLowerCase();
+      if (project.category === "ITパスポート") return category === "ITパスポート" || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報");
+      if (project.category === "TOEIC") return category === "TOEIC" || text.includes("toeic") || text.includes("トイック") || text.includes("英語") || text.includes("part 7") || text.includes("単語") || text.includes("精読");
+      if (project.category === "中国語") return category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("中検") || text.includes("chinese") || text.includes("duolingo") || text.includes("hello chinese") || text.includes("ハローチャイニーズ");
+      return category === project.category;
+    }
+
+    function getProjectPlanStartDateForLog(project) {
+      return project.planStartDate || project.startDate;
+    }
+
+    function getTaroProjectProgressForLog(sessions, project) {
+      const today = todayKey();
+      const planStartDate = getProjectPlanStartDateForLog(project);
+      const effectivePlanToday = clampDateKeyForLog(today, planStartDate, project.deadline);
+      const totalDays = Math.max(1, daysBetweenInclusiveForLog(planStartDate, project.deadline));
+      const elapsedDays = today < planStartDate ? 0 : Math.max(0, daysBetweenInclusiveForLog(planStartDate, effectivePlanToday));
+      const remainingDays = Math.max(1, daysBetweenInclusiveForLog(today, project.deadline));
+      const actual = sumSessionMinutesForLog(sessions, s => isTaroProjectSessionForLog(s, project));
+      const planned = Math.round(project.requiredMinutes * Math.min(1, elapsedDays / totalDays));
+      const variance = actual - planned;
+      const remaining = Math.max(0, project.requiredMinutes - actual);
+      const dailyNeed = Math.ceil(remaining / remainingDays);
+      const progressPct = Math.min(100, Math.round((actual / project.requiredMinutes) * 100));
+      return { project, today, planStartDate, actual, planned, variance, remaining, dailyNeed, progressPct, beforePlanStart: today < planStartDate };
+    }
+
+    function getPrimaryTaroProjectDataForLog(sessions) {
+      const today = todayKey();
+      const rows = TARO_PROJECT_GOALS_FOR_LOG.map(project => getTaroProjectProgressForLog(sessions, project));
+      const active = rows
+        .filter(row => today >= row.project.startDate && today <= row.project.deadline)
+        .sort((a, b) => a.project.deadline.localeCompare(b.project.deadline));
+      if (active.length > 0) return active[0];
+      const future = rows
+        .filter(row => today < row.project.startDate)
+        .sort((a, b) => a.project.startDate.localeCompare(b.project.startDate));
+      return future[0] || rows[0];
+    }
+
+    function getTaroProjectBadgeForLog(data) {
+      if (data.actual >= data.project.requiredMinutes) return "達成";
+      if (data.beforePlanStart && data.actual > 0) return "先行投資中";
+      if (data.beforePlanStart) return "本格開始前";
+      if (data.variance >= 0) return "計画先行";
+      if (data.variance >= -60) return "ほぼ計画通り";
+      if (data.variance >= -180) return "軽微な遅れ";
+      return "リカバリー必要";
+    }
+
+    function getTaroProjectStatusForLog(data) {
+      if (data.actual >= data.project.requiredMinutes) return "必要総時間を達成済み。ここからは演習と弱点補強で達成確度を上げるフェーズ。";
+      if (data.beforePlanStart) {
+        if (data.actual > 0) return `本格開始前の先行投資が${formatMinutes(data.actual)}あります。計画ラインは${data.planStartDate}から動きます。`;
+        return `本格開始は${data.planStartDate}です。今からの記録は先行投資として実績に入ります。`;
+      }
+      if (data.variance >= 0) return `${data.project.rivalName}に${formatMinutes(data.variance)}先行中。残り${formatMinutes(data.remaining)}、今日から${formatMinutes(data.dailyNeed)}/日。`;
+      return `${data.project.rivalName}に${formatMinutes(Math.abs(data.variance))}遅れ。残り${formatMinutes(data.remaining)}、今日から${formatMinutes(data.dailyNeed)}/日。`;
+    }
+
+    function getTodayMainProjectMinutesForLog(sessions, primaryData) {
+      return sumSessionMinutesForLog(sessions, s => s.date === todayKey() && isTaroProjectSessionForLog(s, primaryData.project));
+    }
+
+    function getTaroMarketRankForLog(todayExp, mainProjectToday) {
+      if (todayExp >= 240 && mainProjectToday >= 60) return { label: "AAA", nextText: "AAA達成。かなり強い営業日です。" };
+      if (todayExp >= 240) return { label: "AA+", nextText: `主力PJあと${formatMinutes(Math.max(0, 60 - mainProjectToday))}で AAA` };
+      const thresholds = [
+        { min: 1, label: "C" },
+        { min: 25, label: "B" },
+        { min: 50, label: "BBB" },
+        { min: 75, label: "A" },
+        { min: 100, label: "AA" },
+        { min: 180, label: "AA+" },
+        { min: 240, label: "AAA候補" }
+      ];
+      if (todayExp <= 0) return { label: "市場未稼働", nextText: "あと25分で 市場ランクB" };
+      let current = thresholds[0];
+      for (const row of thresholds) {
+        if (todayExp >= row.min) current = row;
+      }
+      const next = thresholds.find(row => row.min > todayExp);
+      return { label: current.label, nextText: next ? `あと${formatMinutes(next.min - todayExp)}で 市場ランク${next.label}` : "主力PJ条件達成で AAA" };
+    }
+
+    function getTaroMarketCommentForLog(rankLabel, todayExp, mainProjectToday) {
+      if (todayExp <= 0) return "市場コメント：本日はまだ市場未稼働。まず25分で評価が動きます。";
+      if (rankLabel === "AAA") return "市場コメント：高稼働かつ主力PJへの投資を確認。市場評価は非常に強い状態です。";
+      if (rankLabel === "AA+") return "市場コメント：出来高は高水準。主力PJへの追加投資でAAAが見えます。";
+      if (rankLabel === "AA") return "市場コメント：本日の稼働は強い水準。短期の成長期待は維持されています。";
+      if (rankLabel === "A") return "市場コメント：主力事業への投資が継続。短期の成長期待は維持。";
+      if (rankLabel === "BBB") return "市場コメント：稼働は安定圏。あと少しで市場ランクAが見えてきます。";
+      return "市場コメント：小幅ながら稼働開始。ここからの追加記録で評価が上がります。";
+    }
+
+    function buildTaroNextMaterialsForLog(sessions, primaryData, todayExp, mainProjectToday, rank) {
+      const materials = [];
+      materials.push(rank.nextText);
+
+      const projectActual = primaryData.actual;
+      const nextProjectThreshold = [60, 120, 180, 300, 600, 1200, 1800, 3000].find(min => min > projectActual);
+      if (nextProjectThreshold) {
+        materials.push(`あと${formatMinutes(nextProjectThreshold - projectActual)}で ${primaryData.project.name} 累計${formatMinutes(nextProjectThreshold)}到達`);
+      }
+
+      const activeDates = new Set(sessions.filter(s => Number(s.minutes || 0) > 0).map(s => s.date));
+      const yesterday = getDateOffsetKeyForLog(-1);
+      if (activeDates.has(yesterday) && !activeDates.has(todayKey())) {
+        materials.push("今日25分記録で 連続稼働維持");
+      } else {
+        materials.push("明日も記録で 連続稼働配当候補");
+      }
+
+      if (todayExp >= 240 && mainProjectToday < 60) {
+        materials.unshift(`主力PJあと${formatMinutes(60 - mainProjectToday)}で AAA条件達成`);
+      }
+
+      return materials.slice(0, 4);
+    }
+
+    function getTaroWeeklyDataForLog(sessions, offsetWeeks = 0) {
+      const base = new Date();
+      base.setDate(base.getDate() + offsetWeeks * 7);
+      const start = getWeekStartKey(toDateKey(base));
+      const end = getWeekEndKey(start);
+      const dates = getDateRange(start, end);
+      const weekSessions = sessions.filter(s => dates.includes(s.date));
+      const total = weekSessions.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const days = new Set(weekSessions.filter(s => Number(s.minutes || 0) > 0).map(s => s.date)).size;
+      const byDay = {};
+      for (const s of weekSessions) byDay[s.date] = (byDay[s.date] || 0) + Number(s.minutes || 0);
+      const best = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0] || null;
+      return { start, end, dates, sessions: weekSessions, total, days, best };
+    }
+
+    function countRecentZeroDaysForLog(sessions, days = 3) {
+      let zero = 0;
+      for (let i = 0; i < days; i++) {
+        const key = getDateOffsetKeyForLog(-i);
+        const min = sumSessionMinutesForLog(sessions, s => s.date === key);
+        if (min <= 0) zero += 1;
+      }
+      return zero;
+    }
+
+    function getTaroCreditRatingForLog(sessions) {
+      const projectRows = TARO_PROJECT_GOALS_FOR_LOG.map(project => getTaroProjectProgressForLog(sessions, project));
+      const focusProject = projectRows.slice().sort((a, b) => a.variance - b.variance)[0];
+      const currentWeek = getTaroWeeklyDataForLog(sessions, 0);
+      const previousWeek = getTaroWeeklyDataForLog(sessions, -1);
+      const todayExp = sumSessionMinutesForLog(sessions, s => s.date === todayKey());
+      const zeroDays = countRecentZeroDaysForLog(sessions, 3);
+      let score = 0;
+      if (currentWeek.total >= 800) score += 4;
+      else if (currentWeek.total >= 500) score += 3;
+      else if (currentWeek.total >= 300) score += 2;
+      else if (currentWeek.total >= 100) score += 1;
+      if (currentWeek.days >= 5) score += 2;
+      else if (currentWeek.days >= 3) score += 1;
+      const aheadCount = projectRows.filter(p => p.variance >= 0).length;
+      const seriousDelayCount = projectRows.filter(p => p.variance < -480).length;
+      if (aheadCount >= 2) score += 2;
+      else if (aheadCount >= 1) score += 1;
+      if (seriousDelayCount >= 2) score -= 2;
+      else if (seriousDelayCount >= 1) score -= 1;
+      if (focusProject.variance >= 180) score += 1;
+      else if (focusProject.variance < -480) score -= 1;
+      if (todayExp >= 100) score += 1;
+      if (zeroDays >= 3) score -= 2;
+      let rating = "BBB";
+      if (score >= 8) rating = "AAA";
+      else if (score >= 6) rating = "AA";
+      else if (score >= 4) rating = "A";
+      else if (score >= 2) rating = "BBB+";
+      else if (score >= 0) rating = "BBB";
+      else if (score >= -1) rating = "BBB-";
+      else if (score >= -3) rating = "BB";
+      else rating = "B";
+      let outlook = "安定的";
+      if (aheadCount >= 1 && currentWeek.total >= previousWeek.total && currentWeek.total > 0) outlook = "ポジティブ";
+      else if (seriousDelayCount >= 1 || zeroDays >= 3) outlook = "要改善";
+      const varianceText = `${focusProject.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(focusProject.variance))}`;
+      const reason = `今週出来高${formatMinutes(currentWeek.total)}、営業日数${currentWeek.days}日。最も厳しいPJは${focusProject.project.name}で計画比${varianceText}。計画先行PJ ${aheadCount}/${projectRows.length}件。`;
+      return { rating, outlook, reason, currentWeek, previousWeek, projectRows };
+    }
+
+    function getMonthStartKeyForLog(dateObj) {
+      return toDateKey(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+    }
+
+    function getMonthEndKeyForLog(dateObj) {
+      return toDateKey(new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0));
+    }
+
+    function getTaroStockSeriesForLog(sessions, mode = "day") {
+      if (!sessions.some(s => Number(s.minutes || 0) > 0)) return [];
+      const today = todayKey();
+      const firstDateKey = getFirstSessionDateKeyForLog(sessions);
+      const rows = [];
+      if (mode === "week") {
+        const startWeek = getWeekStartKey(firstDateKey);
+        const currentWeek = getWeekStartKey(today);
+        const d = parseDateKey(startWeek);
+        const endWeekDate = parseDateKey(currentWeek);
+        while (d <= endWeekDate) {
+          const start = toDateKey(d);
+          const rawEnd = getWeekEndKey(start);
+          const end = rawEnd > today ? today : rawEnd;
+          rows.push({ label: `${Number(start.slice(5,7))}/${Number(start.slice(8,10))}週`, value: calculateTaroStockForLog(sessions, end), volume: sumSessionMinutesForLog(sessions, s => s.date >= start && s.date <= end), start, end });
+          d.setDate(d.getDate() + 7);
+        }
+        return rows;
+      }
+      if (mode === "month") {
+        const first = parseDateKey(firstDateKey);
+        const now = new Date();
+        const d = new Date(first.getFullYear(), first.getMonth(), 1);
+        const endMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        while (d <= endMonth) {
+          const start = getMonthStartKeyForLog(d);
+          const rawEnd = getMonthEndKeyForLog(d);
+          const end = rawEnd > today ? today : rawEnd;
+          rows.push({ label: `${d.getFullYear()}/${d.getMonth() + 1}`, value: calculateTaroStockForLog(sessions, end), volume: sumSessionMinutesForLog(sessions, s => s.date >= start && s.date <= end), start, end });
+          d.setMonth(d.getMonth() + 1);
+        }
+        return rows;
+      }
+      const d = parseDateKey(firstDateKey);
+      const endDate = parseDateKey(today);
+      while (d <= endDate) {
+        const key = toDateKey(d);
+        rows.push({ label: `${Number(key.slice(5,7))}/${Number(key.slice(8,10))}`, value: calculateTaroStockForLog(sessions, key), volume: sumSessionMinutesForLog(sessions, s => s.date === key), start: key, end: key });
+        d.setDate(d.getDate() + 1);
+      }
+      return rows;
+    }
+
+    function buildTaroStockChartSvgForLog(rows) {
+      if (!rows.length) return `<div class="small">株価データがありません。</div>`;
+      const w = 360, h = 145, padL = 34, padR = 12, padT = 12, padB = 28;
+      const values = rows.map(r => Number(r.value || 0));
+      let min = Math.min(...values), max = Math.max(...values);
+      if (min === max) { min = Math.max(0, min - 50); max += 50; }
+      const x = i => padL + (rows.length === 1 ? 0 : i * ((w - padL - padR) / (rows.length - 1)));
+      const y = v => padT + (max - v) * ((h - padT - padB) / (max - min));
+      const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.value).toFixed(1)}`).join(" ");
+      const areaPoints = `${padL},${h-padB} ${points} ${x(rows.length-1).toFixed(1)},${h-padB}`;
+      const last = rows[rows.length - 1];
+      const first = rows[0];
+      const midIndex = Math.floor((rows.length - 1) / 2);
+      const labels = [0, midIndex, rows.length - 1].filter((v, i, a) => a.indexOf(v) === i);
+      return `
+        <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="株価推移">
+          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="rgba(255,255,255,.16)" />
+          <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="rgba(255,255,255,.16)" />
+          <text x="4" y="${padT+5}" fill="rgba(255,255,255,.55)" font-size="10">${Math.round(max)}</text>
+          <text x="4" y="${h-padB}" fill="rgba(255,255,255,.55)" font-size="10">${Math.round(min)}</text>
+          <polygon points="${areaPoints}" fill="rgba(56,189,248,.12)"></polygon>
+          <polyline points="${points}" fill="none" stroke="rgba(56,189,248,.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <circle cx="${x(rows.length-1).toFixed(1)}" cy="${y(last.value).toFixed(1)}" r="4" fill="rgba(52,211,153,.95)"></circle>
+          ${labels.map(i => `<text x="${x(i).toFixed(1)}" y="${h-8}" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">${escapeHtml(rows[i].label)}</text>`).join("")}
+        </svg>
+      `;
+    }
+
+    function renderTaroChartForLog(sessions) {
+      const rows = getTaroStockSeriesForLog(sessions, logTaroChartMode);
+      const chart = $("logTaroStockChart");
+      const summary = $("logTaroChartSummary");
+      if (!chart || !summary) return;
+      if (!rows.length) {
+        chart.innerHTML = `<div class="small">記録を追加すると株価推移が表示されます。</div>`;
+        summary.textContent = "株価データなし";
+        return;
+      }
+      const first = rows[0], last = rows[rows.length - 1];
+      const diff = last.value - first.value;
+      summary.textContent = `${first.start}〜${last.end} / ${rows.length}点 / ${first.value.toLocaleString("ja-JP")}円 → ${last.value.toLocaleString("ja-JP")}円（${diff >= 0 ? "+" : ""}${diff.toLocaleString("ja-JP")}円）`;
+      chart.innerHTML = buildTaroStockChartSvgForLog(rows);
+      const btns = { day: $("logTaroChartDayBtn"), week: $("logTaroChartWeekBtn"), month: $("logTaroChartMonthBtn") };
+      Object.entries(btns).forEach(([key, btn]) => { if (btn) btn.classList.toggle("active", key === logTaroChartMode); });
+    }
+
+    function renderTaroProjectItemForLog(data, extraClass = "") {
+      const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+      return `
+        <div class="taro-project-item ${extraClass}">
+          <div class="taro-project-head">
+            <div class="taro-project-title">${escapeHtml(data.project.name)}</div>
+            <div class="taro-project-badge">${escapeHtml(getTaroProjectBadgeForLog(data))}</div>
+          </div>
+          <div class="small">${escapeHtml(data.project.category)} / 計画開始 ${escapeHtml(data.planStartDate)}〜${escapeHtml(data.project.deadline)} / 必要投資 ${formatMinutes(data.project.requiredMinutes)}</div>
+          <div class="taro-project-progress"><div style="width:${data.progressPct}%"></div></div>
+          <div class="taro-project-grid">
+            <div class="taro-project-cell"><div class="taro-project-label">進捗率</div><div class="taro-project-value">${data.progressPct}%</div></div>
+            <div class="taro-project-cell"><div class="taro-project-label">実績</div><div class="taro-project-value">${formatMinutes(data.actual)}</div></div>
+            <div class="taro-project-cell"><div class="taro-project-label">計画比</div><div class="taro-project-value">${varianceText}</div></div>
+            <div class="taro-project-cell"><div class="taro-project-label">今日から必要</div><div class="taro-project-value">${formatMinutes(data.dailyNeed)}/日</div></div>
+          </div>
+          <div class="taro-project-status">${escapeHtml(getTaroProjectStatusForLog(data))}</div>
+        </div>
+      `;
+    }
+
+    function buildTaroWeeklyReportForLog(sessions) {
+      const rating = getTaroCreditRatingForLog(sessions);
+      const current = rating.currentWeek;
+      const previous = rating.previousWeek;
+      const diff = current.total - previous.total;
+      const diffText = diff >= 0 ? `+${formatMinutes(diff)}` : `-${formatMinutes(Math.abs(diff))}`;
+      const bestText = current.best ? `${current.best[0]} ${formatMinutes(current.best[1])}` : "なし";
+      const projectLines = TARO_PROJECT_GOALS_FOR_LOG.map(project => {
+        const data = getTaroProjectProgressForLog(sessions, project);
+        const varianceText = `${data.variance >= 0 ? "+" : "-"}${formatMinutes(Math.abs(data.variance))}`;
+        return `・${project.name}：実績${formatMinutes(data.actual)} / 進捗${data.progressPct}% / 計画比${varianceText} / 今日から${formatMinutes(data.dailyNeed)}/日`;
+      }).join("\n");
+      const segments = getTaroSegmentsForLog();
+      const segMap = new Map(segments.map(s => [s.key, s]));
+      for (const session of current.sessions) {
+        const seg = getTaroSegmentForLog(session);
+        const row = segMap.get(seg.key);
+        if (row) row.minutes += Number(session.minutes || 0);
+      }
+      const segmentLines = segments.filter(s => s.minutes > 0).sort((a, b) => b.minutes - a.minutes).map(s => `・${s.label}：${formatMinutes(s.minutes)}`).join("\n") || "・稼働なし";
+      return `株式会社たろちゃん 週次決算短信
+対象期間：${current.start} 〜 ${current.end}
+
+【業績概要】
+今週の総稼働時間：${formatMinutes(current.total)}
+前週比：${diffText}
+営業日数：${current.days}日
+最高稼働日：${bestText}
+
+【中期経営計画】
+${projectLines}
+
+【信用格付け】
+格付け：${rating.rating}
+見通し：${rating.outlook}
+理由：${rating.reason}
+
+【セグメント別業績】
+${segmentLines}
+
+【来週の重点施策】
+1. 主力事業を25分だけ継続する
+2. 稼働ゼロの事業に15分だけ投資する
+3. 週の途中で一度この決算を確認する`;
+    }
+
+    function renderTaroCompanyForLog() {
+      if (!$("logTaroStageText")) return;
+      const state = loadState();
+      const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+      const today = todayKey();
+      const yesterday = getDateOffsetKeyForLog(-1);
+      const totalExp = sumSessionMinutesForLog(sessions, () => true);
+      const todayExp = sumSessionMinutesForLog(sessions, s => s.date === today);
+      const level = Math.floor(totalExp / 100) + 1;
+      const currentLevelBase = (level - 1) * 100;
+      const nextLevelAt = level * 100;
+      const nextExp = Math.max(0, nextLevelAt - totalExp);
+      const progressPct = Math.min(100, Math.round(((totalExp - currentLevelBase) / 100) * 100));
+      const stock = calculateTaroStockForLog(sessions, today);
+      const prevStock = calculateTaroStockForLog(sessions, yesterday);
+      const change = stock - prevStock;
+      const changePct = prevStock > 0 ? (change / prevStock) * 100 : 0;
+      const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
+      const primary = getPrimaryTaroProjectDataForLog(sessions);
+      const mainProjectToday = getTodayMainProjectMinutesForLog(sessions, primary);
+      const market = getTaroMarketRankForLog(todayExp, mainProjectToday);
+      const materials = buildTaroNextMaterialsForLog(sessions, primary, todayExp, mainProjectToday, market);
+      const rating = getTaroCreditRatingForLog(sessions);
+
+      $("logTaroStageText").textContent = `Lv.${level}　${getTaroTitleForLog(level)}`;
+      $("logTaroStockPrice").textContent = `${stock.toLocaleString("ja-JP")}円`;
+      $("logTaroStockChange").textContent = `${change >= 0 ? "+" : ""}${change}円（${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}%）`;
+      $("logTaroStockChange").className = `taro-change ${changeClass}`;
+      $("logTaroBusinessStatus").textContent = getTaroBusinessStatusForLog(todayExp);
+      $("logTaroMarketRank").textContent = market.label;
+      $("logTaroMarketNext").textContent = market.nextText;
+      $("logTaroMarketVolume").textContent = formatMinutes(todayExp);
+      $("logTaroAaaCondition").textContent = `240分 + ${primary.project.category}60分`;
+      $("logTaroMarketComment").textContent = getTaroMarketCommentForLog(market.label, todayExp, mainProjectToday);
+      $("logTaroNextMaterials").innerHTML = `<div class="taro-next-materials-title">次の材料</div><ul>${materials.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+      $("logTaroCreditRating").textContent = rating.rating;
+      $("logTaroRatingOutlook").textContent = `見通し：${rating.outlook}`;
+      $("logTaroRatingReason").textContent = rating.reason;
+      $("logTaroLevelProgress").style.width = `${progressPct}%`;
+      $("logTaroTodayExp").textContent = formatMinutes(todayExp);
+      $("logTaroTotalExp").textContent = totalExp.toLocaleString("ja-JP");
+      $("logTaroNextLevel").textContent = formatMinutes(nextExp);
+
+      const segments = getTaroSegmentsForLog();
+      const segMap = new Map(segments.map(s => [s.key, s]));
+      for (const session of sessions) {
+        const seg = getTaroSegmentForLog(session);
+        const row = segMap.get(seg.key);
+        if (row) row.minutes += Number(session.minutes || 0);
+      }
+      const sortedSegments = segments.sort((a, b) => b.minutes - a.minutes);
+      const mainSegment = sortedSegments.find(s => s.minutes > 0);
+      $("logTaroMainSegment").textContent = mainSegment ? mainSegment.short : "未定";
+      const maxSeg = Math.max(60, ...sortedSegments.map(s => s.minutes));
+      $("logTaroSegments").innerHTML = sortedSegments.slice(0, 6).map(seg => {
+        const pct = Math.min(100, Math.round((seg.minutes / maxSeg) * 100));
+        return `<div class="taro-segment"><div class="taro-segment-line"><span>${escapeHtml(seg.label)}</span><span>${formatMinutes(seg.minutes)}</span></div><div class="taro-segment-bar"><div style="width:${pct}%"></div></div></div>`;
+      }).join("");
+
+      const rows = TARO_PROJECT_GOALS_FOR_LOG.map(project => getTaroProjectProgressForLog(sessions, project));
+      const primaryRow = primary;
+      const subRows = rows.filter(row => row.project.id !== primaryRow.project.id);
+      $("logTaroProjectSummaryBadge").textContent = `主力：${primaryRow.project.name}`;
+      $("logTaroProjectList").innerHTML = `
+        ${renderTaroProjectItemForLog(primaryRow, "primary")}
+        <details class="taro-sub-projects"><summary>サブPJ ${subRows.length}件を見る</summary><div class="taro-sub-project-body">${subRows.map(row => renderTaroProjectItemForLog(row)).join("")}</div></details>
+      `;
+      renderTaroChartForLog(sessions);
+      $("logTaroWeeklyReport").textContent = buildTaroWeeklyReportForLog(sessions);
+    }
+
+    function setLogTaroChartMode(mode) {
+      logTaroChartMode = mode;
+      renderTaroCompanyForLog();
+    }
+
+    function toggleLogTaroWeeklyReport() {
+      const report = $("logTaroWeeklyReport");
+      const btn = $("logTaroWeeklyReportBtn");
+      if (!report) return;
+      report.classList.toggle("show");
+      if (btn) btn.textContent = report.classList.contains("show") ? "週次決算を閉じる" : "週次決算を見る";
+    }
+
+
     const GROWTH_PROJECTS = [
       {
         name: "ITパスポートPJ",
@@ -1107,6 +2120,7 @@
       renderSelectedDay();
       renderWeekSummary();
       renderGrowthEvents();
+      renderTaroCompanyForLog();
     }
 
     $("prevMonthBtn").addEventListener("click", () => {
@@ -1118,6 +2132,13 @@
       visibleMonth.setMonth(visibleMonth.getMonth() + 1);
       render();
     });
+
+
+
+    if ($("logTaroChartDayBtn")) $("logTaroChartDayBtn").addEventListener("click", () => setLogTaroChartMode("day"));
+    if ($("logTaroChartWeekBtn")) $("logTaroChartWeekBtn").addEventListener("click", () => setLogTaroChartMode("week"));
+    if ($("logTaroChartMonthBtn")) $("logTaroChartMonthBtn").addEventListener("click", () => setLogTaroChartMode("month"));
+    if ($("logTaroWeeklyReportBtn")) $("logTaroWeeklyReportBtn").addEventListener("click", toggleLogTaroWeeklyReport);
 
     render();
     pullSessionsFromSupabaseForLog();
