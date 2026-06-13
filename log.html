@@ -840,6 +840,12 @@
       }
     }
 
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -855,12 +861,11 @@
         <h1>学習ログ・カレンダー</h1>
         <div class="small">カレンダーから日付を選ぶ形式。選んだ日の「やったこと」は同じタイトルごとに合算します。</div>
       </div>
-      <button class="ghost" onclick="location.reload()">再読み込み</button>
+      <div class="header-actions">
+        <button class="ghost" id="backToMainBtn" type="button">集中画面へ</button>
+        <button class="ghost" onclick="location.reload()">再読み込み</button>
+      </div>
     </header>
-
-    <div class="notice">
-      旧表示のままなら、このファイルを <strong>log.html</strong> として上書きし、公開ページで <strong>Ctrl + F5</strong> を押してください。
-    </div>
 
     <div class="grid">
       <section class="panel">
@@ -2139,6 +2144,13 @@ ${segmentLines}
     if ($("logTaroChartWeekBtn")) $("logTaroChartWeekBtn").addEventListener("click", () => setLogTaroChartMode("week"));
     if ($("logTaroChartMonthBtn")) $("logTaroChartMonthBtn").addEventListener("click", () => setLogTaroChartMode("month"));
     if ($("logTaroWeeklyReportBtn")) $("logTaroWeeklyReportBtn").addEventListener("click", toggleLogTaroWeeklyReport);
+    if ($("backToMainBtn")) $("backToMainBtn").addEventListener("click", () => {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "show-dashboard" }, "*");
+      } else {
+        location.href = "index.html";
+      }
+    });
 
     render();
     pullSessionsFromSupabaseForLog();

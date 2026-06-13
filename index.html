@@ -2241,6 +2241,42 @@
       margin-bottom: 16px;
     }
 
+    .study-launchpad {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid rgba(56, 189, 248, .35);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(56, 189, 248, .14), rgba(52, 211, 153, .08));
+    }
+
+    .study-launchpad h2 { margin: 0 0 6px; font-size: 1.05rem; }
+    .launch-task { margin-top: 8px; color: var(--text); font-weight: 800; }
+    .launch-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .launch-progress {
+      height: 7px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .65);
+    }
+    .launch-progress > div {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+      transition: width .25s ease;
+    }
+
+    @media (max-width: 720px) {
+      .study-launchpad { grid-template-columns: 1fr; }
+      .launch-actions { justify-content: stretch; }
+      .launch-actions button { flex: 1; }
+    }
+
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -2261,7 +2297,8 @@
         <button class="log-link" id="showCalendarTab" type="button">カレンダー</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
-          
+        <button class="ghost" id="exportBtn" type="button">バックアップ</button>
+        <button class="ghost" id="importBtn" type="button">復元</button>
         <button class="ghost" id="allSyncBtn" type="button">同期</button>
         <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
         </div>
@@ -2271,6 +2308,19 @@
 
     <div class="grid" id="dashboardView">
       <main class="panel">
+        <section class="study-launchpad" aria-labelledby="launchTitle">
+          <div>
+            <h2 id="launchTitle">今日のスタート</h2>
+            <div class="small" id="launchMessage">今日の状況を確認しています。</div>
+            <div class="launch-task" id="launchTask">最初のタスクを選びます。</div>
+            <div class="launch-progress" aria-hidden="true"><div id="launchProgressBar"></div></div>
+          </div>
+          <div class="launch-actions">
+            <button class="ok" id="launchFocusBtn" type="button">このタスクで開始</button>
+            <button class="ghost" id="launchQuickBtn" type="button">2分だけ始める</button>
+          </div>
+        </section>
+
         <section class="main-task">
           <div class="main-task-label">この25分でやること</div>
           <div class="main-task-title" id="currentTaskTitle">今日のタスクはまだありません</div>
@@ -4785,6 +4835,44 @@ ${issue}
       if ($("alarmType")) $("alarmType").value = state.settings.alarmType || "urgent";
     }
 
+    function renderStudyLaunchpad() {
+      const task = currentTask() || getSuggestedTask();
+      const focusedMinutes = todaySessions().reduce((sum, session) => sum + Number(session.minutes || 0), 0);
+      const completed = todayTasks().filter(item => item.done).length;
+      const total = todayTasks().length;
+      const percent = Math.min(100, Math.round((focusedMinutes / 100) * 100));
+
+      $("launchMessage").textContent = focusedMinutes > 0
+        ? `今日は${formatMinutes(focusedMinutes)}集中済み。完了 ${completed}/${total}件。`
+        : "まずは開始ボタンを押すところまでで十分です。";
+      $("launchTask").textContent = task
+        ? `次の一歩：${task.title}`
+        : "次の一歩：下のクイック入力で、やることを1つ追加";
+      $("launchProgressBar").style.width = `${percent}%`;
+      $("launchFocusBtn").disabled = !task;
+      $("launchQuickBtn").disabled = !task;
+    }
+
+    function launchFocus(minutes = null) {
+      const task = currentTask() || getSuggestedTask();
+      if (!task) {
+        $("quickTaskInput").focus();
+        $("quickTaskInput").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      setCurrentTask(task.id);
+      if (minutes) {
+        timer.mode = "focus";
+        timer.running = false;
+        timer.secondsLeft = minutes * 60;
+        timer.totalSeconds = minutes * 60;
+        renderTimer();
+      }
+      document.querySelector(".timer").scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!timer.running) startPauseTimer();
+    }
+
     function render() {
       $("todayText").textContent = dateLabel();
       renderCurrentTask();
@@ -4801,6 +4889,7 @@ ${issue}
       renderTaroCompany();
       renderTimer();
       renderSettings();
+      renderStudyLaunchpad();
     }
 
     let wakeLock = null;
@@ -5930,7 +6019,7 @@ ${issue}
     }
 
     function registerServiceWorker() {
-      if (!("serviceWorker" in navigator)) return;
+      if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
 
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("sw.js")
@@ -5970,6 +6059,11 @@ ${issue}
     if ($("showDashboardTab")) $("showDashboardTab").addEventListener("click", showDashboardView);
     if ($("showCalendarTab")) $("showCalendarTab").addEventListener("click", showCalendarView);
     if ($("backToDashboardBtn")) $("backToDashboardBtn").addEventListener("click", showDashboardView);
+    window.addEventListener("message", event => {
+      if (event.data && event.data.type === "show-dashboard") showDashboardView();
+    });
+    if ($("launchFocusBtn")) $("launchFocusBtn").addEventListener("click", () => launchFocus());
+    if ($("launchQuickBtn")) $("launchQuickBtn").addEventListener("click", () => launchFocus(2));
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
