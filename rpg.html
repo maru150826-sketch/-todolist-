@@ -86,7 +86,7 @@
     .player-card {
       position: relative;
       display: grid;
-      grid-template-columns: 170px minmax(0, 1fr);
+      grid-template-columns: 300px minmax(0, 1fr);
       gap: 20px;
       border-color: rgba(167, 139, 250, .45);
       background:
@@ -95,9 +95,10 @@
     }
 
     .pixel-stage {
+      position: relative;
       display: grid;
       place-items: center;
-      min-height: 190px;
+      min-height: 360px;
       border: 1px solid rgba(167, 139, 250, .32);
       border-radius: 16px;
       background:
@@ -106,6 +107,22 @@
         #0b1220;
       background-size: 16px 16px;
     }
+
+    .custom-avatar {
+      display: none;
+      width: min(250px, 88%);
+      height: 320px;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 4px solid #111827;
+      border-radius: 22px;
+      box-shadow:
+        0 0 0 2px rgba(167, 139, 250, .6),
+        0 22px 34px rgba(0, 0, 0, .5);
+    }
+
+    .pixel-stage.has-custom .pixel-person { display: none; }
+    .pixel-stage.has-custom .custom-avatar { display: block; }
 
     .pixel-person {
       position: relative;
@@ -164,6 +181,156 @@
       border-radius: 18px;
       animation: pulse 2.4s ease-in-out infinite;
     }
+
+    .pixel-person.cyber {
+      filter: drop-shadow(0 0 14px rgba(34, 211, 238, .58));
+    }
+    .pixel-person.cyber .pixel-head {
+      background: #dbeafe;
+      box-shadow: inset 0 9px #172554, 0 0 0 3px #22d3ee;
+    }
+    .pixel-person.cyber .pixel-body {
+      background: linear-gradient(90deg, #0f172a 45%, #06b6d4 46% 54%, #0f172a 55%);
+      border-color: #020617;
+    }
+    .pixel-person.cyber .pixel-tie { background: #67e8f9 !important; }
+    .pixel-person.cyber .pixel-aura {
+      border-color: rgba(34, 211, 238, .8);
+      border-style: solid;
+      box-shadow: 0 0 20px rgba(34, 211, 238, .35);
+    }
+
+    .pixel-person.adventurer .pixel-head {
+      box-shadow: inset 0 9px #713f12;
+    }
+    .pixel-person.adventurer .pixel-body {
+      background: #854d0e;
+      border-color: #1c1917;
+      transform: skew(-2deg);
+    }
+    .pixel-person.adventurer .pixel-tie {
+      width: 34px;
+      height: 9px;
+      left: 28px;
+      top: 68px;
+      clip-path: none;
+      background: #fbbf24 !important;
+    }
+    .pixel-person.adventurer::after {
+      content: "";
+      position: absolute;
+      top: 42px;
+      right: -5px;
+      width: 8px;
+      height: 74px;
+      border-radius: 5px;
+      background: #e5e7eb;
+      transform: rotate(20deg);
+      box-shadow: 0 0 0 3px #451a03;
+    }
+
+    .pixel-person.training .pixel-body {
+      left: 11px;
+      width: 68px;
+      background: #b91c1c;
+      border-radius: 18px 18px 5px 5px;
+    }
+    .pixel-person.training .pixel-tie { display: none; }
+    .pixel-person.training::before,
+    .pixel-person.training::after {
+      content: "";
+      position: absolute;
+      top: 57px;
+      width: 20px;
+      height: 43px;
+      border: 7px solid #111827;
+      border-radius: 12px;
+      background: #b91c1c;
+    }
+    .pixel-person.training::before { left: -4px; transform: rotate(13deg); }
+    .pixel-person.training::after { right: -4px; transform: rotate(-13deg); }
+
+    .pixel-person.royal {
+      filter: drop-shadow(0 0 16px rgba(251, 191, 36, .48));
+    }
+    .pixel-person.royal .pixel-head {
+      box-shadow: inset 0 8px #1e1b4b, 0 -10px 0 -3px #fbbf24;
+    }
+    .pixel-person.royal .pixel-body {
+      background: linear-gradient(90deg, #312e81, #7c3aed 50%, #312e81);
+      border-color: #0f172a;
+      box-shadow: inset 0 0 0 4px #fbbf24;
+    }
+    .pixel-person.royal .pixel-tie { background: #fbbf24 !important; }
+    .pixel-person.royal .pixel-aura {
+      border-color: #fbbf24;
+      box-shadow: 0 0 24px rgba(251, 191, 36, .5);
+    }
+    .pixel-person.royal::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      top: -3px;
+      left: 24px;
+      width: 42px;
+      height: 22px;
+      background: #fbbf24;
+      clip-path: polygon(0 100%, 0 38%, 24% 70%, 50% 0, 76% 70%, 100% 38%, 100% 100%);
+    }
+
+    .wardrobe {
+      grid-column: 1 / -1;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .wardrobe-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .wardrobe-options {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .wardrobe-option {
+      min-width: 0;
+      padding: 9px 7px;
+      font-size: .78rem;
+    }
+
+    .wardrobe-option .kind {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 600;
+    }
+
+    .wardrobe-option.active {
+      color: #cffafe;
+      border-color: #22d3ee;
+      background: rgba(6, 182, 212, .16);
+    }
+
+    .wardrobe-option:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+      border-style: dashed;
+    }
+
+    .unlock-note {
+      margin-top: 9px;
+      color: var(--warn);
+      font-size: .8rem;
+    }
+
+    #avatarFile { display: none; }
 
     @keyframes pulse {
       50% { transform: scale(1.05); opacity: .45; }
@@ -305,6 +472,167 @@
       background: linear-gradient(145deg, rgba(251, 113, 133, .08), rgba(15, 23, 42, .55));
     }
 
+    .boss-scene {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: 230px;
+      margin: -2px 0 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(251, 113, 133, .16), transparent 42%),
+        linear-gradient(#111827, #090e19);
+    }
+
+    .boss-art {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      transition: transform .35s ease, filter .35s ease;
+    }
+
+    .boss:hover .boss-art {
+      transform: scale(1.035);
+      filter: saturate(1.1) contrast(1.05);
+    }
+
+    .boss-scene::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: auto 0 0;
+      height: 42%;
+      pointer-events: none;
+      background: linear-gradient(transparent, rgba(9, 14, 25, .92));
+    }
+
+    .boss-scene::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      height: 2px;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 9px rgba(255,255,255,.035);
+    }
+
+    .boss-monster {
+      position: relative;
+      z-index: 1;
+      width: 94px;
+      height: 100px;
+      filter: drop-shadow(0 14px 12px rgba(0,0,0,.55));
+    }
+
+    .boss-core {
+      position: absolute;
+      inset: 23px 11px 8px;
+      border: 7px solid #020617;
+      border-radius: 20px 20px 12px 12px;
+      background: var(--boss-color, #7f1d1d);
+      box-shadow: inset 0 0 0 4px var(--boss-light, #fb7185);
+    }
+
+    .boss-eye {
+      position: absolute;
+      z-index: 2;
+      top: 47px;
+      width: 13px;
+      height: 10px;
+      border-radius: 2px;
+      background: #fef3c7;
+      box-shadow: 0 0 10px var(--boss-light, #fb7185);
+    }
+    .boss-eye.left { left: 29px; }
+    .boss-eye.right { right: 29px; }
+
+    .boss-horn {
+      position: absolute;
+      z-index: 0;
+      top: 4px;
+      width: 25px;
+      height: 43px;
+      background: var(--boss-light, #fb7185);
+      clip-path: polygon(50% 0, 100% 100%, 0 78%);
+    }
+    .boss-horn.left { left: 8px; transform: rotate(-22deg); }
+    .boss-horn.right { right: 8px; transform: rotate(22deg) scaleX(-1); }
+
+    .boss-monster.it {
+      --boss-color: #172554;
+      --boss-light: #38bdf8;
+    }
+    .boss-monster.it .boss-core {
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, transparent 46%, #38bdf8 47% 53%, transparent 54%),
+        linear-gradient(#1e3a8a, #172554);
+    }
+    .boss-monster.it .boss-horn { background: #94a3b8; }
+    .boss-monster.it::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      left: 38px;
+      bottom: 19px;
+      width: 18px;
+      height: 8px;
+      background: #38bdf8;
+      box-shadow: 0 0 9px #38bdf8;
+    }
+
+    .boss-monster.toeic {
+      --boss-color: #581c87;
+      --boss-light: #c084fc;
+    }
+    .boss-monster.toeic .boss-core {
+      border-radius: 48% 48% 20px 20px;
+    }
+    .boss-monster.toeic::before,
+    .boss-monster.toeic::after {
+      content: "";
+      position: absolute;
+      top: 39px;
+      width: 35px;
+      height: 52px;
+      border: 6px solid #020617;
+      background: #6b21a8;
+    }
+    .boss-monster.toeic::before { left: -12px; transform: rotate(24deg); }
+    .boss-monster.toeic::after { right: -12px; transform: rotate(-24deg); }
+
+    .boss-monster.hsk {
+      --boss-color: #7f1d1d;
+      --boss-light: #fbbf24;
+    }
+    .boss-monster.hsk .boss-core {
+      border-radius: 50% 50% 18px 18px;
+      background: linear-gradient(135deg, #991b1b, #7f1d1d);
+    }
+    .boss-monster.hsk .boss-horn {
+      width: 35px;
+      height: 48px;
+      background: #fbbf24;
+    }
+    .boss-monster.hsk::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      left: 31px;
+      bottom: 18px;
+      width: 32px;
+      height: 12px;
+      border-bottom: 5px solid #fbbf24;
+      border-radius: 50%;
+    }
+
     .boss.primary {
       border-color: rgba(251, 191, 36, .55);
       box-shadow: inset 0 0 24px rgba(251, 191, 36, .06);
@@ -374,7 +702,8 @@
       body { padding: 12px; }
       header { align-items: flex-start; }
       .player-card { grid-template-columns: 1fr; }
-      .pixel-stage { min-height: 160px; }
+      .pixel-stage { min-height: 330px; }
+      .wardrobe-options { grid-template-columns: 1fr 1fr; }
       .metrics { grid-template-columns: 1fr; }
       .boss-grid { grid-template-columns: 1fr; }
       .status-list { grid-template-columns: 1fr; }
@@ -402,6 +731,7 @@
             <div class="pixel-tie"></div>
             <div class="pixel-legs"></div>
           </div>
+          <img class="custom-avatar" id="customAvatar" alt="登録したたろちゃんの画像" />
         </div>
         <div>
           <div class="player-top">
@@ -420,6 +750,27 @@
           </div>
           <div class="bar" aria-label="レベル進捗"><div id="levelBar"></div></div>
           <div class="small refresh-note" id="updatedText"></div>
+        </div>
+        <div class="wardrobe">
+          <div class="wardrobe-head">
+            <div>
+              <h3 style="margin-bottom:3px;">たろちゃんの着せ替え</h3>
+              <div class="small">レベルアップで新しい姿が解放されます。</div>
+            </div>
+            <div class="title-badge" id="wardrobeCount">1 / 6 解放</div>
+          </div>
+          <div class="wardrobe-options" id="wardrobeOptions">
+            <button class="wardrobe-option" data-avatar="executive" type="button">Lv.1 スーツ社長<span class="kind">ドット絵</span></button>
+            <button class="wardrobe-option" data-avatar="school" type="button">Lv.3 学園主人公<span class="kind">かわいいアニメ</span></button>
+            <button class="wardrobe-option" data-avatar="cozy" type="button">Lv.5 日常系たろちゃん<span class="kind">かわいいアニメ</span></button>
+            <button class="wardrobe-option" data-avatar="chibi" type="button">Lv.8 ちびCEO<span class="kind">ミニキャラ</span></button>
+            <button class="wardrobe-option" data-avatar="cyberArt" type="button">Lv.10 電脳CEO<span class="kind">かっこいい</span></button>
+            <button class="wardrobe-option" data-avatar="custom" type="button">Lv.15 好きな画像<span class="kind">自分で選択</span></button>
+            <button class="wardrobe-option" data-avatar="darkArt" type="button">Lv.20 黒衣のCEO<span class="kind">ダークRPG</span></button>
+            <button class="wardrobe-option" data-avatar="royalArt" type="button">Lv.30 覇王CEO<span class="kind">最高レア</span></button>
+          </div>
+          <div class="unlock-note" id="unlockNote">次の衣装はLv.5で解放されます。</div>
+          <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" />
         </div>
       </section>
 
@@ -457,7 +808,29 @@
 
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
+    const AVATAR_STORAGE_KEY = "taro_rpg_avatar_v1";
     const $ = id => document.getElementById(id);
+    let currentPlayerLevel = 1;
+
+    const AVATAR_UNLOCKS = {
+      executive: 1,
+      school: 3,
+      cozy: 5,
+      chibi: 8,
+      cyberArt: 10,
+      custom: 15,
+      darkArt: 20,
+      royalArt: 30
+    };
+
+    const AVATAR_IMAGES = {
+      school: "assets/rpg/hero-school.webp",
+      cozy: "assets/rpg/hero-cozy.webp",
+      chibi: "assets/rpg/hero-chibi.webp",
+      cyberArt: "assets/rpg/hero-cyber.webp",
+      darkArt: "assets/rpg/hero-dark.webp",
+      royalArt: "assets/rpg/hero-royal.webp"
+    };
 
     const SKILLS = [
       { key: "global", label: "海外展開力" },
@@ -512,6 +885,95 @@
       } catch {
         return { sessions: [], tasks: [] };
       }
+    }
+
+    function loadAvatarConfig() {
+      try {
+        const raw = localStorage.getItem(AVATAR_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+          style: parsed.style || "executive",
+          image: parsed.image || ""
+        };
+      } catch {
+        return { style: "executive", image: "" };
+      }
+    }
+
+    function saveAvatarConfig(config) {
+      localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(config));
+    }
+
+    function applyAvatar(level) {
+      currentPlayerLevel = level;
+      const config = loadAvatarConfig();
+      const selected = level >= (AVATAR_UNLOCKS[config.style] || 1) ? config.style : "executive";
+      const stage = document.querySelector(".pixel-stage");
+      const person = $("pixelPerson");
+      const custom = $("customAvatar");
+      const presetImage = AVATAR_IMAGES[selected] || "";
+      const displayedImage = selected === "custom" ? config.image : presetImage;
+
+      stage.classList.toggle("has-custom", Boolean(displayedImage));
+      person.className = "pixel-person";
+      if (displayedImage) custom.src = displayedImage;
+
+      let unlockedCount = 0;
+      document.querySelectorAll("[data-avatar]").forEach(button => {
+        const style = button.dataset.avatar;
+        const required = AVATAR_UNLOCKS[style];
+        const unlocked = level >= required;
+        if (unlocked) unlockedCount += 1;
+        button.disabled = !unlocked;
+        button.classList.toggle("active", selected === style);
+        button.title = unlocked ? "この姿に着せ替える" : `Lv.${required}で解放`;
+      });
+      $("wardrobeCount").textContent = `${unlockedCount} / ${Object.keys(AVATAR_UNLOCKS).length} 解放`;
+
+      const next = Object.entries(AVATAR_UNLOCKS)
+        .map(([style, required]) => ({ style, required }))
+        .filter(row => row.required > level)
+        .sort((a, b) => a.required - b.required)[0];
+      $("unlockNote").textContent = next
+        ? `次の衣装はLv.${next.required}で解放されます。`
+        : "すべての衣装を解放しました。";
+    }
+
+    function selectAvatar(style) {
+      const required = AVATAR_UNLOCKS[style] || 1;
+      if (currentPlayerLevel < required) return;
+      if (style === "custom") {
+        $("avatarFile").click();
+        return;
+      }
+      const config = loadAvatarConfig();
+      saveAvatarConfig({ ...config, style });
+      applyAvatar(currentPlayerLevel);
+    }
+
+    function resizeAvatarFile(file) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        const url = URL.createObjectURL(file);
+        image.onload = () => {
+          const size = 360;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext("2d");
+          const scale = Math.max(size / image.width, size / image.height);
+          const width = image.width * scale;
+          const height = image.height * scale;
+          context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/webp", .82));
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("画像を読み込めませんでした。"));
+        };
+        image.src = url;
+      });
     }
 
     function toDateKey(date) {
@@ -708,6 +1170,7 @@
         level >= 5 ? ["#334155", "#fb7185"] : ["#475569", "#94a3b8"];
       $("pixelPerson").style.setProperty("--suit", colors[0]);
       $("pixelPerson").querySelector(".pixel-tie").style.background = colors[1];
+      applyAvatar(level);
     }
 
     function questRow(title, current, target, unit = "分") {
@@ -737,6 +1200,33 @@
       ].join("");
     }
 
+    function bossVisual(projectId) {
+      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
+      const art = projectId === "it-passport"
+        ? "assets/rpg/boss-it.webp"
+        : projectId === "toeic-900"
+          ? "assets/rpg/boss-toeic.webp"
+          : "assets/rpg/boss-hsk.webp";
+      const label = projectId === "it-passport"
+        ? "電脳試験機兵"
+        : projectId === "toeic-900"
+          ? "ワールド・グリフォン"
+          : "黄金語学龍";
+      return `
+        <div class="boss-scene" aria-label="${label}">
+          <img class="boss-art" src="${art}" alt="${label}" />
+          <div class="boss-monster ${type}">
+            <div class="boss-horn left"></div>
+            <div class="boss-horn right"></div>
+            <div class="boss-core"></div>
+            <div class="boss-eye left"></div>
+            <div class="boss-eye right"></div>
+          </div>
+        </div>
+        <div class="small" style="margin:-5px 0 10px; text-align:center;">${label}</div>
+      `;
+    }
+
     function renderBosses(rows, primary) {
       $("bossGrid").innerHTML = rows.map(row => {
         const isPrimary = row.project.id === primary.project.id;
@@ -744,6 +1234,7 @@
           isPrimary ? '<span class="main-badge">次のボス</span>' : "";
         return `
           <article class="boss ${isPrimary ? "primary" : ""}">
+            ${bossVisual(row.project.id)}
             <div class="player-top">
               <h3>${escapeHtml(row.project.name)}</h3>
               ${status}
@@ -961,6 +1452,22 @@
     }
 
     $("refreshBtn").addEventListener("click", render);
+    $("wardrobeOptions").addEventListener("click", event => {
+      const button = event.target.closest("[data-avatar]");
+      if (button) selectAvatar(button.dataset.avatar);
+    });
+    $("avatarFile").addEventListener("change", async event => {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (!file || currentPlayerLevel < AVATAR_UNLOCKS.custom) return;
+      try {
+        const image = await resizeAvatarFile(file);
+        saveAvatarConfig({ style: "custom", image });
+        applyAvatar(currentPlayerLevel);
+      } catch (error) {
+        alert(error.message || "画像の登録に失敗しました。");
+      }
+    });
     window.addEventListener("storage", event => {
       if (event.key === STORAGE_KEY) render();
     });
