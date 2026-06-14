@@ -865,7 +865,7 @@
       {
         id: "hsk-3",
         name: "中国語 HSK3級",
-        shortName: "中国語",
+        shortName: "HSK",
         category: "中国語",
         startDate: "2026-06-10",
         planStartDate: "2026-08-01",
@@ -1203,10 +1203,10 @@
     function bossVisual(projectId) {
       const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
       const art = projectId === "it-passport"
-        ? "assets/rpg/boss-it.webp"
+        ? "assets/rpg/boss-it.webp?v=20260614-2"
         : projectId === "toeic-900"
-          ? "assets/rpg/boss-toeic.webp"
-          : "assets/rpg/boss-hsk.webp";
+          ? "assets/rpg/boss-toeic.webp?v=20260614-2"
+          : "assets/rpg/boss-hsk.webp?v=20260614-2";
       const label = projectId === "it-passport"
         ? "電脳試験機兵"
         : projectId === "toeic-900"
