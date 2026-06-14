@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>たろちゃん育成RPG</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --accent: #38bdf8;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --purple: #a78bfa;
+      --radius: 18px;
+      --shadow: 0 20px 60px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px;
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(167, 139, 250, .16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, .12), transparent 35%),
+        var(--bg);
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: var(--panel2);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--accent); }
+
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 5px; font-size: clamp(1.5rem, 4vw, 2.1rem); }
+    h2 { margin-bottom: 14px; font-size: 1.12rem; }
+    h3 { margin-bottom: 8px; font-size: 1rem; }
+    .small { color: var(--muted); font-size: .88rem; line-height: 1.55; }
+
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: var(--radius);
+      background: rgba(17, 24, 39, .92);
+      box-shadow: var(--shadow);
+    }
+
+    .player-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      gap: 20px;
+      border-color: rgba(167, 139, 250, .45);
+      background:
+        linear-gradient(145deg, rgba(167, 139, 250, .13), rgba(56, 189, 248, .08)),
+        rgba(17, 24, 39, .94);
+    }
+
+    .pixel-stage {
+      display: grid;
+      place-items: center;
+      min-height: 190px;
+      border: 1px solid rgba(167, 139, 250, .32);
+      border-radius: 16px;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+        #0b1220;
+      background-size: 16px 16px;
+    }
+
+    .pixel-person {
+      position: relative;
+      width: 88px;
+      height: 126px;
+      filter: drop-shadow(0 12px 12px rgba(0,0,0,.35));
+    }
+
+    .pixel-head {
+      position: absolute;
+      top: 9px;
+      left: 25px;
+      width: 40px;
+      height: 40px;
+      border: 6px solid #111827;
+      border-radius: 8px;
+      background: #f0b98d;
+      box-shadow: inset 0 8px #2b211f;
+    }
+
+    .pixel-body {
+      position: absolute;
+      top: 50px;
+      left: 17px;
+      width: 56px;
+      height: 54px;
+      border: 7px solid #111827;
+      border-radius: 8px 8px 3px 3px;
+      background: var(--suit, #334155);
+    }
+
+    .pixel-tie {
+      position: absolute;
+      top: 58px;
+      left: 40px;
+      width: 10px;
+      height: 32px;
+      background: var(--danger);
+      clip-path: polygon(50% 0, 100% 20%, 70% 100%, 30% 100%, 0 20%);
+    }
+
+    .pixel-legs {
+      position: absolute;
+      top: 98px;
+      left: 24px;
+      width: 42px;
+      height: 28px;
+      border-left: 13px solid #111827;
+      border-right: 13px solid #111827;
+    }
+
+    .pixel-aura {
+      position: absolute;
+      inset: 0;
+      border: 2px dashed rgba(251, 191, 36, .55);
+      border-radius: 18px;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% { transform: scale(1.05); opacity: .45; }
+    }
+
+    .player-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .level {
+      color: var(--warn);
+      font-size: clamp(2rem, 8vw, 3.35rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .title-badge,
+    .done-badge,
+    .main-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: .76rem;
+      font-weight: 800;
+    }
+
+    .title-badge {
+      margin-top: 7px;
+      color: #ede9fe;
+      border: 1px solid rgba(167, 139, 250, .45);
+      background: rgba(167, 139, 250, .16);
+    }
+
+    .done-badge {
+      color: #d1fae5;
+      border: 1px solid rgba(52, 211, 153, .42);
+      background: rgba(52, 211, 153, .14);
+    }
+
+    .main-badge {
+      color: #fef3c7;
+      border: 1px solid rgba(251, 191, 36, .42);
+      background: rgba(251, 191, 36, .14);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background: rgba(15, 23, 42, .58);
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      font-size: 1.1rem;
+    }
+
+    .bar {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #0b1220;
+    }
+
+    .bar > div {
+      height: 100%;
+      min-width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+    }
+
+    .quest-list,
+    .growth-list,
+    .achievement-list,
+    .log-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .quest,
+    .growth,
+    .achievement,
+    .log-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background: rgba(31, 41, 55, .68);
+    }
+
+    .quest > div,
+    .growth > div,
+    .achievement > div,
+    .log-item > div { min-width: 0; }
+
+    .quest-title,
+    .log-title {
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .remaining {
+      flex: 0 0 auto;
+      color: var(--warn);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .boss-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .boss {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid rgba(251, 113, 133, .25);
+      border-radius: 15px;
+      background: linear-gradient(145deg, rgba(251, 113, 133, .08), rgba(15, 23, 42, .55));
+    }
+
+    .boss.primary {
+      border-color: rgba(251, 191, 36, .55);
+      box-shadow: inset 0 0 24px rgba(251, 191, 36, .06);
+    }
+
+    .boss-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 11px 0;
+      font-size: .84rem;
+    }
+
+    .hp > div {
+      background: linear-gradient(90deg, var(--danger), var(--warn));
+    }
+
+    .status-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
+
+    .status-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: .88rem;
+      font-weight: 750;
+    }
+
+    .status .bar { height: 8px; }
+    .status:nth-child(2n) .bar > div { background: linear-gradient(90deg, var(--purple), var(--accent)); }
+
+    .achievement {
+      align-items: flex-start;
+      border-color: rgba(251, 191, 36, .2);
+    }
+
+    .achievement-mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      color: #111827;
+      background: var(--warn);
+      font-weight: 900;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      border-radius: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .refresh-note {
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    @media (max-width: 760px) {
+      body { padding: 12px; }
+      header { align-items: flex-start; }
+      .player-card { grid-template-columns: 1fr; }
+      .pixel-stage { min-height: 160px; }
+      .metrics { grid-template-columns: 1fr; }
+      .boss-grid { grid-template-columns: 1fr; }
+      .status-list { grid-template-columns: 1fr; }
+      .quest, .growth, .achievement, .log-item { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>たろちゃん育成RPG</h1>
+        <div class="small">記録した1分が、そのまま会社とキャラクターの成長になります。</div>
+      </div>
+      <button id="refreshBtn" type="button">最新記録を反映</button>
+    </header>
+
+    <main class="stack">
+      <section class="panel player-card">
+        <div class="pixel-stage">
+          <div class="pixel-person" id="pixelPerson" aria-label="たろちゃんのキャラクター">
+            <div class="pixel-aura"></div>
+            <div class="pixel-head"></div>
+            <div class="pixel-body"></div>
+            <div class="pixel-tie"></div>
+            <div class="pixel-legs"></div>
+          </div>
+        </div>
+        <div>
+          <div class="player-top">
+            <div>
+              <div class="small">PLAYER</div>
+              <div class="level" id="playerLevel">Lv.1</div>
+              <div id="playerStage">起業準備中</div>
+              <div class="title-badge" id="playerTitle">称号：新人経営者</div>
+            </div>
+            <div class="small" id="streakText">連続記録 0日</div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="small">総EXP</span><strong id="totalExp">0</strong></div>
+            <div class="metric"><span class="small">今日の獲得EXP</span><strong id="todayExp">0</strong></div>
+            <div class="metric"><span class="small">次のLvまで</span><strong id="nextLevelExp">60 EXP</strong></div>
+          </div>
+          <div class="bar" aria-label="レベル進捗"><div id="levelBar"></div></div>
+          <div class="small refresh-note" id="updatedText"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>今日のクエスト</h2>
+        <div class="quest-list" id="questList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>次の成長</h2>
+        <div class="growth-list" id="growthList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ボス戦</h2>
+        <div class="boss-grid" id="bossGrid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ステータス</h2>
+        <div class="status-list" id="statusList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>実績解除</h2>
+        <div class="achievement-list" id="achievementList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>最近の冒険ログ</h2>
+        <div class="log-list" id="adventureLog"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "focus_dashboard_v1";
+    const $ = id => document.getElementById(id);
+
+    const SKILLS = [
+      { key: "global", label: "海外展開力" },
+      { key: "asia", label: "アジア展開力" },
+      { key: "it", label: "IT基礎力" },
+      { key: "academic", label: "学術力" },
+      { key: "fitness", label: "社長体力" },
+      { key: "judgment", label: "経営判断力" },
+      { key: "action", label: "行動力" }
+    ];
+
+    const PROJECTS = [
+      {
+        id: "it-passport",
+        name: "ITパスポート試験",
+        shortName: "ITパスポート",
+        category: "ITパスポート",
+        startDate: "2026-06-10",
+        deadline: "2026-07-31",
+        requiredMinutes: 120 * 60
+      },
+      {
+        id: "toeic-900",
+        name: "TOEIC 900超え",
+        shortName: "TOEIC",
+        category: "TOEIC",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-10-25",
+        requiredMinutes: 300 * 60
+      },
+      {
+        id: "hsk-3",
+        name: "中国語 HSK3級",
+        shortName: "中国語",
+        category: "中国語",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-11-07",
+        requiredMinutes: 150 * 60
+      }
+    ];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+          sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : []
+        };
+      } catch {
+        return { sessions: [], tasks: [] };
+      }
+    }
+
+    function toDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function todayKey() {
+      return toDateKey(new Date());
+    }
+
+    function parseDateKey(key) {
+      const [y, m, d] = String(key || "").split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function dateOffsetKey(offset) {
+      const date = new Date();
+      date.setDate(date.getDate() + offset);
+      return toDateKey(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function minutesOf(session) {
+      return Math.max(0, Number(session.minutes || 0));
+    }
+
+    function sumMinutes(sessions, filter = () => true) {
+      return sessions.filter(filter).reduce((sum, session) => sum + minutesOf(session), 0);
+    }
+
+    function sessionText(session) {
+      return `${session.category || ""} ${session.taskTitle || session.title || ""}`.toLowerCase();
+    }
+
+    function skillForSession(session) {
+      const text = sessionText(session);
+      if (text.includes("中国語") || text.includes("hsk") || text.includes("chinese") || text.includes("中検")) return "asia";
+      if (text.includes("toeic") || text.includes("英語") || text.includes("english") || text.includes("part 7") || text.includes("単語") || text.includes("精読")) return "global";
+      if (text.includes("itパスポート") || text.includes("過去問") || text.includes("情報") || /(^|\\s)it(\\s|$)/.test(text)) return "it";
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) return "academic";
+      if (text.includes("ジム") || text.includes("筋トレ") || text.includes("トレーニング") || text.includes("胸") || text.includes("背中") || text.includes("脚")) return "fitness";
+      if (text.includes("新聞") || text.includes("読書") || text.includes("ニュース") || text.includes("本")) return "judgment";
+      return "action";
+    }
+
+    function skillTotals(sessions) {
+      const totals = Object.fromEntries(SKILLS.map(skill => [skill.key, 0]));
+      sessions.forEach(session => {
+        totals[skillForSession(session)] += minutesOf(session);
+      });
+      return totals;
+    }
+
+    function isProjectSession(session, project) {
+      const text = sessionText(session);
+      if (project.id === "it-passport") {
+        return session.category === "ITパスポート" || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報");
+      }
+      if (project.id === "toeic-900") {
+        return session.category === "TOEIC" || text.includes("toeic") || text.includes("英語") || text.includes("part 7") || text.includes("単語") || text.includes("精読");
+      }
+      return session.category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("chinese") || text.includes("中検");
+    }
+
+    function projectData(sessions, project) {
+      const damage = sumMinutes(sessions, session => isProjectSession(session, project));
+      const remaining = Math.max(0, project.requiredMinutes - damage);
+      const progress = Math.min(100, (damage / project.requiredMinutes) * 100);
+      const days = Math.max(1, Math.ceil((parseDateKey(project.deadline) - parseDateKey(todayKey())) / 86400000) + 1);
+      return { project, damage, remaining, progress, dailyNeed: Math.ceil(remaining / days) };
+    }
+
+    function primaryProject(rows) {
+      const today = todayKey();
+      const unfinished = rows.filter(row => row.remaining > 0);
+      const active = unfinished
+        .filter(row => (row.project.planStartDate || row.project.startDate) <= today && row.project.deadline >= today)
+        .sort((a, b) => a.project.deadline.localeCompare(b.project.deadline));
+      if (active.length) return active[0];
+      return unfinished.sort((a, b) => {
+        const aStart = a.project.planStartDate || a.project.startDate;
+        const bStart = b.project.planStartDate || b.project.startDate;
+        return aStart.localeCompare(bStart) || a.project.deadline.localeCompare(b.project.deadline);
+      })[0] || rows[rows.length - 1];
+    }
+
+    function getWeekStart(key) {
+      const date = parseDateKey(key);
+      const day = date.getDay();
+      date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+      return toDateKey(date);
+    }
+
+    function getWeekEnd(key) {
+      const date = parseDateKey(getWeekStart(key));
+      date.setDate(date.getDate() + 6);
+      return toDateKey(date);
+    }
+
+    function currentWeekMinutes(sessions) {
+      const start = getWeekStart(todayKey());
+      const end = getWeekEnd(todayKey());
+      return sumMinutes(sessions, session => session.date >= start && session.date <= end);
+    }
+
+    function activeDates(sessions) {
+      return [...new Set(sessions.filter(session => minutesOf(session) > 0 && session.date).map(session => session.date))].sort();
+    }
+
+    function currentStreak(sessions) {
+      const dates = new Set(activeDates(sessions));
+      if (!dates.size) return 0;
+      let cursor = new Date();
+      if (!dates.has(toDateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+      let count = 0;
+      while (dates.has(toDateKey(cursor))) {
+        count += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return count;
+    }
+
+    function levelFromExp(exp) {
+      return Math.floor(Math.sqrt(Math.max(0, exp) / 60)) + 1;
+    }
+
+    function stageForLevel(level) {
+      if (level >= 50) return "覇王企業";
+      if (level >= 30) return "グローバルCEO";
+      if (level >= 20) return "全国展開企業";
+      if (level >= 10) return "成長企業CEO";
+      if (level >= 5) return "スーツ社長";
+      return "起業準備中";
+    }
+
+    function titleForPlayer(totals, streak, weekMinutes) {
+      if (weekMinutes >= 1000) return "急成長企業";
+      if (weekMinutes >= 500) return "高稼働CEO";
+      if (streak >= 3) return "継続稼働社長";
+
+      const levels = SKILLS.map(skill => ({ ...skill, level: Math.floor(totals[skill.key] / 60) }));
+      const max = Math.max(...levels.map(row => row.level));
+      const min = Math.min(...levels.map(row => row.level));
+      if (max > 0 && max - min <= 2) return "バランス型経営者";
+
+      const top = levels.sort((a, b) => b.level - a.level)[0];
+      const titles = {
+        global: "グローバル挑戦者",
+        asia: "アジア市場開拓者",
+        it: "デジタル武装社長",
+        academic: "知識経営CEO",
+        fitness: "フィジカルCEO",
+        judgment: "情報収集型CEO",
+        action: "即断即行社長"
+      };
+      return max > 0 ? titles[top.key] : "新人経営者";
+    }
+
+    function renderPlayer(sessions, totals) {
+      const total = sumMinutes(sessions);
+      const today = sumMinutes(sessions, session => session.date === todayKey());
+      const level = levelFromExp(total);
+      const levelStart = Math.pow(level - 1, 2) * 60;
+      const nextAt = Math.pow(level, 2) * 60;
+      const need = Math.max(0, nextAt - total);
+      const progress = nextAt === levelStart ? 100 : ((total - levelStart) / (nextAt - levelStart)) * 100;
+      const streak = currentStreak(sessions);
+      const weekMinutes = currentWeekMinutes(sessions);
+
+      $("playerLevel").textContent = `Lv.${level}`;
+      $("playerStage").textContent = stageForLevel(level);
+      $("playerTitle").textContent = `称号：${titleForPlayer(totals, streak, weekMinutes)}`;
+      $("totalExp").textContent = total.toLocaleString();
+      $("todayExp").textContent = today.toLocaleString();
+      $("nextLevelExp").textContent = `あと ${need.toLocaleString()} EXP`;
+      $("levelBar").style.width = `${Math.max(0, Math.min(100, progress))}%`;
+      $("streakText").textContent = `連続記録 ${streak}日 / 今週 ${weekMinutes}分`;
+      $("updatedText").textContent = `${new Date().toLocaleString("ja-JP")} 時点`;
+
+      const colors = level >= 30 ? ["#7c3aed", "#fbbf24"] :
+        level >= 20 ? ["#1d4ed8", "#fbbf24"] :
+        level >= 10 ? ["#334155", "#38bdf8"] :
+        level >= 5 ? ["#334155", "#fb7185"] : ["#475569", "#94a3b8"];
+      $("pixelPerson").style.setProperty("--suit", colors[0]);
+      $("pixelPerson").querySelector(".pixel-tie").style.background = colors[1];
+    }
+
+    function questRow(title, current, target, unit = "分") {
+      const done = current >= target;
+      const status = done
+        ? '<span class="done-badge">達成</span>'
+        : `<span class="remaining">あと${Math.ceil(target - current)}${unit}</span>`;
+      return `<div class="quest"><div class="quest-title">${escapeHtml(title)}</div>${status}</div>`;
+    }
+
+    function renderQuests(sessions, primary) {
+      const todaySessions = sessions.filter(session => session.date === todayKey());
+      const todayTotal = sumMinutes(todaySessions);
+      const projectToday = sumMinutes(todaySessions, session => isProjectSession(session, primary.project));
+      const readingToday = sumMinutes(todaySessions, session => {
+        const skill = skillForSession(session);
+        return skill === "judgment";
+      });
+      const manualCount = todaySessions.filter(session => session.type === "manual").length;
+
+      $("questList").innerHTML = [
+        questRow("25分集中する", todayTotal, 25),
+        questRow("合計100分記録する", todayTotal, 100),
+        questRow(`主力PJ「${primary.project.shortName}」を60分進める`, projectToday, 60),
+        questRow("新聞か読書を15分やる", readingToday, 15),
+        questRow("手動ログを1件つける", manualCount, 1, "件")
+      ].join("");
+    }
+
+    function renderBosses(rows, primary) {
+      $("bossGrid").innerHTML = rows.map(row => {
+        const isPrimary = row.project.id === primary.project.id;
+        const status = row.remaining <= 0 ? '<span class="done-badge">撃破</span>' :
+          isPrimary ? '<span class="main-badge">次のボス</span>' : "";
+        return `
+          <article class="boss ${isPrimary ? "primary" : ""}">
+            <div class="player-top">
+              <h3>${escapeHtml(row.project.name)}</h3>
+              ${status}
+            </div>
+            <div class="small">期限 ${row.project.deadline}</div>
+            <div class="boss-stats">
+              <div>ボスHP<br><strong>${row.project.requiredMinutes.toLocaleString()}</strong></div>
+              <div>与えたダメージ<br><strong>${row.damage.toLocaleString()}</strong></div>
+              <div>残りHP<br><strong>${row.remaining.toLocaleString()}</strong></div>
+              <div>必要ダメージ<br><strong>${row.remaining ? `${row.dailyNeed}/日` : "撃破済み"}</strong></div>
+            </div>
+            <div class="bar hp"><div style="width:${row.progress.toFixed(1)}%"></div></div>
+            <div class="small" style="margin-top:7px;">進捗率 ${row.progress.toFixed(1)}%</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderStatuses(totals) {
+      $("statusList").innerHTML = SKILLS.map(skill => {
+        const minutes = totals[skill.key];
+        const level = Math.floor(minutes / 60);
+        const progress = ((minutes % 60) / 60) * 100;
+        return `
+          <div class="status">
+            <div class="status-head">
+              <span>${escapeHtml(skill.label)}</span>
+              <span>Lv.${level}</span>
+            </div>
+            <div class="bar"><div style="width:${progress}%"></div></div>
+            <div class="small" style="margin-top:5px;">累計 ${minutes.toLocaleString()}分 / 次まで ${60 - (minutes % 60 || 60) || 60}分</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function dailyTotals(sessions) {
+      const totals = {};
+      sessions.forEach(session => {
+        if (!session.date) return;
+        totals[session.date] = (totals[session.date] || 0) + minutesOf(session);
+      });
+      return totals;
+    }
+
+    function firstDateAtDailyThreshold(sessions, threshold) {
+      const totals = dailyTotals(sessions);
+      return Object.keys(totals).sort().find(date => totals[date] >= threshold) || null;
+    }
+
+    function firstStreakDate(sessions, target) {
+      const dates = activeDates(sessions);
+      let streak = 0;
+      let previous = null;
+      for (const date of dates) {
+        if (previous) {
+          const diff = (parseDateKey(date) - parseDateKey(previous)) / 86400000;
+          streak = diff === 1 ? streak + 1 : 1;
+        } else {
+          streak = 1;
+        }
+        if (streak >= target) return date;
+        previous = date;
+      }
+      return null;
+    }
+
+    function firstWeekThresholdDate(sessions, threshold) {
+      const totals = {};
+      sessions.forEach(session => {
+        if (!session.date) return;
+        const week = getWeekStart(session.date);
+        totals[week] = (totals[week] || 0) + minutesOf(session);
+      });
+      const week = Object.keys(totals).sort().find(key => totals[key] >= threshold);
+      return week ? getWeekEnd(week) : null;
+    }
+
+    function firstCumulativeDate(sessions, filter, target) {
+      let total = 0;
+      const sorted = [...sessions].sort((a, b) =>
+        String(a.date || "").localeCompare(String(b.date || "")) ||
+        String(a.endedAt || "").localeCompare(String(b.endedAt || ""))
+      );
+      for (const session of sorted) {
+        if (!filter(session)) continue;
+        total += minutesOf(session);
+        if (total >= target) return session.date || todayKey();
+      }
+      return null;
+    }
+
+    function buildAchievements(sessions) {
+      const items = [];
+      const add = (date, title) => {
+        if (date) items.push({ date, title });
+      };
+
+      add(firstCumulativeDate(sessions, () => true, 25), "初めて25分集中");
+      [100, 180, 240].forEach(value => add(firstDateAtDailyThreshold(sessions, value), `初の本日出来高${value}分突破`));
+      [3, 7].forEach(value => add(firstStreakDate(sessions, value), `${value}日連続記録`));
+      [300, 500, 1000].forEach(value => add(firstWeekThresholdDate(sessions, value), `週間${value}分突破`));
+
+      const itProject = PROJECTS[0];
+      add(firstCumulativeDate(sessions, session => isProjectSession(session, itProject), 60), "ITパスポート累計1時間突破");
+      add(firstCumulativeDate(sessions, session => isProjectSession(session, itProject), 300), "ITパスポート累計5時間突破");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "global", 300), "TOEIC累計5時間突破");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "asia", 300), "中国語累計5時間突破");
+
+      [5, 10, 20].forEach(level => {
+        const target = Math.pow(level - 1, 2) * 60;
+        add(firstCumulativeDate(sessions, () => true, target), `Lv.${level}到達`);
+      });
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "fitness", 600), "社長体力Lv.10到達");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "it", 600), "IT基礎力Lv.10到達");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "judgment", 300), "経営判断力Lv.5到達");
+
+      const unique = new Map();
+      items.forEach(item => {
+        if (!unique.has(item.title)) unique.set(item.title, item);
+      });
+      return [...unique.values()]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 20);
+    }
+
+    function renderAchievements(sessions) {
+      const items = buildAchievements(sessions);
+      $("achievementList").innerHTML = items.length ? items.map(item => `
+        <div class="achievement">
+          <div class="achievement-mark">A</div>
+          <div>
+            <div class="quest-title">${escapeHtml(item.title)}</div>
+            <div class="small">${item.date} に解除</div>
+          </div>
+          <span class="done-badge">達成</span>
+        </div>
+      `).join("") : '<div class="empty">最初の25分で、最初の実績が解除されます。</div>';
+    }
+
+    function nextStreakNeed(sessions) {
+      const streak = currentStreak(sessions);
+      if (streak < 3) return { value: 3 - streak, text: `${3 - streak}日記録で 3日連続ログ達成`, type: "day" };
+      if (streak < 7) return { value: 7 - streak, text: `${7 - streak}日記録で 7日連続ログ達成`, type: "day" };
+      return null;
+    }
+
+    function renderGrowth(sessions, totals, primary) {
+      const total = sumMinutes(sessions);
+      const level = levelFromExp(total);
+      const nextLevelAt = Math.pow(level, 2) * 60;
+      const todaySessions = sessions.filter(session => session.date === todayKey());
+      const todayTotal = sumMinutes(todaySessions);
+      const projectDamage = primary.damage;
+      const nextProjectMilestone = Math.min(primary.project.requiredMinutes, (Math.floor(projectDamage / 60) + 1) * 60);
+      const skillRows = SKILLS.map(skill => {
+        const minutes = totals[skill.key];
+        return { text: `${skill.label} Lv.${Math.floor(minutes / 60) + 1}`, value: 60 - (minutes % 60) };
+      }).sort((a, b) => a.value - b.value);
+
+      const rows = [
+        { value: nextLevelAt - total, text: `Lv.${level + 1}` },
+        { value: Math.max(0, nextProjectMilestone - projectDamage), text: `${primary.project.shortName}ボスへ累計${Math.ceil(nextProjectMilestone / 60)}時間ダメージ` },
+        todayTotal < 100 ? { value: 100 - todayTotal, text: "今日のクエスト「合計100分」達成" } : null,
+        { value: skillRows[0].value, text: skillRows[0].text },
+        nextStreakNeed(sessions)
+      ].filter(Boolean).slice(0, 5);
+
+      $("growthList").innerHTML = rows.map(row => `
+        <div class="growth">
+          <div>
+            <div class="quest-title">${escapeHtml(row.text)}</div>
+            <div class="small">次の区切りが見えています。</div>
+          </div>
+          <span class="remaining">あと${row.value}${row.type === "day" ? "日" : "分"}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAdventureLog(sessions) {
+      const rows = [...sessions]
+        .sort((a, b) => String(b.endedAt || b.date || "").localeCompare(String(a.endedAt || a.date || "")))
+        .slice(0, 10);
+      const labels = Object.fromEntries(SKILLS.map(skill => [skill.key, skill.label]));
+
+      $("adventureLog").innerHTML = rows.length ? rows.map(session => {
+        const skill = labels[skillForSession(session)];
+        const title = session.taskTitle || session.title || session.category || "記録";
+        return `
+          <div class="log-item">
+            <div>
+              <div class="log-title">${escapeHtml(title)} ${minutesOf(session)}分</div>
+              <div class="small">${escapeHtml(skill)}に +${minutesOf(session)} EXP</div>
+            </div>
+            <div class="small">${escapeHtml(session.date || "")}</div>
+          </div>
+        `;
+      }).join("") : '<div class="empty">本体で記録を作ると、ここに冒険ログが表示されます。</div>';
+    }
+
+    function render() {
+      const state = loadState();
+      const sessions = state.sessions.filter(session => minutesOf(session) > 0 && session.date);
+      const totals = skillTotals(sessions);
+      const projectRows = PROJECTS.map(project => projectData(sessions, project));
+      const primary = primaryProject(projectRows);
+
+      renderPlayer(sessions, totals);
+      renderQuests(sessions, primary);
+      renderGrowth(sessions, totals, primary);
+      renderBosses(projectRows, primary);
+      renderStatuses(totals);
+      renderAchievements(sessions);
+      renderAdventureLog(sessions);
+    }
+
+    $("refreshBtn").addEventListener("click", render);
+    window.addEventListener("storage", event => {
+      if (event.key === STORAGE_KEY) render();
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

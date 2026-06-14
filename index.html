@@ -852,12 +852,14 @@
       color: var(--text) !important;
     }
 
-    .calendar-view {
+    .calendar-view,
+    .rpg-view {
       display: none;
       margin-top: 18px;
     }
 
-    .calendar-view.show {
+    .calendar-view.show,
+    .rpg-view.show {
       display: block;
     }
 
@@ -1764,123 +1766,111 @@
     }
 
 
-    /* ===== 株式会社たろちゃん：本物の株価風マーケット表示 ===== */
-    .taro-market-board {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
+
+    .taro-market-panel {
+      border: 1px solid rgba(56,189,248,.26);
+      background: rgba(15,23,42,.50);
+      border-radius: 14px;
+      padding: 11px;
       margin: 10px 0;
+      display: grid;
+      gap: 9px;
     }
 
-    .taro-market-cell {
-      background: rgba(15,23,42,.58);
+    .taro-market-top {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .taro-market-main,
+    .taro-market-sub {
       border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
       border-radius: 12px;
       padding: 9px 10px;
       min-width: 0;
     }
 
-    .taro-market-label {
+    .taro-market-rank {
+      font-size: 24px;
+      font-weight: 950;
+      line-height: 1.1;
+      letter-spacing: .02em;
+      margin-top: 3px;
+    }
+
+    .taro-market-rank.rank-closed { color: #d1d5db; }
+    .taro-market-rank.rank-c { color: #e5e7eb; }
+    .taro-market-rank.rank-b { color: #bae6fd; }
+    .taro-market-rank.rank-bbb { color: #bfdbfe; }
+    .taro-market-rank.rank-a { color: #bbf7d0; }
+    .taro-market-rank.rank-aa { color: #fde68a; }
+    .taro-market-rank.rank-aa-plus { color: #fef3c7; }
+    .taro-market-rank.rank-aaa { color: #facc15; }
+
+    .taro-market-next {
+      margin-top: 6px;
+      color: #dbeafe;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
+    .taro-market-sub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .taro-market-mini-label {
       color: var(--muted);
       font-size: 11px;
       line-height: 1.35;
     }
 
-    .taro-market-value {
+    .taro-market-mini-value {
       margin-top: 3px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 950;
       font-variant-numeric: tabular-nums;
       overflow-wrap: anywhere;
     }
 
-    .taro-market-value.up,
-    .taro-market-tape.up {
-      color: #bbf7d0;
-    }
-
-    .taro-market-value.down,
-    .taro-market-tape.down {
-      color: #fecdd3;
-    }
-
-    .taro-market-live {
-      border: 1px solid rgba(56,189,248,.25);
-      background: rgba(15,23,42,.50);
-      border-radius: 14px;
-      padding: 10px;
-      margin: 10px 0;
-    }
-
-    .taro-market-live-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: baseline;
-      flex-wrap: wrap;
-      margin-bottom: 7px;
-    }
-
-    .taro-market-live-title {
+    .taro-market-comment {
+      border: 1px solid rgba(52,211,153,.22);
+      background: rgba(52,211,153,.075);
+      color: #d1fae5;
+      border-radius: 12px;
+      padding: 9px 10px;
       font-size: 13px;
-      color: #e5e7eb;
+      line-height: 1.55;
+    }
+
+    .taro-next-materials {
+      border: 1px solid rgba(251,191,36,.24);
+      background: rgba(251,191,36,.07);
+      color: #fef3c7;
+      border-radius: 12px;
+      padding: 9px 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .taro-next-materials-title {
       font-weight: 950;
+      margin-bottom: 4px;
     }
 
-    .taro-market-tape {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
+    .taro-next-materials ul {
+      margin: 0;
+      padding-left: 1.15em;
     }
 
-    .taro-intraday-chart {
-      width: 100%;
-      min-height: 118px;
-      overflow: hidden;
+    .taro-next-materials li {
+      margin: 2px 0;
     }
-
-    .taro-intraday-chart svg {
-      width: 100%;
-      height: 118px;
-      display: block;
-    }
-
-    .taro-market-news {
-      margin-top: 8px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .taro-market-news-line {
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.035);
-      border-radius: 10px;
-      padding: 7px 8px;
-      color: #d1d5db;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .taro-market-news-time {
-      color: var(--accent);
-      font-weight: 900;
-      margin-right: 6px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    @media (max-width: 720px) {
-      .taro-market-board {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 420px) {
-      .taro-market-board {
-        grid-template-columns: 1fr;
-      }
-    }
-
 
     .taro-rating-panel {
       display: grid;
@@ -2225,8 +2215,15 @@
     }
 
 
+    @media (max-width: 720px) {
+      .taro-market-top,
+      .taro-market-sub-grid {
+        grid-template-columns: 1fr;
+      }
+    }
 
-    /* ===== 集中画面：会社情報はカレンダーへ退避 ===== */
+
+    /* ===== 集中優先レイアウト ===== */
     .company-moved-note {
       border: 1px solid rgba(56,189,248,.22);
       background: rgba(56,189,248,.07);
@@ -2236,6 +2233,50 @@
       font-size: 13px;
       line-height: 1.55;
       margin-bottom: 16px;
+    }
+
+    .main-task {
+      margin-bottom: 12px;
+    }
+
+    .timer {
+      margin-bottom: 16px;
+    }
+
+    .study-launchpad {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid rgba(56, 189, 248, .35);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(56, 189, 248, .14), rgba(52, 211, 153, .08));
+    }
+
+    .study-launchpad h2 { margin: 0 0 6px; font-size: 1.05rem; }
+    .launch-task { margin-top: 8px; color: var(--text); font-weight: 800; }
+    .launch-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .launch-progress {
+      height: 7px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .65);
+    }
+    .launch-progress > div {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+      transition: width .25s ease;
+    }
+
+    @media (max-width: 720px) {
+      .study-launchpad { grid-template-columns: 1fr; }
+      .launch-actions { justify-content: stretch; }
+      .launch-actions button { flex: 1; }
     }
 
 </style>
@@ -2256,9 +2297,11 @@
       <div class="top-actions">
         <button class="ghost active-tab" id="showDashboardTab" type="button">本体</button>
         <button class="log-link" id="showCalendarTab" type="button">カレンダー</button>
+        <button class="ghost" id="showRpgTab" type="button">RPG</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
-          
+        <button class="ghost" id="exportBtn" type="button">バックアップ</button>
+        <button class="ghost" id="importBtn" type="button">復元</button>
         <button class="ghost" id="allSyncBtn" type="button">同期</button>
         <button class="ghost" id="appRefreshBtn" type="button">アプリ更新</button>
         </div>
@@ -2268,10 +2311,24 @@
 
     <div class="grid" id="dashboardView">
       <main class="panel">
+        <section class="study-launchpad" aria-labelledby="launchTitle">
+          <div>
+            <h2 id="launchTitle">今日のスタート</h2>
+            <div class="small" id="launchMessage">今日の状況を確認しています。</div>
+            <div class="launch-task" id="launchTask">最初のタスクを選びます。</div>
+            <div class="launch-progress" aria-hidden="true"><div id="launchProgressBar"></div></div>
+          </div>
+          <div class="launch-actions">
+            <button class="ok" id="launchFocusBtn" type="button">このタスクで開始</button>
+            <button class="ghost" id="launchQuickBtn" type="button">2分だけ始める</button>
+          </div>
+        </section>
+
         <section class="main-task">
           <div class="main-task-label">この25分でやること</div>
           <div class="main-task-title" id="currentTaskTitle">今日のタスクはまだありません</div>
         </section>
+
 
         <section class="timer">
           <div class="mode" id="modeText">集中</div>
@@ -2307,8 +2364,7 @@
 
         <div class="quote" id="quoteBox"></div>
 
-        <div class="company-moved-note">株式会社たろちゃんの株価・値動き・中期経営計画は「カレンダー」で確認できます。本体はこの25分のタスクとタイマー優先にしました。</div>
-
+        <div class="company-moved-note">株式会社たろちゃんの株価・市場ランク・中期経営計画・成長イベントは「カレンダー」で確認できます。</div>
         <section style="margin-top:18px;">
           <h2>手動ログ</h2>
           <div class="small" style="margin-bottom:10px;">ジム・読書・移動中の勉強など、ポモドーロを使わない活動を時間だけ記録します。</div>
@@ -2507,6 +2563,19 @@
           <button class="ghost" id="backToDashboardBtn" type="button">本体に戻る</button>
         </div>
         <iframe class="calendar-frame" id="calendarFrame" src="log.html" title="カレンダー・週別サマリー"></iframe>
+      </div>
+    </section>
+
+    <section class="rpg-view" id="rpgView">
+      <div class="calendar-frame-wrap">
+        <div class="calendar-frame-head">
+          <div>
+            <h2>たろちゃん育成RPG</h2>
+            <div class="small">記録時間からキャラ成長・クエスト・ボス戦を表示します。</div>
+          </div>
+          <button class="ghost" id="backToDashboardFromRpgBtn" type="button">本体に戻る</button>
+        </div>
+        <iframe class="calendar-frame" id="rpgFrame" src="rpg.html" title="たろちゃん育成RPG"></iframe>
       </div>
     </section>
 
@@ -3556,7 +3625,7 @@
 
       box.innerHTML = visibleHistory.map(s => `
         <div class="history-item">
-          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? " <span class=\"mini-tag\">手動</span>" : ""}${s.reason === "finished_early" ? " <span class=\"mini-tag\">途中終了</span>" : ""}<br />
+          <strong>${escapeHtml(s.taskTitle || "休憩/未選択")}</strong>${s.type === "manual" ? ' <span class="mini-tag">手動</span>' : ""}${s.reason === "finished_early" ? ' <span class="mini-tag">途中終了</span>' : ""}<br />
           ${s.date} / ${escapeHtml(s.category || "その他")} / ${formatMinutes(s.minutes)}
           ${s.note ? `<div class="small">${escapeHtml(s.note)}</div>` : ""}
           <div class="task-actions" style="margin-top:8px; justify-content:flex-start;">
@@ -4267,12 +4336,178 @@
     }
 
     function getTaroBusinessStatus(todayExp) {
-      if (todayExp <= 0) return "本日の業績：売上ゼロ。まだ市場は開いている。";
-      if (todayExp < 25) return "本日の業績：小さく稼働開始";
-      if (todayExp < 50) return "本日の業績：黒字化ライン突破";
-      if (todayExp < 100) return "本日の業績：堅実に成長中";
-      if (todayExp < 180) return "本日の業績：事業拡大中";
-      return "本日の業績：爆伸び決算";
+      if (todayExp <= 0) return "本日の業績：市場未稼働";
+      if (todayExp < 25) return "本日の業績：小幅稼働";
+      if (todayExp < 50) return "本日の業績：黒字転換";
+      if (todayExp < 100) return "本日の業績：堅調推移";
+      if (todayExp < 180) return "本日の業績：成長継続";
+      return "本日の業績：大幅増収";
+    }
+
+    function getTodayPrimaryProjectMinutes() {
+      const primary = getPrimaryTaroProjectData();
+      const minutes = (state.sessions || [])
+        .filter(s => s.date === todayKey())
+        .filter(s => isProjectSession(s, primary.project))
+        .reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      return { primary, minutes };
+    }
+
+    function getTaroMarketRank(todayExp, primaryProjectMinutes) {
+      const conditionText = "240分 + 主力PJ60分";
+      const rankRows = [
+        { min: 1, label: "C", className: "rank-c" },
+        { min: 25, label: "B", className: "rank-b" },
+        { min: 50, label: "BBB", className: "rank-bbb" },
+        { min: 75, label: "A", className: "rank-a" },
+        { min: 100, label: "AA", className: "rank-aa" },
+        { min: 180, label: "AA+", className: "rank-aa-plus" }
+      ];
+
+      if (todayExp >= 240 && primaryProjectMinutes >= 60) {
+        return {
+          rank: "AAA",
+          className: "rank-aaa",
+          nextText: "AAA達成。かなり強い営業日です。",
+          conditionText,
+          nextRank: null,
+          missingMinutes: 0
+        };
+      }
+
+      if (todayExp >= 240 && primaryProjectMinutes < 60) {
+        const missingPrimary = Math.max(0, 60 - primaryProjectMinutes);
+        return {
+          rank: "AA+",
+          className: "rank-aa-plus",
+          nextText: `主力PJあと${formatMinutes(missingPrimary)}で AAA`,
+          conditionText,
+          nextRank: "AAA",
+          missingMinutes: 0,
+          missingPrimary
+        };
+      }
+
+      if (todayExp <= 0) {
+        return {
+          rank: "市場未稼働",
+          className: "rank-closed",
+          nextText: "あと25分で 市場ランクB",
+          conditionText,
+          nextRank: "B",
+          missingMinutes: 25
+        };
+      }
+
+      const current = rankRows.slice().reverse().find(row => todayExp >= row.min) || rankRows[0];
+      const next = rankRows.find(row => row.min > todayExp);
+      if (next) {
+        return {
+          rank: current.label,
+          className: current.className,
+          nextText: `あと${formatMinutes(next.min - todayExp)}で 市場ランク${next.label}`,
+          conditionText,
+          nextRank: next.label,
+          missingMinutes: next.min - todayExp
+        };
+      }
+
+      return {
+        rank: "AA+",
+        className: "rank-aa-plus",
+        nextText: `あと${formatMinutes(240 - todayExp)} + 主力PJ60分で AAA`,
+        conditionText,
+        nextRank: "AAA",
+        missingMinutes: 240 - todayExp
+      };
+    }
+
+    function getTaroMarketComment(todayExp, marketData, primaryData) {
+      if (marketData.rank === "AAA") {
+        return "市場コメント：高水準の出来高に加え、主力事業への投資も確認。たろちゃん社の成長期待は強い。";
+      }
+      if (todayExp <= 0) {
+        return "市場コメント：市場は様子見。まず25分の稼働で本日の評価が動きます。";
+      }
+      if (todayExp >= 180) {
+        return "市場コメント：高稼働を確認。AAAには主力PJへの追加投資が材料になります。";
+      }
+      if (primaryData.minutes >= 60 && todayExp >= 100) {
+        return "市場コメント：主力事業への投資が継続。短期の成長期待は維持。";
+      }
+      if (todayExp >= 100) {
+        return "市場コメント：出来高は堅調。もう一段の積み増しで高稼働日として記録されます。";
+      }
+      if (todayExp >= 75) {
+        return "市場コメント：稼働は安定圏。あと少しで市場ランクAAが見えてきます。";
+      }
+      if (todayExp >= 25) {
+        return "市場コメント：市場は開場済み。追加の25分で評価をもう一段押し上げられます。";
+      }
+      return "市場コメント：小幅に稼働開始。まずは25分到達で市場評価を切り替えたいところ。";
+    }
+
+    function getNextStockMilestone(stock) {
+      const milestones = [1000, 2000, 3000, 5000, 10000, 20000];
+      return milestones.find(v => stock < v) || null;
+    }
+
+    function getNextProjectDailyMilestone(minutes) {
+      const milestones = [60, 120, 180, 240, 300, 360];
+      return milestones.find(v => minutes < v) || null;
+    }
+
+    function buildTaroNextMaterials(todayExp, marketData, primaryData, stock) {
+      const materials = [];
+
+      if (marketData.nextRank) {
+        materials.push(marketData.nextText);
+      } else {
+        materials.push("AAA達成済み。ここからは質の高い復習で上振れ維持。");
+      }
+
+      const projectMilestone = getNextProjectDailyMilestone(primaryData.minutes);
+      if (projectMilestone) {
+        const missing = Math.max(0, projectMilestone - primaryData.minutes);
+        materials.push(`あと${formatMinutes(missing)}で ${primaryData.primary.project.name} 本日${formatMinutes(projectMilestone)}到達`);
+      }
+
+      const nextStock = getNextStockMilestone(stock);
+      if (nextStock) {
+        const estimatedMinutes = Math.max(1, Math.ceil((nextStock - stock) / 2.5));
+        if (estimatedMinutes <= 120) {
+          materials.push(`あと約${formatMinutes(estimatedMinutes)}で 株価${nextStock.toLocaleString('ja-JP')}円突破`);
+        }
+      }
+
+      const streak = calculateStreak();
+      if (todayExp > 0) {
+        materials.push(`あと1日記録で 連続稼働${streak + 1}日`);
+      } else if (streak > 0) {
+        materials.push("今日15分記録で 連続稼働を維持");
+      } else {
+        materials.push("まず25分記録で 初日稼働を確定");
+      }
+
+      return materials.slice(0, 3);
+    }
+
+    function renderTaroMarket(todayExp, stock) {
+      if (!$('taroMarketRank')) return;
+      const primaryData = getTodayPrimaryProjectMinutes();
+      const marketData = getTaroMarketRank(todayExp, primaryData.minutes);
+      const materials = buildTaroNextMaterials(todayExp, marketData, primaryData, stock);
+
+      $('taroMarketRank').textContent = marketData.rank;
+      $('taroMarketRank').className = `taro-market-rank ${marketData.className}`;
+      $('taroMarketNext').textContent = marketData.nextText;
+      $('taroMarketVolume').textContent = formatMinutes(todayExp);
+      $('taroAaaCondition').textContent = marketData.conditionText;
+      $('taroMarketComment').textContent = getTaroMarketComment(todayExp, marketData, primaryData);
+      $('taroNextMaterials').innerHTML = `
+        <div class="taro-next-materials-title">次の材料</div>
+        <ul>${materials.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      `;
     }
 
     function getTaroWeeklyData(offsetWeeks = 0) {
@@ -4392,244 +4627,47 @@
       return rows;
     }
 
-
-    function taroHashString(str) {
-      const text = String(str || "");
-      let hash = 0;
-      for (let i = 0; i < text.length; i++) {
-        hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
-      }
-      return Math.abs(hash);
-    }
-
-    function getTaroSessionTimeLabel(session) {
-      const raw = session.endedAt || session.createdAt || "";
-      const d = raw ? new Date(raw) : null;
-      if (d && !Number.isNaN(d.getTime())) {
-        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      }
-      return "記録";
-    }
-
-    function getTaroTodaySessions() {
-      const today = todayKey();
-      return (state.sessions || [])
-        .filter(s => s && s.date === today && Number(s.minutes || 0) > 0)
-        .slice()
-        .sort((a, b) => new Date(a.endedAt || a.createdAt || `${today}T23:59:59`) - new Date(b.endedAt || b.createdAt || `${today}T23:59:59`));
-    }
-
-    function getTaroLivePulse(todayExp, totalExp) {
-      if (todayExp <= 0) return 0;
-      const now = new Date();
-      const minute = now.getHours() * 60 + now.getMinutes();
-      const wave = Math.sin((minute + totalExp) / 7) * 3 + Math.sin((minute + todayExp) / 3.7) * 2;
-      const momentum = Math.min(12, Math.floor(todayExp / 25));
-      return Math.round(wave + momentum);
-    }
-
-    function getTaroIntradayRows(stock, prevStock, todayExp, totalExp) {
-      const todaySessions = getTaroTodaySessions();
-      const rows = [{ label: "寄付", value: prevStock, volume: 0, title: "前日終値から寄付" }];
-      const livePrice = stock + getTaroLivePulse(todayExp, totalExp);
-
-      if (todayExp <= 0 || todaySessions.length === 0) {
-        rows.push({ label: "現在", value: livePrice, volume: 0, title: "市場未稼働" });
-        return rows;
-      }
-
-      let cumulative = 0;
-      for (const session of todaySessions) {
-        cumulative += Number(session.minutes || 0);
-        const progress = Math.min(1, cumulative / Math.max(1, todayExp));
-        const noiseSeed = taroHashString(`${session.id || ""}${session.taskTitle || ""}${session.category || ""}`) % 7;
-        const noise = noiseSeed - 3;
-        const value = Math.round(prevStock + (livePrice - prevStock) * progress + noise);
-        rows.push({
-          label: getTaroSessionTimeLabel(session),
-          value,
-          volume: cumulative,
-          title: `${session.taskTitle || session.category || "記録"} ${formatMinutes(Number(session.minutes || 0))}`
-        });
-      }
-
-      if (rows[rows.length - 1].label !== "現在") {
-        rows.push({ label: "現在", value: livePrice, volume: todayExp, title: "現在気配" });
-      }
-      return rows;
-    }
-
-    function buildTaroIntradayChartSvg(rows) {
-      if (!rows || rows.length === 0) return `<div class="taro-chart-empty">本日の値動きはまだありません。</div>`;
-      const w = 360;
-      const h = 118;
-      const padL = 34;
-      const padR = 12;
-      const padT = 12;
-      const padB = 24;
-      const values = rows.map(r => Number(r.value || 0));
-      let min = Math.min(...values);
-      let max = Math.max(...values);
-      const rangePad = Math.max(8, Math.round((max - min) * .25));
-      min = Math.max(0, min - rangePad);
-      max = max + rangePad;
-      if (min === max) max = min + 20;
-      const x = (i) => padL + (rows.length === 1 ? 0 : i * ((w - padL - padR) / (rows.length - 1)));
-      const y = (v) => padT + (max - v) * ((h - padT - padB) / (max - min));
-      const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.value).toFixed(1)}`).join(" ");
-      const last = rows[rows.length - 1];
-      const first = rows[0];
-      const diff = Number(last.value || 0) - Number(first.value || 0);
-      const stroke = diff >= 0 ? "#34d399" : "#fb7185";
-      const fill = diff >= 0 ? "rgba(52,211,153,.12)" : "rgba(251,113,133,.12)";
-      const areaPoints = `${padL},${h-padB} ${points} ${w-padR},${h-padB}`;
-      const labelStep = rows.length > 8 ? Math.ceil(rows.length / 5) : 1;
-      const labels = rows.map((r, i) => {
-        if (i !== 0 && i !== rows.length - 1 && i % labelStep !== 0) return "";
-        return `<text x="${x(i).toFixed(1)}" y="${h-7}" text-anchor="middle" font-size="9" fill="#9ca3af">${escapeHtml(r.label)}</text>`;
-      }).join("");
-      const dots = rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.value).toFixed(1)}" r="2.6" fill="${stroke}"><title>${escapeHtml(r.label)}：${Number(r.value).toLocaleString('ja-JP')}円 / ${escapeHtml(r.title || "")}</title></circle>`).join("");
-
-      return `
-        <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="本日の値動き">
-          <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
-          <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
-          <line x1="${padL}" y1="${y(first.value).toFixed(1)}" x2="${w-padR}" y2="${y(first.value).toFixed(1)}" stroke="rgba(255,255,255,.14)" stroke-dasharray="4 4" />
-          <text x="4" y="${padT+4}" font-size="9" fill="#9ca3af">${Math.round(max).toLocaleString('ja-JP')}</text>
-          <text x="4" y="${h-padB}" font-size="9" fill="#9ca3af">${Math.round(min).toLocaleString('ja-JP')}</text>
-          <polygon points="${areaPoints}" fill="${fill}"></polygon>
-          <polyline points="${points}" fill="none" stroke="${stroke}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
-          ${dots}
-          ${labels}
-          <text x="${w-padR}" y="${padT+4}" text-anchor="end" font-size="10" fill="${stroke}">現在 ${Number(last.value).toLocaleString('ja-JP')}円</text>
-        </svg>`;
-    }
-
-    function getTaroMarketSnapshot(stock, prevStock, todayExp, totalExp) {
-      const rows = getTaroIntradayRows(stock, prevStock, todayExp, totalExp);
-      const values = rows.map(r => Number(r.value || 0));
-      const live = values[values.length - 1] || stock;
-      const high = Math.max(...values);
-      const low = Math.min(...values);
-      const tradingValue = Math.round(todayExp * live);
-      const change = live - prevStock;
-      const changePct = prevStock > 0 ? (change / prevStock) * 100 : 0;
-      return { rows, live, open: prevStock, high, low, tradingValue, change, changePct };
-    }
-
-    function buildTaroMarketNews(snapshot, todayExp) {
-      const todaySessions = getTaroTodaySessions();
-      const latest = todaySessions[todaySessions.length - 1];
-      const lines = [];
-      if (latest) {
-        lines.push({ time: getTaroSessionTimeLabel(latest), text: `${latest.category || "その他"}に${formatMinutes(Number(latest.minutes || 0))}投資。市場は追加材料として織り込み。` });
-      } else {
-        lines.push({ time: "寄付", text: "本日の取引材料はまだなし。最初の25分で値動きが出ます。" });
-      }
-      if (snapshot.high > snapshot.open) {
-        lines.push({ time: "高値", text: `本日高値${snapshot.high.toLocaleString('ja-JP')}円を確認。出来高は${formatMinutes(todayExp)}。` });
-      }
-      if (todayExp >= 100) {
-        lines.push({ time: "速報", text: "出来高100分を突破。市場ランクは強い水準に接近。" });
-      } else {
-        lines.push({ time: "気配", text: `あと${formatMinutes(Math.max(0, 100 - todayExp))}で出来高100分。追加記録が上昇材料。` });
-      }
-      return lines.slice(0, 3);
-    }
-
-    function renderTaroMarketDisplay(stock, prevStock, todayExp, totalExp) {
-      const snapshot = getTaroMarketSnapshot(stock, prevStock, todayExp, totalExp);
-      const liveChangeClass = snapshot.change > 0 ? "up" : snapshot.change < 0 ? "down" : "flat";
-      const liveChangeText = `${snapshot.change >= 0 ? "+" : ""}${snapshot.change.toLocaleString('ja-JP')}円 / ${snapshot.changePct >= 0 ? "+" : ""}${snapshot.changePct.toFixed(1)}%`;
-
-      if ($('taroStockPrice')) $('taroStockPrice').textContent = `${snapshot.live.toLocaleString('ja-JP')}円`;
-      if ($('taroStockChange')) {
-        $('taroStockChange').textContent = liveChangeText;
-        $('taroStockChange').className = `taro-change ${liveChangeClass}`;
-      }
-      if ($('taroOpenPrice')) $('taroOpenPrice').textContent = `${snapshot.open.toLocaleString('ja-JP')}円`;
-      if ($('taroHighPrice')) $('taroHighPrice').textContent = `${snapshot.high.toLocaleString('ja-JP')}円`;
-      if ($('taroLowPrice')) $('taroLowPrice').textContent = `${snapshot.low.toLocaleString('ja-JP')}円`;
-      if ($('taroTradingValue')) $('taroTradingValue').textContent = `${snapshot.tradingValue.toLocaleString('ja-JP')}`;
-      if ($('taroLiveTicker')) {
-        $('taroLiveTicker').textContent = `現在 ${snapshot.live.toLocaleString('ja-JP')}円　${liveChangeText}`;
-        $('taroLiveTicker').className = `taro-market-tape ${liveChangeClass}`;
-      }
-      if ($('taroIntradayChart')) $('taroIntradayChart').innerHTML = buildTaroIntradayChartSvg(snapshot.rows);
-      if ($('taroMarketNews')) {
-        $('taroMarketNews').innerHTML = buildTaroMarketNews(snapshot, todayExp).map(line => `
-          <div class="taro-market-news-line"><span class="taro-market-news-time">${escapeHtml(line.time)}</span>${escapeHtml(line.text)}</div>
-        `).join("");
-      }
-
-      return snapshot;
-    }
-
     function buildTaroStockChartSvg(rows) {
       if (!rows || rows.length === 0) return `<div class="taro-chart-empty">株価データがありません。</div>`;
 
-      const displayRows = rows.length > 70 ? rows.slice(-70) : rows;
       const w = 360;
-      const h = 160;
+      const h = 145;
       const padL = 34;
       const padR = 12;
-      const padT = 14;
-      const padB = 38;
-      const candleGap = 3;
-      const candleW = Math.max(3, Math.min(12, ((w - padL - padR) / Math.max(1, displayRows.length)) - candleGap));
-      const candles = displayRows.map((r, i) => {
-        const previous = i === 0 ? rows[Math.max(0, rows.length - displayRows.length - 1)] : displayRows[i - 1];
-        const open = Number(previous?.value || r.value || 0);
-        const close = Number(r.value || 0);
-        const wick = Math.max(4, Math.round(Math.sqrt(Number(r.volume || 0) + 1) * 0.9 + (taroHashString(`${r.start}${r.end}`) % 6)));
-        const high = Math.max(open, close) + wick;
-        const low = Math.max(0, Math.min(open, close) - wick);
-        return { ...r, open, close, high, low };
-      });
-
-      const values = candles.flatMap(c => [c.open, c.close, c.high, c.low]);
+      const padT = 12;
+      const padB = 28;
+      const values = rows.map(r => Number(r.value || 0));
       let min = Math.min(...values);
       let max = Math.max(...values);
       if (min === max) {
         min = Math.max(0, min - 50);
         max = max + 50;
       }
-      const x = (i) => padL + (displayRows.length === 1 ? 0 : i * ((w - padL - padR) / (displayRows.length - 1)));
+      const x = (i) => padL + (rows.length === 1 ? 0 : i * ((w - padL - padR) / (rows.length - 1)));
       const y = (v) => padT + (max - v) * ((h - padT - padB) / (max - min));
-      const linePoints = candles.map((c, i) => `${x(i).toFixed(1)},${y(c.close).toFixed(1)}`).join(" ");
-      const first = candles[0];
-      const last = candles[candles.length - 1];
-      const labelStep = candles.length > 10 ? Math.ceil(candles.length / 6) : candles.length > 7 ? 2 : 1;
-      const xLabels = candles.map((r, i) => {
-        if (i !== 0 && i !== candles.length - 1 && i % labelStep !== 0) return "";
-        return `<text x="${x(i).toFixed(1)}" y="${h-9}" text-anchor="middle" font-size="9" fill="#9ca3af">${escapeHtml(r.label)}</text>`;
+      const points = rows.map((r, i) => `${x(i).toFixed(1)},${y(r.value).toFixed(1)}`).join(" ");
+      const areaPoints = `${padL},${h-padB} ${points} ${w-padR},${h-padB}`;
+      const last = rows[rows.length - 1];
+      const first = rows[0];
+      const labelStep = rows.length > 10 ? Math.ceil(rows.length / 6) : rows.length > 7 ? 2 : 1;
+      const xLabels = rows.map((r, i) => {
+        if (i !== 0 && i !== rows.length - 1 && i % labelStep !== 0) return "";
+        return `<text x="${x(i).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="9" fill="#9ca3af">${escapeHtml(r.label)}</text>`;
       }).join("");
-      const candleSvg = candles.map((c, i) => {
-        const cx = x(i);
-        const up = c.close >= c.open;
-        const color = up ? "#34d399" : "#fb7185";
-        const bodyY = Math.min(y(c.open), y(c.close));
-        const bodyH = Math.max(2, Math.abs(y(c.close) - y(c.open)));
-        const left = cx - candleW / 2;
-        return `
-          <line x1="${cx.toFixed(1)}" y1="${y(c.high).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${y(c.low).toFixed(1)}" stroke="${color}" stroke-width="1.4" />
-          <rect x="${left.toFixed(1)}" y="${bodyY.toFixed(1)}" width="${candleW.toFixed(1)}" height="${bodyH.toFixed(1)}" rx="1.5" fill="${up ? 'rgba(52,211,153,.85)' : 'rgba(251,113,133,.85)'}">
-            <title>${escapeHtml(c.label)}：始値 ${Math.round(c.open).toLocaleString('ja-JP')}円 / 高値 ${Math.round(c.high).toLocaleString('ja-JP')}円 / 安値 ${Math.round(c.low).toLocaleString('ja-JP')}円 / 終値 ${Math.round(c.close).toLocaleString('ja-JP')}円 / 出来高 ${formatMinutes(c.volume)}</title>
-          </rect>
-        `;
-      }).join("");
+      const dots = rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.value).toFixed(1)}" r="2.4" fill="#34d399"><title>${escapeHtml(r.label)}：${Number(r.value).toLocaleString('ja-JP')}円 / 出来高 ${formatMinutes(r.volume)}</title></circle>`).join("");
 
       return `
-        <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="株式会社たろちゃん株価推移 ローソク足風">
+        <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="株式会社たろちゃん株価推移">
           <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
           <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="rgba(255,255,255,.14)" />
           <text x="4" y="${padT+4}" font-size="9" fill="#9ca3af">${Math.round(max).toLocaleString('ja-JP')}</text>
           <text x="4" y="${h-padB}" font-size="9" fill="#9ca3af">${Math.round(min).toLocaleString('ja-JP')}</text>
-          ${candleSvg}
-          <polyline points="${linePoints}" fill="none" stroke="rgba(56,189,248,.75)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          <polygon points="${areaPoints}" fill="rgba(56,189,248,.12)"></polygon>
+          <polyline points="${points}" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+          ${dots}
           ${xLabels}
-          <text x="${w-padR}" y="${padT+4}" text-anchor="end" font-size="10" fill="#bbf7d0">終値 ${Number(last.close).toLocaleString('ja-JP')}円</text>
-          <text x="${padL}" y="${h-23}" font-size="10" fill="#9ca3af">ローソク足風：努力量から擬似OHLCを生成</text>
+          <text x="${w-padR}" y="${padT+4}" text-anchor="end" font-size="10" fill="#bbf7d0">終値 ${Number(last.value).toLocaleString('ja-JP')}円</text>
+          <text x="${padL}" y="${padT+4}" font-size="10" fill="#e5e7eb">始値 ${Number(first.value).toLocaleString('ja-JP')}円</text>
         </svg>`;
     }
 
@@ -4647,7 +4685,7 @@
       const totalVolume = rows.reduce((sum, r) => sum + Number(r.volume || 0), 0);
       const modeLabel = mode === "week" ? "週次" : mode === "month" ? "月次" : "日次";
 
-      summary.textContent = `${modeLabel}ローソク足風チャート：保存済み履歴の全期間（${first.start} → ${last.end}）/ 変動 ${diffText} / 対象出来高 ${formatMinutes(totalVolume)}`;
+      summary.textContent = `${modeLabel}チャート：保存済み履歴の全期間（${first.start} → ${last.end}）/ 変動 ${diffText} / 対象出来高 ${formatMinutes(totalVolume)}`;
       chart.innerHTML = buildTaroStockChartSvg(rows);
 
       const btns = {
@@ -4734,7 +4772,10 @@ ${issue}
 
       const stock = calculateTaroStock(today);
       const prevStock = calculateTaroStock(yesterday);
-      const marketSnapshot = renderTaroMarketDisplay(stock, prevStock, todayExp, totalExp);
+      const change = stock - prevStock;
+      const changePct = prevStock > 0 ? (change / prevStock) * 100 : 0;
+      const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
+      const changeText = `${change >= 0 ? "+" : ""}${change}円（${changePct >= 0 ? "+" : ""}${changePct.toFixed(1)}%）`;
 
       const segments = getTaroSegments();
       const segMap = new Map(segments.map(s => [s.key, s]));
@@ -4748,7 +4789,11 @@ ${issue}
       const mainSegment = sortedSegments.find(s => s.minutes > 0);
 
       $('taroStageText').textContent = `${getTaroStageIcon(level)} Lv.${level}　${getTaroTitle(level)}`;
+      $('taroStockPrice').textContent = `${stock.toLocaleString('ja-JP')}円`;
+      $('taroStockChange').textContent = changeText;
+      $('taroStockChange').className = `taro-change ${changeClass}`;
       $('taroBusinessStatus').textContent = getTaroBusinessStatus(todayExp);
+      renderTaroMarket(todayExp, stock);
       $('taroLevelProgress').style.width = `${progressPct}%`;
       $('taroTodayExp').textContent = formatMinutes(todayExp);
       $('taroTotalExp').textContent = `${totalExp.toLocaleString('ja-JP')}`;
@@ -4806,6 +4851,44 @@ ${issue}
       if ($("alarmType")) $("alarmType").value = state.settings.alarmType || "urgent";
     }
 
+    function renderStudyLaunchpad() {
+      const task = currentTask() || getSuggestedTask();
+      const focusedMinutes = todaySessions().reduce((sum, session) => sum + Number(session.minutes || 0), 0);
+      const completed = todayTasks().filter(item => item.done).length;
+      const total = todayTasks().length;
+      const percent = Math.min(100, Math.round((focusedMinutes / 100) * 100));
+
+      $("launchMessage").textContent = focusedMinutes > 0
+        ? `今日は${formatMinutes(focusedMinutes)}集中済み。完了 ${completed}/${total}件。`
+        : "まずは開始ボタンを押すところまでで十分です。";
+      $("launchTask").textContent = task
+        ? `次の一歩：${task.title}`
+        : "次の一歩：下のクイック入力で、やることを1つ追加";
+      $("launchProgressBar").style.width = `${percent}%`;
+      $("launchFocusBtn").disabled = !task;
+      $("launchQuickBtn").disabled = !task;
+    }
+
+    function launchFocus(minutes = null) {
+      const task = currentTask() || getSuggestedTask();
+      if (!task) {
+        $("quickTaskInput").focus();
+        $("quickTaskInput").scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      setCurrentTask(task.id);
+      if (minutes) {
+        timer.mode = "focus";
+        timer.running = false;
+        timer.secondsLeft = minutes * 60;
+        timer.totalSeconds = minutes * 60;
+        renderTimer();
+      }
+      document.querySelector(".timer").scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!timer.running) startPauseTimer();
+    }
+
     function render() {
       $("todayText").textContent = dateLabel();
       renderCurrentTask();
@@ -4822,6 +4905,7 @@ ${issue}
       renderTaroCompany();
       renderTimer();
       renderSettings();
+      renderStudyLaunchpad();
     }
 
     let wakeLock = null;
@@ -5902,24 +5986,51 @@ ${issue}
     function showDashboardView() {
       const dashboard = $("dashboardView");
       const calendar = $("calendarView");
+      const rpg = $("rpgView");
       const dashboardTab = $("showDashboardTab");
       const calendarTab = $("showCalendarTab");
+      const rpgTab = $("showRpgTab");
       if (dashboard) dashboard.style.display = "grid";
       if (calendar) calendar.classList.remove("show");
+      if (rpg) rpg.classList.remove("show");
       if (dashboardTab) dashboardTab.classList.add("active-tab");
       if (calendarTab) calendarTab.classList.remove("active-tab");
+      if (rpgTab) rpgTab.classList.remove("active-tab");
     }
 
     function showCalendarView() {
       const dashboard = $("dashboardView");
       const calendar = $("calendarView");
+      const rpg = $("rpgView");
       const dashboardTab = $("showDashboardTab");
       const calendarTab = $("showCalendarTab");
+      const rpgTab = $("showRpgTab");
       const frame = $("calendarFrame");
       if (dashboard) dashboard.style.display = "none";
       if (calendar) calendar.classList.add("show");
+      if (rpg) rpg.classList.remove("show");
       if (dashboardTab) dashboardTab.classList.remove("active-tab");
       if (calendarTab) calendarTab.classList.add("active-tab");
+      if (rpgTab) rpgTab.classList.remove("active-tab");
+      if (frame && frame.contentWindow) {
+        try { frame.contentWindow.location.reload(); } catch {}
+      }
+    }
+
+    function showRpgView() {
+      const dashboard = $("dashboardView");
+      const calendar = $("calendarView");
+      const rpg = $("rpgView");
+      const dashboardTab = $("showDashboardTab");
+      const calendarTab = $("showCalendarTab");
+      const rpgTab = $("showRpgTab");
+      const frame = $("rpgFrame");
+      if (dashboard) dashboard.style.display = "none";
+      if (calendar) calendar.classList.remove("show");
+      if (rpg) rpg.classList.add("show");
+      if (dashboardTab) dashboardTab.classList.remove("active-tab");
+      if (calendarTab) calendarTab.classList.remove("active-tab");
+      if (rpgTab) rpgTab.classList.add("active-tab");
       if (frame && frame.contentWindow) {
         try { frame.contentWindow.location.reload(); } catch {}
       }
@@ -5951,7 +6062,7 @@ ${issue}
     }
 
     function registerServiceWorker() {
-      if (!("serviceWorker" in navigator)) return;
+      if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
 
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("sw.js")
@@ -5990,7 +6101,14 @@ ${issue}
 
     if ($("showDashboardTab")) $("showDashboardTab").addEventListener("click", showDashboardView);
     if ($("showCalendarTab")) $("showCalendarTab").addEventListener("click", showCalendarView);
+    if ($("showRpgTab")) $("showRpgTab").addEventListener("click", showRpgView);
     if ($("backToDashboardBtn")) $("backToDashboardBtn").addEventListener("click", showDashboardView);
+    if ($("backToDashboardFromRpgBtn")) $("backToDashboardFromRpgBtn").addEventListener("click", showDashboardView);
+    window.addEventListener("message", event => {
+      if (event.data && event.data.type === "show-dashboard") showDashboardView();
+    });
+    if ($("launchFocusBtn")) $("launchFocusBtn").addEventListener("click", () => launchFocus());
+    if ($("launchQuickBtn")) $("launchQuickBtn").addEventListener("click", () => launchFocus(2));
     $("addTaskBtn").addEventListener("click", addTask);
     $("addManualLogBtn").addEventListener("click", addManualLog);
     $("quickAddTaskBtn").addEventListener("click", addQuickTaskFromInput);
@@ -6054,9 +6172,6 @@ ${issue}
     removeRecurringLocalData();
     disableRepeatInputs();
     render();
-    setInterval(() => {
-      if ($('taroCompanyCard')) renderTaroCompany();
-    }, 30000);
     cleanupRecurringEverywhere();
     startInitialSupabaseSync();
     startInitialTaskSync();
