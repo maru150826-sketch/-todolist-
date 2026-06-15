@@ -153,6 +153,42 @@
       backdrop-filter: blur(8px);
     }
 
+    .boss-switcher {
+      position: relative;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .boss-switch-label {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 800;
+    }
+
+    .boss-switcher button {
+      flex: 0 0 auto;
+      min-width: 78px;
+      padding: 7px 12px;
+      border-color: rgba(148, 163, 184, .28);
+      border-radius: 999px;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, .72);
+      font-size: .78rem;
+    }
+
+    .boss-switcher button.active {
+      border-color: rgba(56, 189, 248, .85);
+      color: #f8fafc;
+      background: linear-gradient(135deg, rgba(14, 116, 144, .88), rgba(67, 56, 202, .88));
+      box-shadow: 0 0 18px rgba(56, 189, 248, .2);
+    }
+
     .battle-stage {
       position: relative;
       min-height: 420px;
@@ -223,7 +259,7 @@
       z-index: 7;
       top: 18px;
       right: 40px;
-      width: min(42%, 390px);
+      width: min(39%, 370px);
     }
 
     .canvas-stage .action-bubble {
@@ -386,12 +422,30 @@
     }
 
     .boss-hud-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
       margin-bottom: 7px;
       font-size: .78rem;
       font-weight: 800;
+    }
+
+    #battleBossName {
+      overflow: hidden;
+      color: #f8fafc;
+      font-size: .83rem;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .boss-numbers {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #cbd5e1;
+      font-size: .72rem;
+      white-space: nowrap;
     }
 
     #battleBossHpBar {
@@ -1169,10 +1223,11 @@
       .battle-stage { min-height: 0; }
       .canvas-stage { padding: 0 8px 12px; }
       #adventureCanvas { min-height: 360px; object-fit: cover; }
+      .boss-switcher { padding: 10px 12px 0; }
       .canvas-stage .boss-hud {
         top: 12px;
         right: 18px;
-        width: 55%;
+        width: 48%;
       }
       .canvas-stage .action-bubble {
         left: 18px;
@@ -1224,13 +1279,23 @@
           </div>
           <button class="replay-button" id="replayBattleBtn" type="button">演出をもう一度</button>
         </div>
+        <div class="boss-switcher" id="bossSwitcher" aria-label="表示する目標を選択">
+          <span class="boss-switch-label">表示する目標</span>
+          <button type="button" data-project="auto">自動</button>
+          <button type="button" data-project="it-passport">IT</button>
+          <button type="button" data-project="toeic-900">TOEIC</button>
+          <button type="button" data-project="hsk-3">HSK</button>
+        </div>
         <div class="battle-stage canvas-stage" id="battleStage">
           <canvas id="adventureCanvas" width="960" height="420" aria-label="現在地から中間地点を通ってゴールへ進む、たろちゃんのドット絵冒険画面"></canvas>
           <div class="action-bubble" id="actionBubble">次の一歩を積み上げています。</div>
           <div class="boss-hud">
             <div class="boss-hud-top">
               <span id="battleBossName">ITパスポート試験</span>
-              <span id="battleBossHpText">HP 7,200 / 7,200</span>
+              <div class="boss-numbers">
+                <span id="battleBossProgressText">進行度 0%</span>
+                <span id="battleBossHpText">HP 7,200 / 7,200</span>
+              </div>
             </div>
             <div class="bar hp"><div id="battleBossHpBar"></div></div>
           </div>
@@ -1330,6 +1395,7 @@
     const STORAGE_KEY = "focus_dashboard_v1";
     const AVATAR_STORAGE_KEY = "taro_rpg_avatar_v1";
     const LAST_BATTLE_SESSION_KEY = "taro_rpg_last_battle_session_v1";
+    const SELECTED_PROJECT_KEY = "taro_rpg_selected_project_v1";
     const $ = id => document.getElementById(id);
     let currentPlayerLevel = 1;
     let latestBattleData = null;
@@ -1563,13 +1629,31 @@
 
     function isProjectSession(session, project) {
       const text = sessionText(session);
+      const isChinese =
+        session.category === "中国語" ||
+        text.includes("中国語") ||
+        text.includes("hsk") ||
+        text.includes("chinese") ||
+        text.includes("中検");
+      const isEnglish =
+        session.category === "TOEIC" ||
+        text.includes("toeic") ||
+        text.includes("英語") ||
+        text.includes("english") ||
+        text.includes("part 7") ||
+        (!isChinese && (text.includes("単語") || text.includes("精読")));
       if (project.id === "it-passport") {
-        return session.category === "ITパスポート" || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報");
+        return !isChinese && !isEnglish && (
+          session.category === "ITパスポート" ||
+          text.includes("itパスポート") ||
+          text.includes("過去問") ||
+          text.includes("情報")
+        );
       }
       if (project.id === "toeic-900") {
-        return session.category === "TOEIC" || text.includes("toeic") || text.includes("英語") || text.includes("part 7") || text.includes("単語") || text.includes("精読");
+        return isEnglish;
       }
-      return session.category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("chinese") || text.includes("中検");
+      return isChinese;
     }
 
     function activityForSession(session) {
@@ -1823,6 +1907,33 @@
       return primary;
     }
 
+    function selectedProjectMode() {
+      const saved = localStorage.getItem(SELECTED_PROJECT_KEY) || "auto";
+      return saved === "auto" || PROJECTS.some(project => project.id === saved) ? saved : "auto";
+    }
+
+    function selectedProjectRow(rows, latest, primary) {
+      const mode = selectedProjectMode();
+      if (mode === "auto") return targetProjectForSession(latest, rows, primary);
+      return rows.find(row => row.project.id === mode) || primary;
+    }
+
+    function updateBossSwitcher() {
+      const selected = selectedProjectMode();
+      document.querySelectorAll("#bossSwitcher [data-project]").forEach(button => {
+        const active = button.dataset.project === selected;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    }
+
+    function sessionDamagesTarget(session, target, primary) {
+      if (!session || activityForSession(session) !== "study") return false;
+      if (isProjectSession(session, target.project)) return true;
+      const matchesAnyProject = PROJECTS.some(project => isProjectSession(session, project));
+      return !matchesAnyProject && primary && target.project.id === primary.project.id;
+    }
+
     function canvasPalette() {
       const style = loadAvatarConfig().style;
       const palettes = {
@@ -1851,11 +1962,106 @@
       ctx.restore();
     }
 
+    function drawSegment(ctx, x1, y1, x2, y2, width, color) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      drawLimb(ctx, x1, y1, width, Math.hypot(dx, dy), Math.atan2(dy, dx) - Math.PI / 2, color);
+    }
+
+    function drawPixelSegment(ctx, x1, y1, x2, y2, size, color) {
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 4));
+      for (let i = 0; i <= steps; i += 1) {
+        const ratio = i / steps;
+        pixelRect(
+          ctx,
+          x1 + (x2 - x1) * ratio - size / 2,
+          y1 + (y2 - y1) * ratio - size / 2,
+          size,
+          size,
+          color
+        );
+      }
+    }
+
+    function legJoints(hipX, hipY, footX, footY) {
+      const upper = 25;
+      const lower = 25;
+      const dx = footX - hipX;
+      const dy = footY - hipY;
+      const distance = Math.max(8, Math.min(upper + lower - 1, Math.hypot(dx, dy)));
+      const direction = Math.atan2(dy, dx);
+      const offset = Math.acos(
+        Math.max(-1, Math.min(1, (upper * upper + distance * distance - lower * lower) / (2 * upper * distance)))
+      );
+      const thighAngle = direction - offset;
+      return {
+        kneeX: hipX + Math.cos(thighAngle) * upper,
+        kneeY: hipY + Math.sin(thighAngle) * upper,
+        footX,
+        footY
+      };
+    }
+
+    function drawWalkingLeg(ctx, hipX, hipY, footX, footY, backLeg) {
+      const joints = legJoints(hipX, hipY, footX, footY);
+      const trouser = backLeg ? "#1e293b" : "#475569";
+      drawPixelSegment(ctx, hipX, hipY, joints.kneeX, joints.kneeY, 9, trouser);
+      drawPixelSegment(ctx, joints.kneeX, joints.kneeY, joints.footX, joints.footY, 8, trouser);
+      const facing = joints.footX >= hipX ? 1 : -1;
+      pixelRect(
+        ctx,
+        joints.footX + (facing > 0 ? -2 : -14),
+        joints.footY - 2,
+        16,
+        7,
+        backLeg ? "#020617" : "#0f172a"
+      );
+    }
+
+    function drawSpriteLeg(ctx, hipX, hipY, kneeX, kneeY, footX, footY, backLeg) {
+      const trouser = backLeg ? "#1e293b" : "#475569";
+      drawPixelSegment(ctx, hipX, hipY, kneeX, kneeY, 9, trouser);
+      drawPixelSegment(ctx, kneeX, kneeY, footX, footY, 8, trouser);
+      const facing = footX >= hipX ? 1 : -1;
+      pixelRect(
+        ctx,
+        footX + (facing > 0 ? -2 : -14),
+        footY - 2,
+        16,
+        7,
+        backLeg ? "#020617" : "#0f172a"
+      );
+    }
+
     function drawPixelHero(ctx, x, groundY, activity, phase, actionAmount) {
       const colors = canvasPalette();
-      const walking = activity === "walking" || actionAmount < .72;
-      const stride = walking ? Math.sin(phase) : 0;
-      const bob = walking ? Math.abs(Math.sin(phase)) * 3 : Math.sin(phase * .25) * 1.5;
+      const walking = activity === "walking" || actionAmount < .52;
+      const rawWalkFrame = walking ? Math.floor(phase / 1.7) : 1;
+      const walkFrame = ((rawWalkFrame % 4) + 4) % 4;
+      const poses = [
+        {
+          left: { kneeX: 7, kneeY: 20, footX: 20, lift: 0 },
+          right: { kneeX: -9, kneeY: 18, footX: -14, lift: 10 },
+          arm: -1
+        },
+        {
+          left: { kneeX: -5, kneeY: 21, footX: -8, lift: 0 },
+          right: { kneeX: 6, kneeY: 21, footX: 9, lift: 0 },
+          arm: 0
+        },
+        {
+          left: { kneeX: -9, kneeY: 18, footX: -14, lift: 10 },
+          right: { kneeX: 7, kneeY: 20, footX: 20, lift: 0 },
+          arm: 1
+        },
+        {
+          left: { kneeX: 5, kneeY: 21, footX: 8, lift: 0 },
+          right: { kneeX: -6, kneeY: 21, footX: -9, lift: 0 },
+          arm: 0
+        }
+      ];
+      const pose = poses[walkFrame];
+      const bob = walking && walkFrame % 2 === 0 ? 1 : 0;
       const squat = activity === "training" ? (Math.sin(phase * .7) + 1) * 6 : 0;
       const baseY = groundY + squat - bob;
 
@@ -1863,16 +2069,40 @@
       pixelRect(ctx, x - 25, groundY + 3, 50, 7, "#020617");
       ctx.globalAlpha = 1;
 
-      drawLimb(ctx, x - 7, baseY - 42, 8, 39, stride * .48, "#1e293b");
-      drawLimb(ctx, x + 7, baseY - 42, 8, 39, -stride * .48, "#334155");
-      pixelRect(ctx, x - 17 + stride * 8, baseY - 7, 22, 7, "#0f172a");
-      pixelRect(ctx, x - 5 - stride * 8, baseY - 7, 22, 7, "#0f172a");
+      if (walking) {
+        const hipY = baseY - 43;
+        drawSpriteLeg(
+          ctx,
+          x - 7,
+          hipY,
+          x + pose.left.kneeX,
+          hipY + pose.left.kneeY,
+          x + pose.left.footX,
+          groundY - 5 - pose.left.lift,
+          true
+        );
+        drawSpriteLeg(
+          ctx,
+          x + 7,
+          hipY,
+          x + pose.right.kneeX,
+          hipY + pose.right.kneeY,
+          x + pose.right.footX,
+          groundY - 5 - pose.right.lift,
+          false
+        );
+      } else {
+        pixelRect(ctx, x - 13, baseY - 43, 10, 39, "#1e293b");
+        pixelRect(ctx, x + 4, baseY - 43, 10, 39, "#475569");
+        pixelRect(ctx, x - 17, groundY - 7, 18, 7, "#020617");
+        pixelRect(ctx, x + 3, groundY - 7, 18, 7, "#0f172a");
+      }
 
       pixelRect(ctx, x - 16, baseY - 82, 32, 43, colors.coat);
       pixelRect(ctx, x - 3, baseY - 80, 6, 38, colors.trim);
       pixelRect(ctx, x - 18, baseY - 84, 36, 7, colors.accent);
 
-      let armSwing = -stride * .45;
+      let armSwing = walking ? pose.arm * .52 : 0;
       if (activity === "training") {
         armSwing = -1.7 + Math.sin(phase * .7) * .18;
       } else if (activity === "study" && actionAmount > .72) {
@@ -1898,7 +2128,7 @@
       }
     }
 
-    function drawPixelBoss(ctx, x, groundY, projectId, shake = 0, dimmed = false) {
+    function drawPixelBoss(ctx, x, groundY, projectId, damageRatio, phase, shake = 0, dimmed = false, hit = false) {
       const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
       const colors = type === "it"
         ? { body: "#172554", armor: "#2563eb", trim: "#fbbf24", glow: "#22d3ee" }
@@ -1908,7 +2138,7 @@
       const sx = x + shake;
       ctx.save();
       ctx.globalAlpha = dimmed ? .45 : 1;
-      ctx.shadowColor = colors.glow;
+      ctx.shadowColor = hit ? "#ffffff" : colors.glow;
       ctx.shadowBlur = dimmed ? 4 : 18;
       pixelRect(ctx, sx - 32, groundY - 94, 64, 83, colors.body);
       pixelRect(ctx, sx - 42, groundY - 82, 84, 19, colors.armor);
@@ -1932,6 +2162,46 @@
         pixelRect(ctx, sx - 50, groundY - 84, 12, 58, colors.glow);
         pixelRect(ctx, sx + 38, groundY - 84, 12, 58, colors.glow);
       }
+
+      if (damageRatio > 0) {
+        pixelRect(ctx, sx - 25, groundY - 76, 24, 4, "#f8fafc");
+        pixelRect(ctx, sx - 10, groundY - 72, 4, 13, "#94a3b8");
+        pixelRect(ctx, sx + 12, groundY - 48, 20, 4, "#0f172a");
+      }
+      if (damageRatio >= .35) {
+        pixelRect(ctx, sx + 9, groundY - 121, 4, 18, "#020617");
+        pixelRect(ctx, sx + 13, groundY - 106, 11, 4, "#020617");
+        pixelRect(ctx, sx - 34, groundY - 62, 7, 7, "#f97316");
+      }
+      if (damageRatio >= .55) {
+        const spark = Math.floor(phase / 3) % 2 === 0;
+        pixelRect(ctx, sx - 45, groundY - 76, 9, 30, "#020617");
+        if (spark) {
+          pixelRect(ctx, sx - 51, groundY - 64, 7, 4, "#fde047");
+          pixelRect(ctx, sx - 47, groundY - 72, 4, 7, "#fb923c");
+          pixelRect(ctx, sx - 47, groundY - 57, 4, 7, "#fb923c");
+        }
+      }
+      if (damageRatio >= .72) {
+        pixelRect(ctx, sx + 30, groundY - 83, 20, 58, "#020617");
+        pixelRect(ctx, sx + 36, groundY - 34, 18, 8, "#475569");
+        pixelRect(ctx, sx - 18, groundY - 91, 15, 12, "#64748b");
+      }
+      if (damageRatio >= .45) {
+        const smokeY = (phase * 2) % 34;
+        ctx.globalAlpha = dimmed ? .18 : .42;
+        pixelRect(ctx, sx + 19, groundY - 137 - smokeY, 18, 15, "#94a3b8");
+        pixelRect(ctx, sx + 8, groundY - 151 - smokeY, 24, 17, "#475569");
+        ctx.globalAlpha = dimmed ? .45 : 1;
+      }
+      if (damageRatio >= .9 && Math.floor(phase / 2) % 2 === 0) {
+        ctx.globalAlpha = .35;
+        pixelRect(ctx, sx - 48, groundY - 143, 96, 136, "#ef4444");
+      }
+      if (hit) {
+        ctx.globalAlpha = .48;
+        pixelRect(ctx, sx - 51, groundY - 151, 102, 145, "#ffffff");
+      }
       ctx.restore();
     }
 
@@ -1942,6 +2212,60 @@
       ctx.font = "900 11px system-ui";
       ctx.textAlign = "center";
       ctx.fillText(completed ? "CLEAR" : label, x, roadY - 67);
+    }
+
+    function drawWorldLandmarks(ctx, projectId, roadY, phase) {
+      if (projectId === "it-passport") {
+        [150, 580].forEach((x, index) => {
+          pixelRect(ctx, x, roadY - 116 - index * 14, 58, 116 + index * 14, "#0f2747");
+          pixelRect(ctx, x + 7, roadY - 105 - index * 14, 44, 8, "#1d4ed8");
+          for (let y = roadY - 87; y < roadY - 15; y += 17) {
+            pixelRect(ctx, x + 10, y, 7, 5, "#22d3ee");
+            pixelRect(ctx, x + 23, y, 21, 5, "#334155");
+          }
+        });
+        ctx.strokeStyle = "rgba(34, 211, 238, .35)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(208, roadY - 92);
+        ctx.lineTo(580, roadY - 124);
+        ctx.stroke();
+      } else if (projectId === "toeic-900") {
+        pixelRect(ctx, 145, roadY - 88, 88, 88, "#312e81");
+        pixelRect(ctx, 155, roadY - 76, 68, 62, "#faf5ff");
+        ctx.strokeStyle = "#7c3aed";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(189, roadY - 45, 25, 0, Math.PI * 2);
+        ctx.stroke();
+        drawSegment(ctx, 189, roadY - 45, 189, roadY - 63, 4, "#1e1b4b");
+        drawSegment(ctx, 189, roadY - 45, 205, roadY - 39, 4, "#1e1b4b");
+        [565, 590, 615].forEach((x, index) => {
+          pixelRect(ctx, x, roadY - 42 - index * 12, 54, 42 + index * 12, index % 2 ? "#5b21b6" : "#3730a3");
+          pixelRect(ctx, x + 7, roadY - 34 - index * 12, 40, 5, "#fbbf24");
+        });
+      } else {
+        pixelRect(ctx, 150, roadY - 118, 12, 118, "#7f1d1d");
+        pixelRect(ctx, 225, roadY - 118, 12, 118, "#7f1d1d");
+        pixelRect(ctx, 135, roadY - 126, 117, 13, "#dc2626");
+        pixelRect(ctx, 151, roadY - 142, 85, 14, "#fbbf24");
+        [570, 650].forEach((x, index) => {
+          const glow = Math.floor(phase / 4 + index) % 2 ? "#fb923c" : "#fbbf24";
+          pixelRect(ctx, x, roadY - 105, 7, 105, "#78350f");
+          pixelRect(ctx, x - 15, roadY - 104, 37, 28, "#991b1b");
+          pixelRect(ctx, x - 10, roadY - 99, 27, 18, glow);
+        });
+      }
+    }
+
+    function drawBattleMessage(ctx, text, accent) {
+      pixelRect(ctx, 305, 77, 350, 58, "#020617");
+      pixelRect(ctx, 309, 81, 342, 50, "#111827");
+      pixelRect(ctx, 318, 91, 8, 30, accent);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 18px system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText(text, 340, 112);
     }
 
     function drawCanvasScene(state, now) {
@@ -1965,7 +2289,7 @@
         : destinationX;
       let heroX = walkingStartX + (destinationX - walkingStartX) * easedWalk;
       const actionAmount = state.animate ? Math.min(1, elapsed / duration) : 1;
-      const attackPhase = state.activity === "study" && state.animate && elapsed >= 2550 && elapsed <= 4100;
+      const attackPhase = state.canAttack && state.animate && elapsed >= 2550 && elapsed <= 4100;
       const impactPhase = attackPhase && elapsed >= 3350;
       const roaming = state.activity === "walking" && !state.animate;
       if (roaming) heroX += Math.sin(elapsed / 900) * 22;
@@ -2002,6 +2326,7 @@
       ctx.lineTo(0, 340);
       ctx.fill();
 
+      drawWorldLandmarks(ctx, state.target.project.id, roadY, elapsed / 115);
       pixelRect(ctx, 0, roadY, canvas.width, 80, "#111827");
       pixelRect(ctx, routeStart, roadY - 8, routeEnd - routeStart, 10, "#475569");
       pixelRect(ctx, routeStart, roadY - 8, Math.max(0, heroX - routeStart), 10, "#fbbf24");
@@ -2014,7 +2339,23 @@
       drawCheckpoint(ctx, routeEnd, roadY, "GOAL", shownProgress >= .98, shownProgress >= 1);
 
       const bossShake = impactPhase ? Math.sin(elapsed / 22) * 9 : 0;
-      drawPixelBoss(ctx, routeEnd, roadY, state.target.project.id, bossShake, state.activity !== "study");
+      const beforeHit = state.canAttack && state.animate && elapsed < 3350;
+      const displayedDamage = beforeHit
+        ? Math.max(0, state.target.damage - state.minutes)
+        : state.target.damage;
+      const damageRatio = Math.max(0, Math.min(1, displayedDamage / state.target.project.requiredMinutes));
+      const hitFlash = impactPhase && Math.floor(elapsed / 70) % 2 === 0;
+      drawPixelBoss(
+        ctx,
+        routeEnd,
+        roadY,
+        state.target.project.id,
+        damageRatio,
+        elapsed / 115,
+        bossShake,
+        state.activity !== "study",
+        hitFlash
+      );
       drawPixelHero(ctx, Math.min(heroX, routeEnd - 78), roadY, state.activity, elapsed / 115, actionAmount);
       const heroLabelX = Math.min(heroX, routeEnd - 78);
       pixelRect(ctx, heroLabelX - 17, roadY - 151, 34, 21, "rgba(2, 6, 23, .88)");
@@ -2047,12 +2388,15 @@
         ctx.stroke();
       }
 
-      ctx.fillStyle = "rgba(2, 6, 23, .76)";
-      ctx.fillRect(340, 18, 250, 48);
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "900 17px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText(`${state.target.project.shortName} 進行度 ${Math.round(state.toProgress * 100)}%`, 465, 48);
+      if (attackPhase) {
+        drawBattleMessage(
+          ctx,
+          impactPhase
+            ? `${state.target.project.shortName}に ${state.minutes} ダメージ！`
+            : "たろちゃんの べんきょうこうげき！",
+          impactPhase ? "#f97316" : "#38bdf8"
+        );
+      }
 
       adventureAnimationId = requestAnimationFrame(next => drawCanvasScene(state, next));
     }
@@ -2063,6 +2407,7 @@
       const state = {
         ...data,
         animate: replay || data.shouldAttack || data.activity === "training",
+        canAttack: data.activity === "study" && data.minutes > 0,
         startedAt: performance.now()
       };
       adventureAnimationId = requestAnimationFrame(now => drawCanvasScene(state, now));
@@ -2074,27 +2419,36 @@
     }
 
     function renderLiveAdventure(sessions, rows, primary, forceReplay = false) {
-      const latest = sortedSessions(sessions)[0] || null;
-      const activity = activityForSession(latest);
-      const target = targetProjectForSession(latest, rows, primary);
+      const latestOverall = sortedSessions(sessions)[0] || null;
+      const target = selectedProjectRow(rows, latestOverall, primary);
+      const mode = selectedProjectMode();
+      const latestForTarget = sortedSessions(sessions)
+        .find(session => sessionDamagesTarget(session, target, primary)) || null;
+      const latest = mode === "auto" ? latestOverall : latestForTarget;
+      const activity = mode === "auto" ? activityForSession(latest) : "study";
       const minutes = latest ? minutesOf(latest) : 0;
       const title = latest ? (latest.taskTitle || latest.title || latest.category || "記録") : "次の冒険";
       const seenId = localStorage.getItem(LAST_BATTLE_SESSION_KEY);
-      const isNewSession = Boolean(latest && latest.id && latest.id !== seenId);
-      const shouldAttack = activity === "study" && (forceReplay || isNewSession);
+      const isLatestRecord = Boolean(latest && latestOverall && latest.id === latestOverall.id);
+      const isNewSession = Boolean(isLatestRecord && latest.id && latest.id !== seenId);
+      const damagesTarget = sessionDamagesTarget(latest, target, primary);
+      const shouldAttack = damagesTarget && (forceReplay || isNewSession);
 
       const toProgress = Math.max(0, Math.min(1, target.damage / target.project.requiredMinutes));
-      const fromDamage = activity === "study" ? Math.max(0, target.damage - minutes) : target.damage;
+      const fromDamage = damagesTarget ? Math.max(0, target.damage - minutes) : target.damage;
       const fromProgress = Math.max(0, Math.min(1, fromDamage / target.project.requiredMinutes));
       latestBattleData = { latest, activity, target, minutes, title, shouldAttack, fromProgress, toProgress };
       const live = $("liveAdventure");
       live.className = `panel live-adventure mode-${activity}`;
+      updateBossSwitcher();
 
       const copy = {
         study: {
           heading: "たろちゃん、集中任務中",
           bubble: "理解した分だけ、攻撃力に変わる。",
-          status: `${title}を${minutes}分進めました。学習記録がボスへのダメージになります。`
+          status: latest
+            ? `${title}を${minutes}分進めました。学習記録がボスへのダメージになります。`
+            : `${target.project.shortName}を選択中。対応する学習記録が増えるとボスが傷つきます。`
         },
         training: {
           heading: "たろちゃん、社長体力を強化中",
@@ -2114,6 +2468,7 @@
       $("liveStatus").textContent = copy.status;
       $("actionBubble").textContent = copy.bubble;
       $("battleBossName").textContent = target.project.name;
+      $("battleBossProgressText").textContent = `進行度 ${Math.round(toProgress * 100)}%`;
       $("battleBossHpText").textContent =
         `HP ${target.remaining.toLocaleString()} / ${target.project.requiredMinutes.toLocaleString()}`;
       const remainingPercent = Math.max(0, Math.min(100, (target.remaining / target.project.requiredMinutes) * 100));
@@ -2332,11 +2687,17 @@
 
     $("refreshBtn").addEventListener("click", () => render(false));
     $("replayBattleBtn").addEventListener("click", () => {
-      if (latestBattleData && latestBattleData.activity === "study") {
+      if (latestBattleData && latestBattleData.activity === "study" && latestBattleData.minutes > 0) {
         playBattleAnimation();
       } else {
         render(true);
       }
+    });
+    $("bossSwitcher").addEventListener("click", event => {
+      const button = event.target.closest("[data-project]");
+      if (!button) return;
+      localStorage.setItem(SELECTED_PROJECT_KEY, button.dataset.project);
+      render(false);
     });
     $("wardrobeOptions").addEventListener("click", event => {
       const button = event.target.closest("[data-avatar]");
