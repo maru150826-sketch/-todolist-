@@ -83,6 +83,389 @@
       box-shadow: var(--shadow);
     }
 
+    .live-adventure {
+      position: relative;
+      min-height: 500px;
+      padding: 0;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: rgba(56, 189, 248, .38);
+      background: #050914;
+    }
+
+    .live-adventure::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 35%, rgba(56, 189, 248, .22), transparent 31%),
+        radial-gradient(circle at 82% 34%, rgba(251, 113, 133, .18), transparent 34%),
+        linear-gradient(135deg, #081226, #111827 50%, #160b1c);
+    }
+
+    .live-adventure.mode-training::before {
+      background:
+        radial-gradient(circle at 22% 35%, rgba(251, 113, 133, .25), transparent 32%),
+        linear-gradient(145deg, #170b0d, #111827 58%, #23120a);
+    }
+
+    .live-adventure.mode-walking::before {
+      background:
+        radial-gradient(circle at 50% 5%, rgba(251, 191, 36, .28), transparent 32%),
+        linear-gradient(#182848, #203a63 52%, #101827 53%);
+    }
+
+    .live-head {
+      position: relative;
+      z-index: 8;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px 0;
+    }
+
+    .live-kicker {
+      color: var(--accent);
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    .live-title {
+      margin-top: 3px;
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 900;
+    }
+
+    .live-status {
+      max-width: 470px;
+      margin-top: 5px;
+      color: #cbd5e1;
+      font-size: .88rem;
+    }
+
+    .replay-button {
+      flex: 0 0 auto;
+      border-color: rgba(56, 189, 248, .48);
+      background: rgba(8, 18, 38, .72);
+      backdrop-filter: blur(8px);
+    }
+
+    .battle-stage {
+      position: relative;
+      min-height: 420px;
+      overflow: hidden;
+    }
+
+    .battle-stage::after {
+      content: "";
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 30px;
+      height: 70px;
+      border: 1px solid rgba(56, 189, 248, .22);
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(56, 189, 248, .2), transparent 68%);
+      transform: perspective(400px) rotateX(65deg);
+    }
+
+    .battle-character,
+    .battle-boss {
+      position: absolute;
+      z-index: 3;
+      bottom: 34px;
+      object-fit: cover;
+      object-position: center 18%;
+      filter: drop-shadow(0 22px 18px rgba(0,0,0,.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .battle-character {
+      left: 7%;
+      width: min(29%, 300px);
+      height: 350px;
+      border-radius: 28px;
+      mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+      animation: heroBreathing 3.2s ease-in-out infinite;
+    }
+
+    .battle-boss {
+      right: 5%;
+      width: min(36%, 370px);
+      height: 370px;
+      border-radius: 28px;
+      mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+      animation: bossBreathing 4s ease-in-out infinite;
+    }
+
+    .live-adventure.mode-training .battle-boss {
+      opacity: .2;
+      filter: blur(2px) grayscale(.5);
+    }
+
+    .live-adventure.mode-walking .battle-boss {
+      opacity: 0;
+    }
+
+    .live-adventure.mode-training .boss-hud {
+      opacity: .55;
+    }
+
+    .live-adventure.mode-walking .boss-hud {
+      opacity: 0;
+    }
+
+    .activity-prop {
+      position: absolute;
+      z-index: 4;
+      left: 29%;
+      bottom: 69px;
+      width: 128px;
+      height: 76px;
+      opacity: 0;
+      transform: translateX(-50%);
+    }
+
+    .mode-study .activity-prop {
+      opacity: 1;
+      border: 8px solid #334155;
+      border-radius: 6px 6px 16px 16px;
+      background:
+        linear-gradient(90deg, #f8fafc 49%, #cbd5e1 50% 51%, #f8fafc 52%);
+      box-shadow: 0 12px 0 #1e293b, 0 18px 28px rgba(0,0,0,.45);
+      animation: bookGlow 2.2s ease-in-out infinite;
+    }
+
+    .mode-training .activity-prop {
+      opacity: 1;
+      width: 148px;
+      height: 24px;
+      bottom: 102px;
+      border-radius: 999px;
+      background: #94a3b8;
+      box-shadow:
+        -58px 0 0 12px #111827,
+        -42px 0 0 17px #475569,
+        58px 0 0 12px #111827,
+        42px 0 0 17px #475569;
+      animation: dumbbellLift 1.45s ease-in-out infinite;
+    }
+
+    .mode-walking .activity-prop {
+      opacity: 1;
+      left: 0;
+      bottom: 24px;
+      width: 200%;
+      height: 88px;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 85px, rgba(255,255,255,.72) 86px 145px, transparent 146px 230px),
+        #172033;
+      transform: none;
+      animation: roadMove 2.8s linear infinite;
+    }
+
+    .mode-study .battle-character {
+      animation: studying 2.4s ease-in-out infinite;
+    }
+
+    .mode-training .battle-character {
+      animation: training 1.45s ease-in-out infinite;
+    }
+
+    .mode-walking .battle-character {
+      animation: walking 1.1s ease-in-out infinite;
+    }
+
+    .action-bubble {
+      position: absolute;
+      z-index: 6;
+      left: 32%;
+      top: 34%;
+      max-width: 210px;
+      padding: 10px 13px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 14px 14px 14px 3px;
+      color: #e0f2fe;
+      background: rgba(8, 18, 38, .86);
+      box-shadow: 0 12px 30px rgba(0,0,0,.38);
+      backdrop-filter: blur(9px);
+      font-size: .83rem;
+      font-weight: 750;
+      animation: bubbleFloat 2.8s ease-in-out infinite;
+    }
+
+    .boss-hud {
+      position: absolute;
+      z-index: 7;
+      top: 14px;
+      right: 4%;
+      width: min(34%, 350px);
+      padding: 11px 13px;
+      border: 1px solid rgba(251, 113, 133, .35);
+      border-radius: 14px;
+      background: rgba(9, 14, 25, .76);
+      backdrop-filter: blur(8px);
+    }
+
+    .boss-hud-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+
+    #battleBossHpBar {
+      transition: width .75s cubic-bezier(.2,.75,.25,1);
+    }
+
+    .battle-flash {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 73% 46%, #fff 0, #67e8f9 4%, rgba(56,189,248,.75) 10%, transparent 31%);
+    }
+
+    .energy-shot {
+      position: absolute;
+      z-index: 9;
+      left: 31%;
+      top: 49%;
+      width: 40px;
+      height: 40px;
+      opacity: 0;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow:
+        0 0 12px 6px #67e8f9,
+        0 0 35px 18px rgba(56, 189, 248, .75);
+    }
+
+    .damage-number {
+      position: absolute;
+      z-index: 12;
+      right: 21%;
+      top: 36%;
+      opacity: 0;
+      color: #fef3c7;
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 1000;
+      line-height: 1;
+      text-shadow:
+        0 3px #7f1d1d,
+        0 0 18px #fb7185,
+        0 0 35px #fbbf24;
+      transform: rotate(-7deg);
+    }
+
+    .battle-stage.attack .energy-shot {
+      animation: energyAttack .9s cubic-bezier(.2,.75,.25,1) forwards;
+    }
+    .battle-stage.attack .battle-flash {
+      animation: attackFlash .55s .66s ease-out;
+    }
+    .battle-stage.attack .battle-boss {
+      animation: bossHit .65s .62s ease-out, bossBreathing 4s 1.4s ease-in-out infinite;
+    }
+    .battle-stage.attack .damage-number {
+      animation: damagePop 1.25s .68s cubic-bezier(.15,.8,.3,1) forwards;
+    }
+    .battle-stage.attack {
+      animation: screenShake .45s .68s linear;
+    }
+
+    .impact-caption {
+      position: absolute;
+      z-index: 11;
+      left: 50%;
+      bottom: 20px;
+      opacity: 0;
+      padding: 8px 15px;
+      border: 1px solid rgba(251, 191, 36, .5);
+      border-radius: 999px;
+      color: #fef3c7;
+      background: rgba(69, 26, 3, .88);
+      font-weight: 900;
+      transform: translateX(-50%);
+    }
+    .battle-stage.attack .impact-caption {
+      animation: captionPop 2s .75s ease forwards;
+    }
+
+    @keyframes heroBreathing {
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes bossBreathing {
+      50% { transform: translateY(-5px) scale(1.015); filter: drop-shadow(0 22px 24px rgba(251,113,133,.28)); }
+    }
+    @keyframes studying {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(3px) rotate(-1.5deg); }
+    }
+    @keyframes training {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-14px) scale(1.025); }
+    }
+    @keyframes walking {
+      0%, 100% { transform: translate(0, 0) rotate(-1deg); }
+      50% { transform: translate(22px, -8px) rotate(1deg); }
+    }
+    @keyframes bookGlow {
+      50% { box-shadow: 0 12px 0 #1e293b, 0 0 28px rgba(56,189,248,.65); }
+    }
+    @keyframes dumbbellLift {
+      0%, 100% { transform: translate(-50%, 22px) rotate(-3deg); }
+      50% { transform: translate(-50%, -38px) rotate(3deg); }
+    }
+    @keyframes roadMove {
+      to { transform: translateX(-230px); }
+    }
+    @keyframes bubbleFloat {
+      50% { transform: translateY(-7px); }
+    }
+    @keyframes energyAttack {
+      0% { opacity: 0; transform: scale(.2); }
+      15% { opacity: 1; }
+      100% { opacity: 1; left: 73%; transform: scale(1.35); }
+    }
+    @keyframes attackFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes bossHit {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(24px) rotate(3deg); filter: brightness(2); }
+      35% { transform: translateX(-18px) rotate(-2deg); }
+      55% { transform: translateX(12px); }
+      75% { transform: translateX(-7px); }
+    }
+    @keyframes damagePop {
+      0% { opacity: 0; transform: translateY(30px) scale(.4) rotate(-7deg); }
+      25% { opacity: 1; transform: translateY(-12px) scale(1.25) rotate(-7deg); }
+      70% { opacity: 1; transform: translateY(-20px) scale(1) rotate(-7deg); }
+      100% { opacity: 0; transform: translateY(-65px) scale(.9) rotate(-7deg); }
+    }
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-8px, 4px); }
+      40% { transform: translate(7px, -4px); }
+      60% { transform: translate(-5px, -2px); }
+      80% { transform: translate(4px, 2px); }
+    }
+    @keyframes captionPop {
+      0% { opacity: 0; transform: translate(-50%, 15px) scale(.8); }
+      20%, 75% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -10px) scale(.96); }
+    }
+
     .player-card {
       position: relative;
       display: grid;
@@ -708,6 +1091,29 @@
       .boss-grid { grid-template-columns: 1fr; }
       .status-list { grid-template-columns: 1fr; }
       .quest, .growth, .achievement, .log-item { align-items: flex-start; }
+      .live-adventure { min-height: 650px; }
+      .battle-stage { min-height: 570px; }
+      .battle-character {
+        left: 2%;
+        width: 48%;
+        height: 330px;
+      }
+      .battle-boss {
+        right: -4%;
+        width: 55%;
+        height: 340px;
+      }
+      .boss-hud {
+        top: 10px;
+        right: 4%;
+        width: 58%;
+      }
+      .activity-prop { left: 28%; }
+      .action-bubble {
+        left: 8%;
+        top: 13%;
+        max-width: 42%;
+      }
     }
   </style>
 </head>
@@ -722,6 +1128,34 @@
     </header>
 
     <main class="stack">
+      <section class="panel live-adventure mode-study" id="liveAdventure">
+        <div class="live-head">
+          <div>
+            <div class="live-kicker">LIVE ADVENTURE</div>
+            <div class="live-title" id="liveTitle">たろちゃん、集中任務中</div>
+            <div class="live-status" id="liveStatus">直近の記録から現在の行動を再現しています。</div>
+          </div>
+          <button class="replay-button" id="replayBattleBtn" type="button">演出をもう一度</button>
+        </div>
+        <div class="battle-stage" id="battleStage">
+          <img class="battle-character" id="battleAvatar" alt="行動中のたろちゃん" />
+          <div class="activity-prop" aria-hidden="true"></div>
+          <div class="action-bubble" id="actionBubble">次の一歩を積み上げています。</div>
+          <img class="battle-boss" id="battleBoss" alt="対戦中のボス" />
+          <div class="boss-hud">
+            <div class="boss-hud-top">
+              <span id="battleBossName">ITパスポート試験</span>
+              <span id="battleBossHpText">HP 7,200 / 7,200</span>
+            </div>
+            <div class="bar hp"><div id="battleBossHpBar"></div></div>
+          </div>
+          <div class="energy-shot" aria-hidden="true"></div>
+          <div class="battle-flash" aria-hidden="true"></div>
+          <div class="damage-number" id="damageNumber">-25</div>
+          <div class="impact-caption" id="impactCaption">学習記録がボスへのダメージになった</div>
+        </div>
+      </section>
+
       <section class="panel player-card">
         <div class="pixel-stage">
           <div class="pixel-person" id="pixelPerson" aria-label="たろちゃんのキャラクター">
@@ -809,8 +1243,10 @@
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
     const AVATAR_STORAGE_KEY = "taro_rpg_avatar_v1";
+    const LAST_BATTLE_SESSION_KEY = "taro_rpg_last_battle_session_v1";
     const $ = id => document.getElementById(id);
     let currentPlayerLevel = 1;
+    let latestBattleData = null;
 
     const AVATAR_UNLOCKS = {
       executive: 1,
@@ -911,12 +1347,15 @@
       const stage = document.querySelector(".pixel-stage");
       const person = $("pixelPerson");
       const custom = $("customAvatar");
+      const battleAvatar = $("battleAvatar");
       const presetImage = AVATAR_IMAGES[selected] || "";
       const displayedImage = selected === "custom" ? config.image : presetImage;
+      const battleImage = displayedImage || AVATAR_IMAGES.school;
 
       stage.classList.toggle("has-custom", Boolean(displayedImage));
       person.className = "pixel-person";
       if (displayedImage) custom.src = displayedImage;
+      battleAvatar.src = battleImage;
 
       let unlockedCount = 0;
       document.querySelectorAll("[data-avatar]").forEach(button => {
@@ -1049,6 +1488,25 @@
       return session.category === "中国語" || text.includes("中国語") || text.includes("hsk") || text.includes("chinese") || text.includes("中検");
     }
 
+    function activityForSession(session) {
+      if (!session) return "walking";
+      const text = sessionText(session);
+      if (text.includes("歩") || text.includes("散歩") || text.includes("ウォーキング") ||
+          text.includes("移動") || text.includes("通学") || text.includes("通勤")) {
+        return "walking";
+      }
+      if (skillForSession(session) === "fitness") return "training";
+      return "study";
+    }
+
+    function sortedSessions(sessions) {
+      return [...sessions].sort((a, b) => {
+        const aTime = String(a.endedAt || a.ended_at || a.date || "");
+        const bTime = String(b.endedAt || b.ended_at || b.date || "");
+        return bTime.localeCompare(aTime);
+      });
+    }
+
     function projectData(sessions, project) {
       const damage = sumMinutes(sessions, session => isProjectSession(session, project));
       const remaining = Math.max(0, project.requiredMinutes - damage);
@@ -1069,6 +1527,22 @@
         const bStart = b.project.planStartDate || b.project.startDate;
         return aStart.localeCompare(bStart) || a.project.deadline.localeCompare(b.project.deadline);
       })[0] || rows[rows.length - 1];
+    }
+
+    function applyGeneralStudyDamage(sessions, primary) {
+      const generalMinutes = sumMinutes(sessions, session =>
+        activityForSession(session) === "study" &&
+        !PROJECTS.some(project => isProjectSession(session, project))
+      );
+      if (!generalMinutes || !primary) return;
+      primary.damage = Math.min(primary.project.requiredMinutes, primary.damage + generalMinutes);
+      primary.remaining = Math.max(0, primary.project.requiredMinutes - primary.damage);
+      primary.progress = Math.min(100, (primary.damage / primary.project.requiredMinutes) * 100);
+      const days = Math.max(
+        1,
+        Math.ceil((parseDateKey(primary.project.deadline) - parseDateKey(todayKey())) / 86400000) + 1
+      );
+      primary.dailyNeed = Math.ceil(primary.remaining / days);
     }
 
     function getWeekStart(key) {
@@ -1200,13 +1674,17 @@
       ].join("");
     }
 
-    function bossVisual(projectId) {
-      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
-      const art = projectId === "it-passport"
+    function bossArtForProject(projectId) {
+      return projectId === "it-passport"
         ? "assets/rpg/boss-it.webp?v=20260614-2"
         : projectId === "toeic-900"
           ? "assets/rpg/boss-toeic.webp?v=20260614-2"
           : "assets/rpg/boss-hsk.webp?v=20260614-2";
+    }
+
+    function bossVisual(projectId) {
+      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
+      const art = bossArtForProject(projectId);
       const label = projectId === "it-passport"
         ? "電脳試験機兵"
         : projectId === "toeic-900"
@@ -1251,6 +1729,84 @@
           </article>
         `;
       }).join("");
+    }
+
+    function targetProjectForSession(session, rows, primary) {
+      if (session) {
+        const matched = rows.find(row => isProjectSession(session, row.project));
+        if (matched) return matched;
+      }
+      return primary;
+    }
+
+    function playBattleAnimation() {
+      const stage = $("battleStage");
+      if (!stage || !latestBattleData || latestBattleData.activity !== "study") return;
+      stage.classList.remove("attack");
+      void stage.offsetWidth;
+      requestAnimationFrame(() => stage.classList.add("attack"));
+      window.setTimeout(() => stage.classList.remove("attack"), 2400);
+    }
+
+    function renderLiveAdventure(sessions, rows, primary, forceReplay = false) {
+      const latest = sortedSessions(sessions)[0] || null;
+      const activity = activityForSession(latest);
+      const target = targetProjectForSession(latest, rows, primary);
+      const minutes = latest ? minutesOf(latest) : 0;
+      const title = latest ? (latest.taskTitle || latest.title || latest.category || "記録") : "次の冒険";
+      const seenId = localStorage.getItem(LAST_BATTLE_SESSION_KEY);
+      const isNewSession = Boolean(latest && latest.id && latest.id !== seenId);
+      const shouldAttack = activity === "study" && (forceReplay || isNewSession);
+
+      latestBattleData = { latest, activity, target, minutes };
+      const live = $("liveAdventure");
+      live.className = `panel live-adventure mode-${activity}`;
+
+      const copy = {
+        study: {
+          heading: "たろちゃん、集中任務中",
+          bubble: "理解した分だけ、攻撃力に変わる。",
+          status: `${title}を${minutes}分進めました。学習記録がボスへのダメージになります。`
+        },
+        training: {
+          heading: "たろちゃん、社長体力を強化中",
+          bubble: "身体を鍛えて、長期戦に備える。",
+          status: `${title}を${minutes}分記録。筋トレ中の動きを再現しています。`
+        },
+        walking: {
+          heading: latest ? "たろちゃん、次の任務へ移動中" : "たろちゃん、冒険の準備中",
+          bubble: latest ? "歩いた距離も、前進の証になる。" : "最初の記録を待っています。",
+          status: latest
+            ? `${title}を${minutes}分記録。次の目的地へ歩いています。`
+            : "本体で勉強・筋トレ・移動を記録すると、この場面が変化します。"
+        }
+      }[activity];
+
+      $("liveTitle").textContent = copy.heading;
+      $("liveStatus").textContent = copy.status;
+      $("actionBubble").textContent = copy.bubble;
+      $("battleBoss").src = bossArtForProject(target.project.id);
+      $("battleBoss").alt = target.project.name;
+      $("battleBossName").textContent = target.project.name;
+      $("battleBossHpText").textContent =
+        `HP ${target.remaining.toLocaleString()} / ${target.project.requiredMinutes.toLocaleString()}`;
+      const remainingPercent = Math.max(0, Math.min(100, (target.remaining / target.project.requiredMinutes) * 100));
+      const beforeRemaining = Math.min(target.project.requiredMinutes, target.remaining + minutes);
+      const beforePercent = Math.max(0, Math.min(100, (beforeRemaining / target.project.requiredMinutes) * 100));
+      $("battleBossHpBar").style.width = `${shouldAttack ? beforePercent : remainingPercent}%`;
+      $("damageNumber").textContent = `-${minutes}`;
+      $("impactCaption").textContent =
+        `${title} ${minutes}分が ${target.project.shortName} へのダメージになった`;
+
+      if (isNewSession && latest.id) {
+        localStorage.setItem(LAST_BATTLE_SESSION_KEY, latest.id);
+      }
+      if (shouldAttack) {
+        window.setTimeout(playBattleAnimation, 280);
+        window.setTimeout(() => {
+          $("battleBossHpBar").style.width = `${remainingPercent}%`;
+        }, 980);
+      }
     }
 
     function renderStatuses(totals) {
@@ -1435,14 +1991,16 @@
       }).join("") : '<div class="empty">本体で記録を作ると、ここに冒険ログが表示されます。</div>';
     }
 
-    function render() {
+    function render(forceReplay = false) {
       const state = loadState();
       const sessions = state.sessions.filter(session => minutesOf(session) > 0 && session.date);
       const totals = skillTotals(sessions);
       const projectRows = PROJECTS.map(project => projectData(sessions, project));
       const primary = primaryProject(projectRows);
+      applyGeneralStudyDamage(sessions, primary);
 
       renderPlayer(sessions, totals);
+      renderLiveAdventure(sessions, projectRows, primary, forceReplay);
       renderQuests(sessions, primary);
       renderGrowth(sessions, totals, primary);
       renderBosses(projectRows, primary);
@@ -1451,7 +2009,14 @@
       renderAdventureLog(sessions);
     }
 
-    $("refreshBtn").addEventListener("click", render);
+    $("refreshBtn").addEventListener("click", () => render(false));
+    $("replayBattleBtn").addEventListener("click", () => {
+      if (latestBattleData && latestBattleData.activity === "study") {
+        playBattleAnimation();
+      } else {
+        render(true);
+      }
+    });
     $("wardrobeOptions").addEventListener("click", event => {
       const button = event.target.closest("[data-avatar]");
       if (button) selectAvatar(button.dataset.avatar);
@@ -1469,13 +2034,13 @@
       }
     });
     window.addEventListener("storage", event => {
-      if (event.key === STORAGE_KEY) render();
+      if (event.key === STORAGE_KEY) render(false);
     });
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) render();
+      if (!document.hidden) render(false);
     });
 
-    render();
+    render(false);
   </script>
 </body>
 </html>
