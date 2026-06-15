@@ -1400,6 +1400,11 @@
     let currentPlayerLevel = 1;
     let latestBattleData = null;
     let adventureAnimationId = 0;
+    const HERO_SPRITE = new Image();
+    HERO_SPRITE.onload = () => {
+      if (latestBattleData) startCanvasAdventure(latestBattleData, false);
+    };
+    HERO_SPRITE.src = "assets/rpg/hero-jrpg-sprites.webp?v=20260615-2";
 
     const AVATAR_UNLOCKS = {
       executive: 1,
@@ -2033,6 +2038,55 @@
       );
     }
 
+    function drawHeroSprite(ctx, x, groundY, activity, elapsed, moving, attackPhase) {
+      if (!HERO_SPRITE.complete || !HERO_SPRITE.naturalWidth) return false;
+      let row = 0;
+      let frame = Math.floor(elapsed / 170) % 4;
+
+      if (activity === "training") {
+        row = 4;
+        frame = Math.floor(elapsed / 320) % 4;
+      } else if (attackPhase) {
+        row = 3;
+        frame = Math.min(3, Math.max(0, Math.floor((elapsed - 2550) / 330)));
+      } else if (moving || activity === "walking") {
+        row = 1;
+      } else if (activity === "study") {
+        row = 2;
+        frame = Math.floor(elapsed / 300) % 4;
+      }
+
+      const gridX = 60;
+      const gridY = 5;
+      const cellWidth = 1130 / 4;
+      const cellHeight = 1200 / 5;
+      const sourceX = gridX + frame * cellWidth;
+      const sourceY = gridY + row * cellHeight;
+      const drawWidth = row === 4 ? 174 : row === 3 ? 158 : 138;
+      const drawHeight = row === 4 ? 148 : 132;
+      const drawX = Math.round(x - drawWidth / 2);
+      const drawY = Math.round(groundY - drawHeight + 5);
+
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = .34;
+      pixelRect(ctx, x - 33, groundY + 2, 66, 8, "#020617");
+      ctx.globalAlpha = 1;
+      ctx.drawImage(
+        HERO_SPRITE,
+        sourceX,
+        sourceY,
+        cellWidth,
+        cellHeight,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
+      ctx.restore();
+      return true;
+    }
+
     function drawPixelHero(ctx, x, groundY, activity, phase, actionAmount) {
       const colors = canvasPalette();
       const walking = activity === "walking" || actionAmount < .52;
@@ -2292,6 +2346,7 @@
       const attackPhase = state.canAttack && state.animate && elapsed >= 2550 && elapsed <= 4100;
       const impactPhase = attackPhase && elapsed >= 3350;
       const roaming = state.activity === "walking" && !state.animate;
+      const moving = state.animate && elapsed < 2350;
       if (roaming) heroX += Math.sin(elapsed / 900) * 22;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2356,15 +2411,26 @@
         state.activity !== "study",
         hitFlash
       );
-      drawPixelHero(ctx, Math.min(heroX, routeEnd - 78), roadY, state.activity, elapsed / 115, actionAmount);
       const heroLabelX = Math.min(heroX, routeEnd - 78);
+      const spriteDrawn = drawHeroSprite(
+        ctx,
+        heroLabelX,
+        roadY,
+        state.activity,
+        elapsed,
+        moving,
+        attackPhase
+      );
+      if (!spriteDrawn) {
+        drawPixelHero(ctx, heroLabelX, roadY, state.activity, elapsed / 115, actionAmount);
+      }
       pixelRect(ctx, heroLabelX - 17, roadY - 151, 34, 21, "rgba(2, 6, 23, .88)");
       ctx.fillStyle = "#f8fafc";
       ctx.font = "900 13px system-ui";
       ctx.textAlign = "center";
       ctx.fillText("俺", heroLabelX, roadY - 136);
 
-      if (attackPhase) {
+      if (attackPhase && !spriteDrawn) {
         const shotProgress = Math.min(1, Math.max(0, (elapsed - 2750) / 650));
         const shotX = heroX + 35 + (routeEnd - heroX - 65) * shotProgress;
         const shotY = roadY - 82 - Math.sin(shotProgress * Math.PI) * 45;

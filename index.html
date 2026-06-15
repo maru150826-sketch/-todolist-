@@ -2575,7 +2575,7 @@
           </div>
           <button class="ghost" id="backToDashboardFromRpgBtn" type="button">本体に戻る</button>
         </div>
-        <iframe class="calendar-frame" id="rpgFrame" src="rpg.html" title="たろちゃん育成RPG"></iframe>
+        <iframe class="calendar-frame" id="rpgFrame" src="rpg.html?v=20260615-2" title="たろちゃん育成RPG"></iframe>
       </div>
     </section>
 
@@ -6031,8 +6031,14 @@ ${issue}
       if (dashboardTab) dashboardTab.classList.remove("active-tab");
       if (calendarTab) calendarTab.classList.remove("active-tab");
       if (rpgTab) rpgTab.classList.add("active-tab");
-      if (frame && frame.contentWindow) {
-        try { frame.contentWindow.location.reload(); } catch {}
+      if (frame) {
+        const latestRpgUrl = `rpg.html?v=20260615-2&t=${Date.now()}`;
+        if (!frame.src.includes("v=20260615-2") || frame.dataset.loadedOnce === "true") {
+          frame.src = latestRpgUrl;
+        } else if (frame.contentWindow) {
+          try { frame.contentWindow.location.replace(latestRpgUrl); } catch { frame.src = latestRpgUrl; }
+        }
+        frame.dataset.loadedOnce = "true";
       }
     }
     async function updateServiceWorkerAndReload() {
