@@ -159,6 +159,80 @@
       overflow: hidden;
     }
 
+    .canvas-stage {
+      margin-top: 10px;
+      min-height: 0;
+      padding: 0 18px 18px;
+    }
+
+    .canvas-stage::after {
+      display: none;
+    }
+
+    #adventureCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 7;
+      border: 2px solid rgba(56, 189, 248, .32);
+      border-radius: 18px;
+      background: #07111f;
+      box-shadow:
+        inset 0 0 0 4px rgba(2, 6, 23, .62),
+        0 18px 48px rgba(0, 0, 0, .35);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .canvas-route {
+      position: absolute;
+      z-index: 6;
+      left: 38px;
+      right: 38px;
+      bottom: 29px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .canvas-route span {
+      justify-self: start;
+      padding: 5px 9px;
+      border: 1px solid rgba(148, 163, 184, .34);
+      border-radius: 999px;
+      color: #dbeafe;
+      background: rgba(2, 6, 23, .78);
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      backdrop-filter: blur(5px);
+    }
+
+    .canvas-route span:nth-child(2) {
+      justify-self: center;
+    }
+
+    .canvas-route span:last-child {
+      justify-self: end;
+      color: #fef3c7;
+      border-color: rgba(251, 191, 36, .45);
+    }
+
+    .canvas-stage .boss-hud {
+      z-index: 7;
+      top: 18px;
+      right: 40px;
+      width: min(42%, 390px);
+    }
+
+    .canvas-stage .action-bubble {
+      z-index: 7;
+      left: 42px;
+      top: 18px;
+      max-width: 34%;
+    }
+
     .battle-stage::after {
       content: "";
       position: absolute;
@@ -1091,8 +1165,21 @@
       .boss-grid { grid-template-columns: 1fr; }
       .status-list { grid-template-columns: 1fr; }
       .quest, .growth, .achievement, .log-item { align-items: flex-start; }
-      .live-adventure { min-height: 650px; }
-      .battle-stage { min-height: 570px; }
+      .live-adventure { min-height: 0; }
+      .battle-stage { min-height: 0; }
+      .canvas-stage { padding: 0 8px 12px; }
+      #adventureCanvas { min-height: 360px; object-fit: cover; }
+      .canvas-stage .boss-hud {
+        top: 12px;
+        right: 18px;
+        width: 55%;
+      }
+      .canvas-stage .action-bubble {
+        left: 18px;
+        top: 12px;
+        max-width: 37%;
+      }
+      .canvas-route { left: 20px; right: 20px; bottom: 20px; }
       .battle-character {
         left: 2%;
         width: 48%;
@@ -1137,11 +1224,9 @@
           </div>
           <button class="replay-button" id="replayBattleBtn" type="button">演出をもう一度</button>
         </div>
-        <div class="battle-stage" id="battleStage">
-          <img class="battle-character" id="battleAvatar" alt="行動中のたろちゃん" />
-          <div class="activity-prop" aria-hidden="true"></div>
+        <div class="battle-stage canvas-stage" id="battleStage">
+          <canvas id="adventureCanvas" width="960" height="420" aria-label="現在地から中間地点を通ってゴールへ進む、たろちゃんのドット絵冒険画面"></canvas>
           <div class="action-bubble" id="actionBubble">次の一歩を積み上げています。</div>
-          <img class="battle-boss" id="battleBoss" alt="対戦中のボス" />
           <div class="boss-hud">
             <div class="boss-hud-top">
               <span id="battleBossName">ITパスポート試験</span>
@@ -1149,10 +1234,11 @@
             </div>
             <div class="bar hp"><div id="battleBossHpBar"></div></div>
           </div>
-          <div class="energy-shot" aria-hidden="true"></div>
-          <div class="battle-flash" aria-hidden="true"></div>
-          <div class="damage-number" id="damageNumber">-25</div>
-          <div class="impact-caption" id="impactCaption">学習記録がボスへのダメージになった</div>
+          <div class="canvas-route" aria-hidden="true">
+            <span>スタート地点</span>
+            <span>中間地点 50%</span>
+            <span>ゴール・目標</span>
+          </div>
         </div>
       </section>
 
@@ -1247,6 +1333,7 @@
     const $ = id => document.getElementById(id);
     let currentPlayerLevel = 1;
     let latestBattleData = null;
+    let adventureAnimationId = 0;
 
     const AVATAR_UNLOCKS = {
       executive: 1,
@@ -1347,15 +1434,12 @@
       const stage = document.querySelector(".pixel-stage");
       const person = $("pixelPerson");
       const custom = $("customAvatar");
-      const battleAvatar = $("battleAvatar");
       const presetImage = AVATAR_IMAGES[selected] || "";
       const displayedImage = selected === "custom" ? config.image : presetImage;
-      const battleImage = displayedImage || AVATAR_IMAGES.school;
 
       stage.classList.toggle("has-custom", Boolean(displayedImage));
       person.className = "pixel-person";
       if (displayedImage) custom.src = displayedImage;
-      battleAvatar.src = battleImage;
 
       let unlockedCount = 0;
       document.querySelectorAll("[data-avatar]").forEach(button => {
@@ -1739,13 +1823,254 @@
       return primary;
     }
 
+    function canvasPalette() {
+      const style = loadAvatarConfig().style;
+      const palettes = {
+        executive: { coat: "#0f172a", trim: "#fbbf24", hair: "#111827", accent: "#38bdf8" },
+        school: { coat: "#1d4ed8", trim: "#f8fafc", hair: "#3f2d20", accent: "#60a5fa" },
+        cozy: { coat: "#b45309", trim: "#fde68a", hair: "#4a2c20", accent: "#fb923c" },
+        chibi: { coat: "#db2777", trim: "#fce7f3", hair: "#713f12", accent: "#f472b6" },
+        cyberArt: { coat: "#111827", trim: "#22d3ee", hair: "#0f172a", accent: "#a78bfa" },
+        custom: { coat: "#334155", trim: "#f8fafc", hair: "#111827", accent: "#38bdf8" },
+        darkArt: { coat: "#2e1065", trim: "#c084fc", hair: "#09090b", accent: "#e879f9" },
+        royalArt: { coat: "#172554", trim: "#fbbf24", hair: "#e5e7eb", accent: "#60a5fa" }
+      };
+      return palettes[style] || palettes.executive;
+    }
+
+    function pixelRect(ctx, x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+    }
+
+    function drawLimb(ctx, x, y, width, height, angle, color) {
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(y));
+      ctx.rotate(angle);
+      pixelRect(ctx, -width / 2, 0, width, height, color);
+      ctx.restore();
+    }
+
+    function drawPixelHero(ctx, x, groundY, activity, phase, actionAmount) {
+      const colors = canvasPalette();
+      const walking = activity === "walking" || actionAmount < .72;
+      const stride = walking ? Math.sin(phase) : 0;
+      const bob = walking ? Math.abs(Math.sin(phase)) * 3 : Math.sin(phase * .25) * 1.5;
+      const squat = activity === "training" ? (Math.sin(phase * .7) + 1) * 6 : 0;
+      const baseY = groundY + squat - bob;
+
+      ctx.globalAlpha = .35;
+      pixelRect(ctx, x - 25, groundY + 3, 50, 7, "#020617");
+      ctx.globalAlpha = 1;
+
+      drawLimb(ctx, x - 7, baseY - 42, 8, 39, stride * .48, "#1e293b");
+      drawLimb(ctx, x + 7, baseY - 42, 8, 39, -stride * .48, "#334155");
+      pixelRect(ctx, x - 17 + stride * 8, baseY - 7, 22, 7, "#0f172a");
+      pixelRect(ctx, x - 5 - stride * 8, baseY - 7, 22, 7, "#0f172a");
+
+      pixelRect(ctx, x - 16, baseY - 82, 32, 43, colors.coat);
+      pixelRect(ctx, x - 3, baseY - 80, 6, 38, colors.trim);
+      pixelRect(ctx, x - 18, baseY - 84, 36, 7, colors.accent);
+
+      let armSwing = -stride * .45;
+      if (activity === "training") {
+        armSwing = -1.7 + Math.sin(phase * .7) * .18;
+      } else if (activity === "study" && actionAmount > .72) {
+        armSwing = -1.25;
+      }
+      drawLimb(ctx, x - 16, baseY - 77, 7, 34, armSwing, colors.coat);
+      drawLimb(ctx, x + 16, baseY - 77, 7, 34, -armSwing, colors.coat);
+
+      pixelRect(ctx, x - 12, baseY - 106, 24, 23, "#f1c7a5");
+      pixelRect(ctx, x - 14, baseY - 111, 28, 10, colors.hair);
+      pixelRect(ctx, x - 14, baseY - 104, 5, 12, colors.hair);
+      pixelRect(ctx, x + 9, baseY - 104, 5, 12, colors.hair);
+      pixelRect(ctx, x - 7, baseY - 98, 4, 4, "#0f172a");
+      pixelRect(ctx, x + 5, baseY - 98, 4, 4, "#0f172a");
+
+      if (activity === "training") {
+        pixelRect(ctx, x - 35, baseY - 118, 70, 6, "#94a3b8");
+        pixelRect(ctx, x - 42, baseY - 125, 9, 20, "#475569");
+        pixelRect(ctx, x + 33, baseY - 125, 9, 20, "#475569");
+      } else if (activity === "study" && actionAmount > .72) {
+        pixelRect(ctx, x + 17, baseY - 83, 22, 17, "#fbbf24");
+        pixelRect(ctx, x + 20, baseY - 80, 16, 3, "#7c2d12");
+      }
+    }
+
+    function drawPixelBoss(ctx, x, groundY, projectId, shake = 0, dimmed = false) {
+      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
+      const colors = type === "it"
+        ? { body: "#172554", armor: "#2563eb", trim: "#fbbf24", glow: "#22d3ee" }
+        : type === "toeic"
+          ? { body: "#2e1065", armor: "#6d28d9", trim: "#fbbf24", glow: "#c084fc" }
+          : { body: "#450a0a", armor: "#b91c1c", trim: "#fbbf24", glow: "#fb923c" };
+      const sx = x + shake;
+      ctx.save();
+      ctx.globalAlpha = dimmed ? .45 : 1;
+      ctx.shadowColor = colors.glow;
+      ctx.shadowBlur = dimmed ? 4 : 18;
+      pixelRect(ctx, sx - 32, groundY - 94, 64, 83, colors.body);
+      pixelRect(ctx, sx - 42, groundY - 82, 84, 19, colors.armor);
+      pixelRect(ctx, sx - 26, groundY - 125, 52, 37, colors.armor);
+      pixelRect(ctx, sx - 19, groundY - 118, 38, 25, "#111827");
+      pixelRect(ctx, sx - 13, groundY - 109, 8, 6, colors.glow);
+      pixelRect(ctx, sx + 5, groundY - 109, 8, 6, colors.glow);
+      pixelRect(ctx, sx - 31, groundY - 137, 12, 18, colors.trim);
+      pixelRect(ctx, sx + 19, groundY - 137, 12, 18, colors.trim);
+      pixelRect(ctx, sx - 25, groundY - 62, 50, 7, colors.trim);
+      pixelRect(ctx, sx - 34, groundY - 11, 25, 9, "#0f172a");
+      pixelRect(ctx, sx + 9, groundY - 11, 25, 9, "#0f172a");
+      if (type === "toeic") {
+        pixelRect(ctx, sx - 4, groundY - 155, 8, 25, colors.trim);
+        pixelRect(ctx, sx + 33, groundY - 122, 7, 80, colors.trim);
+        pixelRect(ctx, sx + 27, groundY - 132, 19, 19, colors.glow);
+      } else if (type === "hsk") {
+        pixelRect(ctx, sx - 35, groundY - 148, 70, 9, colors.trim);
+        pixelRect(ctx, sx - 19, groundY - 158, 38, 11, colors.armor);
+      } else {
+        pixelRect(ctx, sx - 50, groundY - 84, 12, 58, colors.glow);
+        pixelRect(ctx, sx + 38, groundY - 84, 12, 58, colors.glow);
+      }
+      ctx.restore();
+    }
+
+    function drawCheckpoint(ctx, x, roadY, label, active, completed) {
+      pixelRect(ctx, x - 4, roadY - 75, 8, 75, active ? "#fbbf24" : "#64748b");
+      pixelRect(ctx, x - 22, roadY - 82, 44, 21, completed ? "#16a34a" : active ? "#d97706" : "#334155");
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(completed ? "CLEAR" : label, x, roadY - 67);
+    }
+
+    function drawCanvasScene(state, now) {
+      const canvas = $("adventureCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const elapsed = now - state.startedAt;
+      const roadY = 340;
+      const routeStart = 105;
+      const routeEnd = 855;
+      const routeMid = (routeStart + routeEnd) / 2;
+      const duration = state.animate ? 5200 : 1;
+      const walkRatio = state.animate ? Math.min(1, elapsed / 2350) : 1;
+      const easedWalk = 1 - Math.pow(1 - walkRatio, 3);
+      const visualFrom = state.animate ? Math.max(0, Math.min(state.fromProgress, state.toProgress - .08)) : state.toProgress;
+      const shownProgress = visualFrom + (state.toProgress - visualFrom) * easedWalk;
+      const destinationX = routeStart + (routeEnd - routeStart) * state.toProgress;
+      const recordedStartX = routeStart + (routeEnd - routeStart) * state.fromProgress;
+      const walkingStartX = state.animate
+        ? Math.max(42, Math.min(recordedStartX, destinationX - 90))
+        : destinationX;
+      let heroX = walkingStartX + (destinationX - walkingStartX) * easedWalk;
+      const actionAmount = state.animate ? Math.min(1, elapsed / duration) : 1;
+      const attackPhase = state.activity === "study" && state.animate && elapsed >= 2550 && elapsed <= 4100;
+      const impactPhase = attackPhase && elapsed >= 3350;
+      const roaming = state.activity === "walking" && !state.animate;
+      if (roaming) heroX += Math.sin(elapsed / 900) * 22;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+
+      const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      if (state.activity === "training") {
+        sky.addColorStop(0, "#2b0b12");
+        sky.addColorStop(1, "#111827");
+      } else if (state.activity === "walking") {
+        sky.addColorStop(0, "#17365f");
+        sky.addColorStop(1, "#101827");
+      } else {
+        sky.addColorStop(0, "#071b35");
+        sky.addColorStop(1, "#120a24");
+      }
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 32; i += 1) {
+        const sx = (i * 83 + 31) % canvas.width;
+        const sy = (i * 47 + 19) % 190;
+        pixelRect(ctx, sx, sy, i % 3 === 0 ? 3 : 2, i % 3 === 0 ? 3 : 2, i % 2 ? "#93c5fd" : "#fde68a");
+      }
+      ctx.fillStyle = "rgba(15, 23, 42, .92)";
+      ctx.beginPath();
+      ctx.moveTo(0, 270);
+      for (let x = 0; x <= canvas.width; x += 80) {
+        ctx.lineTo(x, 215 + ((x / 80) % 3) * 22);
+      }
+      ctx.lineTo(canvas.width, 340);
+      ctx.lineTo(0, 340);
+      ctx.fill();
+
+      pixelRect(ctx, 0, roadY, canvas.width, 80, "#111827");
+      pixelRect(ctx, routeStart, roadY - 8, routeEnd - routeStart, 10, "#475569");
+      pixelRect(ctx, routeStart, roadY - 8, Math.max(0, heroX - routeStart), 10, "#fbbf24");
+      for (let x = routeStart; x < routeEnd; x += 42) {
+        pixelRect(ctx, x, roadY + 21, 22, 4, "#334155");
+      }
+
+      drawCheckpoint(ctx, routeStart, roadY, "START", shownProgress > .02, shownProgress > .02);
+      drawCheckpoint(ctx, routeMid, roadY, "MID", shownProgress >= .48, shownProgress >= .5);
+      drawCheckpoint(ctx, routeEnd, roadY, "GOAL", shownProgress >= .98, shownProgress >= 1);
+
+      const bossShake = impactPhase ? Math.sin(elapsed / 22) * 9 : 0;
+      drawPixelBoss(ctx, routeEnd, roadY, state.target.project.id, bossShake, state.activity !== "study");
+      drawPixelHero(ctx, Math.min(heroX, routeEnd - 78), roadY, state.activity, elapsed / 115, actionAmount);
+      const heroLabelX = Math.min(heroX, routeEnd - 78);
+      pixelRect(ctx, heroLabelX - 17, roadY - 151, 34, 21, "rgba(2, 6, 23, .88)");
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("俺", heroLabelX, roadY - 136);
+
+      if (attackPhase) {
+        const shotProgress = Math.min(1, Math.max(0, (elapsed - 2750) / 650));
+        const shotX = heroX + 35 + (routeEnd - heroX - 65) * shotProgress;
+        const shotY = roadY - 82 - Math.sin(shotProgress * Math.PI) * 45;
+        ctx.shadowColor = "#67e8f9";
+        ctx.shadowBlur = 22;
+        pixelRect(ctx, shotX - 10, shotY - 10, 20, 20, "#e0f2fe");
+        pixelRect(ctx, shotX - 5, shotY - 5, 10, 10, "#38bdf8");
+        ctx.shadowBlur = 0;
+      }
+
+      if (impactPhase) {
+        const rise = Math.min(50, (elapsed - 3350) / 12);
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "900 30px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(`-${state.minutes}`, routeEnd - 18, roadY - 155 - rise);
+        ctx.strokeStyle = `rgba(251, 191, 36, ${Math.max(0, 1 - (elapsed - 3350) / 800)})`;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(routeEnd, roadY - 82, 28 + rise, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "rgba(2, 6, 23, .76)";
+      ctx.fillRect(340, 18, 250, 48);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 17px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(`${state.target.project.shortName} 進行度 ${Math.round(state.toProgress * 100)}%`, 465, 48);
+
+      adventureAnimationId = requestAnimationFrame(next => drawCanvasScene(state, next));
+    }
+
+    function startCanvasAdventure(data, replay = false) {
+      if (!data) return;
+      cancelAnimationFrame(adventureAnimationId);
+      const state = {
+        ...data,
+        animate: replay || data.shouldAttack || data.activity === "training",
+        startedAt: performance.now()
+      };
+      adventureAnimationId = requestAnimationFrame(now => drawCanvasScene(state, now));
+    }
+
     function playBattleAnimation() {
-      const stage = $("battleStage");
-      if (!stage || !latestBattleData || latestBattleData.activity !== "study") return;
-      stage.classList.remove("attack");
-      void stage.offsetWidth;
-      requestAnimationFrame(() => stage.classList.add("attack"));
-      window.setTimeout(() => stage.classList.remove("attack"), 2400);
+      if (!latestBattleData) return;
+      startCanvasAdventure(latestBattleData, true);
     }
 
     function renderLiveAdventure(sessions, rows, primary, forceReplay = false) {
@@ -1758,7 +2083,10 @@
       const isNewSession = Boolean(latest && latest.id && latest.id !== seenId);
       const shouldAttack = activity === "study" && (forceReplay || isNewSession);
 
-      latestBattleData = { latest, activity, target, minutes };
+      const toProgress = Math.max(0, Math.min(1, target.damage / target.project.requiredMinutes));
+      const fromDamage = activity === "study" ? Math.max(0, target.damage - minutes) : target.damage;
+      const fromProgress = Math.max(0, Math.min(1, fromDamage / target.project.requiredMinutes));
+      latestBattleData = { latest, activity, target, minutes, title, shouldAttack, fromProgress, toProgress };
       const live = $("liveAdventure");
       live.className = `panel live-adventure mode-${activity}`;
 
@@ -1785,8 +2113,6 @@
       $("liveTitle").textContent = copy.heading;
       $("liveStatus").textContent = copy.status;
       $("actionBubble").textContent = copy.bubble;
-      $("battleBoss").src = bossArtForProject(target.project.id);
-      $("battleBoss").alt = target.project.name;
       $("battleBossName").textContent = target.project.name;
       $("battleBossHpText").textContent =
         `HP ${target.remaining.toLocaleString()} / ${target.project.requiredMinutes.toLocaleString()}`;
@@ -1794,19 +2120,14 @@
       const beforeRemaining = Math.min(target.project.requiredMinutes, target.remaining + minutes);
       const beforePercent = Math.max(0, Math.min(100, (beforeRemaining / target.project.requiredMinutes) * 100));
       $("battleBossHpBar").style.width = `${shouldAttack ? beforePercent : remainingPercent}%`;
-      $("damageNumber").textContent = `-${minutes}`;
-      $("impactCaption").textContent =
-        `${title} ${minutes}分が ${target.project.shortName} へのダメージになった`;
 
       if (isNewSession && latest.id) {
         localStorage.setItem(LAST_BATTLE_SESSION_KEY, latest.id);
       }
-      if (shouldAttack) {
-        window.setTimeout(playBattleAnimation, 280);
-        window.setTimeout(() => {
-          $("battleBossHpBar").style.width = `${remainingPercent}%`;
-        }, 980);
-      }
+      startCanvasAdventure(latestBattleData, forceReplay);
+      if (shouldAttack) window.setTimeout(() => {
+        $("battleBossHpBar").style.width = `${remainingPercent}%`;
+      }, 3450);
     }
 
     function renderStatuses(totals) {
