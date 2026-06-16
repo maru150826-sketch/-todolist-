@@ -609,6 +609,51 @@
       box-shadow: var(--shadow);
     }
 
+    .video-box {
+      max-width: 920px;
+      width: min(100%, 920px);
+      background: #0f172a;
+      border: 1px solid rgba(56,189,248,.32);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .video-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, rgba(14,116,144,.32), rgba(88,28,135,.28));
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    .video-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .video-frame-wrap {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #020617;
+    }
+
+    .video-frame-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-note {
+      padding: 12px 18px 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
     .alarm-box h2 {
       font-size: 34px;
       margin: 0 0 8px;
@@ -1003,7 +1048,7 @@
 
     .top-actions {
       display: grid;
-      grid-template-columns: repeat(4, auto);
+      grid-template-columns: repeat(5, auto);
       gap: 8px;
       align-items: center;
       justify-content: end;
@@ -2298,6 +2343,7 @@
         <button class="ghost active-tab" id="showDashboardTab" type="button">本体</button>
         <button class="log-link" id="showCalendarTab" type="button">カレンダー</button>
         <button class="ghost" id="showRpgTab" type="button">RPG</button>
+        <button class="ghost" id="openMotivationVideoBtn" type="button">激励動画</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
         <button class="ghost" id="exportBtn" type="button">バックアップ</button>
@@ -2589,6 +2635,26 @@
     </div>
   </div>
 
+  <div class="overlay" id="motivationVideoOverlay" aria-hidden="true">
+    <div class="video-box" role="dialog" aria-modal="true" aria-labelledby="motivationVideoTitle">
+      <div class="video-head">
+        <div>
+          <h2 id="motivationVideoTitle">今日の激励動画</h2>
+          <div class="small">気合いを入れてから、今日の一歩を始めます。</div>
+        </div>
+        <button class="ghost" id="closeMotivationVideoBtn" type="button">閉じる</button>
+      </div>
+      <div class="video-frame-wrap">
+        <iframe
+          id="motivationVideoFrame"
+          title="激励動画"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+      </div>
+      <div class="video-note">動画はYouTubeから再生されます。公開時は、埋め込みが許可されている動画だけを使ってください。</div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = "focus_dashboard_v1";
@@ -2596,6 +2662,7 @@
     const SUPABASE_URL = "https://ghmitazvjjmeaydofflq.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdobWl0YXp2amptZWF5ZG9mZmxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2ODQ3MTMsImV4cCI6MjA5NjI2MDcxM30.1jIDXBidNrSHzUJTOPTp8hN5uImT6OpsVQoWVn6AVdM";
     const SUPABASE_USER_ID = "default-user";
+    const MOTIVATION_VIDEO_EMBED_URL = "https://www.youtube-nocookie.com/embed/fXVAaffCMh8?autoplay=1&rel=0&modestbranding=1";
     const supabaseClient = window.supabase
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
       : null;
@@ -5896,6 +5963,24 @@ ${issue}
       $("alarmOverlay").classList.remove("show");
     }
 
+    function openMotivationVideo() {
+      const overlay = $("motivationVideoOverlay");
+      const frame = $("motivationVideoFrame");
+      if (!overlay || !frame) return;
+      frame.src = MOTIVATION_VIDEO_EMBED_URL;
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMotivationVideo() {
+      const overlay = $("motivationVideoOverlay");
+      const frame = $("motivationVideoFrame");
+      if (!overlay || !frame) return;
+      frame.src = "";
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
     function saveReview() {
       state.reviews[todayKey()] = $("reviewText").value.trim();
       saveState();
@@ -6108,6 +6193,14 @@ ${issue}
     if ($("showDashboardTab")) $("showDashboardTab").addEventListener("click", showDashboardView);
     if ($("showCalendarTab")) $("showCalendarTab").addEventListener("click", showCalendarView);
     if ($("showRpgTab")) $("showRpgTab").addEventListener("click", showRpgView);
+    if ($("openMotivationVideoBtn")) $("openMotivationVideoBtn").addEventListener("click", openMotivationVideo);
+    if ($("closeMotivationVideoBtn")) $("closeMotivationVideoBtn").addEventListener("click", closeMotivationVideo);
+    if ($("motivationVideoOverlay")) $("motivationVideoOverlay").addEventListener("click", event => {
+      if (event.target === $("motivationVideoOverlay")) closeMotivationVideo();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeMotivationVideo();
+    });
     if ($("backToDashboardBtn")) $("backToDashboardBtn").addEventListener("click", showDashboardView);
     if ($("backToDashboardFromRpgBtn")) $("backToDashboardFromRpgBtn").addEventListener("click", showDashboardView);
     window.addEventListener("message", event => {
