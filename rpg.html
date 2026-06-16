@@ -1,22 +1,3060 @@
-{
-  "name": "集中ダッシュボード・たろちゃん育成RPG",
-  "short_name": "集中DB",
-  "description": "学習記録と育成RPGを組み合わせた集中ダッシュボード",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>たろちゃん育成RPG</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --accent: #38bdf8;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --purple: #a78bfa;
+      --radius: 18px;
+      --shadow: 0 20px 60px rgba(0, 0, 0, .35);
     }
-  ]
-}
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px;
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(167, 139, 250, .16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, .12), transparent 35%),
+        var(--bg);
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: var(--panel2);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--accent); }
+
+    .app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 5px; font-size: clamp(1.5rem, 4vw, 2.1rem); }
+    h2 { margin-bottom: 14px; font-size: 1.12rem; }
+    h3 { margin-bottom: 8px; font-size: 1rem; }
+    .small { color: var(--muted); font-size: .88rem; line-height: 1.55; }
+
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: var(--radius);
+      background: rgba(17, 24, 39, .92);
+      box-shadow: var(--shadow);
+    }
+
+    .live-adventure {
+      position: relative;
+      min-height: 500px;
+      padding: 0;
+      isolation: isolate;
+      overflow: hidden;
+      border-color: rgba(56, 189, 248, .38);
+      background: #050914;
+    }
+
+    .live-adventure::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 35%, rgba(56, 189, 248, .22), transparent 31%),
+        radial-gradient(circle at 82% 34%, rgba(251, 113, 133, .18), transparent 34%),
+        linear-gradient(135deg, #081226, #111827 50%, #160b1c);
+    }
+
+    .live-adventure.mode-training::before {
+      background:
+        radial-gradient(circle at 22% 35%, rgba(251, 113, 133, .25), transparent 32%),
+        linear-gradient(145deg, #170b0d, #111827 58%, #23120a);
+    }
+
+    .live-adventure.mode-walking::before {
+      background:
+        radial-gradient(circle at 50% 5%, rgba(251, 191, 36, .28), transparent 32%),
+        linear-gradient(#182848, #203a63 52%, #101827 53%);
+    }
+
+    .live-head {
+      position: relative;
+      z-index: 8;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 20px 0;
+    }
+
+    .live-kicker {
+      color: var(--accent);
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    .live-title {
+      margin-top: 3px;
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 900;
+    }
+
+    .live-status {
+      max-width: 470px;
+      margin-top: 5px;
+      color: #cbd5e1;
+      font-size: .88rem;
+    }
+
+    .replay-button {
+      flex: 0 0 auto;
+      border-color: rgba(56, 189, 248, .48);
+      background: rgba(8, 18, 38, .72);
+      backdrop-filter: blur(8px);
+    }
+
+    .boss-switcher {
+      position: relative;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .boss-switch-label {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 800;
+    }
+
+    .boss-switcher button {
+      flex: 0 0 auto;
+      min-width: 78px;
+      padding: 7px 12px;
+      border-color: rgba(148, 163, 184, .28);
+      border-radius: 999px;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, .72);
+      font-size: .78rem;
+    }
+
+    .boss-switcher button.active {
+      border-color: rgba(56, 189, 248, .85);
+      color: #f8fafc;
+      background: linear-gradient(135deg, rgba(14, 116, 144, .88), rgba(67, 56, 202, .88));
+      box-shadow: 0 0 18px rgba(56, 189, 248, .2);
+    }
+
+    .goal-dashboard {
+      position: relative;
+      z-index: 9;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px 20px 0;
+    }
+
+    .goal-card {
+      border: 1px solid rgba(148, 163, 184, .22);
+      border-radius: 16px;
+      padding: 11px 12px;
+      background: rgba(15, 23, 42, .72);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .goal-card:hover,
+    .goal-card.active {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, .72);
+      background: rgba(14, 116, 144, .2);
+    }
+
+    .goal-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #f8fafc;
+      font-size: .86rem;
+      font-weight: 900;
+    }
+
+    .goal-card-percent {
+      color: #fbbf24;
+      font-size: 1.1rem;
+      font-weight: 1000;
+    }
+
+    .goal-card-meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    .goal-card .bar {
+      height: 8px;
+      margin-bottom: 8px;
+    }
+
+    .battle-stage {
+      position: relative;
+      min-height: 420px;
+      overflow: hidden;
+    }
+
+    .canvas-stage {
+      margin-top: 10px;
+      min-height: 0;
+      padding: 0 18px 18px;
+    }
+
+    .canvas-stage::after {
+      display: none;
+    }
+
+    #adventureCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 7;
+      border: 2px solid rgba(56, 189, 248, .32);
+      border-radius: 18px;
+      background: #07111f;
+      box-shadow:
+        inset 0 0 0 4px rgba(2, 6, 23, .62),
+        0 18px 48px rgba(0, 0, 0, .35);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .canvas-route {
+      position: absolute;
+      z-index: 6;
+      left: 38px;
+      right: 38px;
+      bottom: 29px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .canvas-route span {
+      justify-self: start;
+      padding: 5px 9px;
+      border: 1px solid rgba(148, 163, 184, .34);
+      border-radius: 999px;
+      color: #dbeafe;
+      background: rgba(2, 6, 23, .78);
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      backdrop-filter: blur(5px);
+    }
+
+    .canvas-route span:nth-child(2) {
+      justify-self: center;
+    }
+
+    .canvas-route span:last-child {
+      justify-self: end;
+      color: #fef3c7;
+      border-color: rgba(251, 191, 36, .45);
+    }
+
+    .canvas-stage .boss-hud {
+      z-index: 7;
+      top: 18px;
+      right: 40px;
+      width: min(39%, 370px);
+    }
+
+    .canvas-stage .action-bubble {
+      z-index: 7;
+      left: 42px;
+      top: 18px;
+      max-width: 34%;
+    }
+
+    .video-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(2, 6, 23, .92);
+    }
+
+    .video-overlay.show { display: flex; }
+
+    .video-box {
+      width: min(920px, 100%);
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, .34);
+      border-radius: 24px;
+      background: #0f172a;
+      box-shadow: var(--shadow);
+    }
+
+    .video-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      background: linear-gradient(135deg, rgba(14, 116, 144, .32), rgba(88, 28, 135, .28));
+    }
+
+    .video-head h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .video-frame-wrap {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #020617;
+    }
+
+    .video-frame-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-note {
+      padding: 12px 18px 18px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .battle-stage::after {
+      content: "";
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 30px;
+      height: 70px;
+      border: 1px solid rgba(56, 189, 248, .22);
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(56, 189, 248, .2), transparent 68%);
+      transform: perspective(400px) rotateX(65deg);
+    }
+
+    .battle-character,
+    .battle-boss {
+      position: absolute;
+      z-index: 3;
+      bottom: 34px;
+      object-fit: cover;
+      object-position: center 18%;
+      filter: drop-shadow(0 22px 18px rgba(0,0,0,.62));
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .battle-character {
+      left: 7%;
+      width: min(29%, 300px);
+      height: 350px;
+      border-radius: 28px;
+      mask-image: linear-gradient(to bottom, #000 82%, transparent 100%);
+      animation: heroBreathing 3.2s ease-in-out infinite;
+    }
+
+    .battle-boss {
+      right: 5%;
+      width: min(36%, 370px);
+      height: 370px;
+      border-radius: 28px;
+      mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+      animation: bossBreathing 4s ease-in-out infinite;
+    }
+
+    .live-adventure.mode-training .battle-boss {
+      opacity: .2;
+      filter: blur(2px) grayscale(.5);
+    }
+
+    .live-adventure.mode-walking .battle-boss {
+      opacity: 0;
+    }
+
+    .live-adventure.mode-training .boss-hud {
+      opacity: .55;
+    }
+
+    .live-adventure.mode-walking .boss-hud {
+      opacity: 0;
+    }
+
+    .activity-prop {
+      position: absolute;
+      z-index: 4;
+      left: 29%;
+      bottom: 69px;
+      width: 128px;
+      height: 76px;
+      opacity: 0;
+      transform: translateX(-50%);
+    }
+
+    .mode-study .activity-prop {
+      opacity: 1;
+      border: 8px solid #334155;
+      border-radius: 6px 6px 16px 16px;
+      background:
+        linear-gradient(90deg, #f8fafc 49%, #cbd5e1 50% 51%, #f8fafc 52%);
+      box-shadow: 0 12px 0 #1e293b, 0 18px 28px rgba(0,0,0,.45);
+      animation: bookGlow 2.2s ease-in-out infinite;
+    }
+
+    .mode-training .activity-prop {
+      opacity: 1;
+      width: 148px;
+      height: 24px;
+      bottom: 102px;
+      border-radius: 999px;
+      background: #94a3b8;
+      box-shadow:
+        -58px 0 0 12px #111827,
+        -42px 0 0 17px #475569,
+        58px 0 0 12px #111827,
+        42px 0 0 17px #475569;
+      animation: dumbbellLift 1.45s ease-in-out infinite;
+    }
+
+    .mode-walking .activity-prop {
+      opacity: 1;
+      left: 0;
+      bottom: 24px;
+      width: 200%;
+      height: 88px;
+      background:
+        repeating-linear-gradient(90deg, transparent 0 85px, rgba(255,255,255,.72) 86px 145px, transparent 146px 230px),
+        #172033;
+      transform: none;
+      animation: roadMove 2.8s linear infinite;
+    }
+
+    .mode-study .battle-character {
+      animation: studying 2.4s ease-in-out infinite;
+    }
+
+    .mode-training .battle-character {
+      animation: training 1.45s ease-in-out infinite;
+    }
+
+    .mode-walking .battle-character {
+      animation: walking 1.1s ease-in-out infinite;
+    }
+
+    .action-bubble {
+      position: absolute;
+      z-index: 6;
+      left: 32%;
+      top: 34%;
+      max-width: 210px;
+      padding: 10px 13px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 14px 14px 14px 3px;
+      color: #e0f2fe;
+      background: rgba(8, 18, 38, .86);
+      box-shadow: 0 12px 30px rgba(0,0,0,.38);
+      backdrop-filter: blur(9px);
+      font-size: .83rem;
+      font-weight: 750;
+      animation: bubbleFloat 2.8s ease-in-out infinite;
+    }
+
+    .boss-hud {
+      position: absolute;
+      z-index: 7;
+      top: 14px;
+      right: 4%;
+      width: min(34%, 350px);
+      padding: 11px 13px;
+      border: 1px solid rgba(251, 113, 133, .35);
+      border-radius: 14px;
+      background: rgba(9, 14, 25, .76);
+      backdrop-filter: blur(8px);
+    }
+
+    .boss-hud-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      margin-bottom: 7px;
+      font-size: .78rem;
+      font-weight: 800;
+    }
+
+    #battleBossName {
+      overflow: hidden;
+      color: #f8fafc;
+      font-size: .83rem;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .boss-numbers {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #cbd5e1;
+      font-size: .72rem;
+      white-space: nowrap;
+    }
+
+    #battleBossHpBar {
+      transition: width .75s cubic-bezier(.2,.75,.25,1);
+    }
+
+    .battle-flash {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 73% 46%, #fff 0, #67e8f9 4%, rgba(56,189,248,.75) 10%, transparent 31%);
+    }
+
+    .energy-shot {
+      position: absolute;
+      z-index: 9;
+      left: 31%;
+      top: 49%;
+      width: 40px;
+      height: 40px;
+      opacity: 0;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow:
+        0 0 12px 6px #67e8f9,
+        0 0 35px 18px rgba(56, 189, 248, .75);
+    }
+
+    .damage-number {
+      position: absolute;
+      z-index: 12;
+      right: 21%;
+      top: 36%;
+      opacity: 0;
+      color: #fef3c7;
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 1000;
+      line-height: 1;
+      text-shadow:
+        0 3px #7f1d1d,
+        0 0 18px #fb7185,
+        0 0 35px #fbbf24;
+      transform: rotate(-7deg);
+    }
+
+    .battle-stage.attack .energy-shot {
+      animation: energyAttack .9s cubic-bezier(.2,.75,.25,1) forwards;
+    }
+    .battle-stage.attack .battle-flash {
+      animation: attackFlash .55s .66s ease-out;
+    }
+    .battle-stage.attack .battle-boss {
+      animation: bossHit .65s .62s ease-out, bossBreathing 4s 1.4s ease-in-out infinite;
+    }
+    .battle-stage.attack .damage-number {
+      animation: damagePop 1.25s .68s cubic-bezier(.15,.8,.3,1) forwards;
+    }
+    .battle-stage.attack {
+      animation: screenShake .45s .68s linear;
+    }
+
+    .impact-caption {
+      position: absolute;
+      z-index: 11;
+      left: 50%;
+      bottom: 20px;
+      opacity: 0;
+      padding: 8px 15px;
+      border: 1px solid rgba(251, 191, 36, .5);
+      border-radius: 999px;
+      color: #fef3c7;
+      background: rgba(69, 26, 3, .88);
+      font-weight: 900;
+      transform: translateX(-50%);
+    }
+    .battle-stage.attack .impact-caption {
+      animation: captionPop 2s .75s ease forwards;
+    }
+
+    @keyframes heroBreathing {
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes bossBreathing {
+      50% { transform: translateY(-5px) scale(1.015); filter: drop-shadow(0 22px 24px rgba(251,113,133,.28)); }
+    }
+    @keyframes studying {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(3px) rotate(-1.5deg); }
+    }
+    @keyframes training {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-14px) scale(1.025); }
+    }
+    @keyframes walking {
+      0%, 100% { transform: translate(0, 0) rotate(-1deg); }
+      50% { transform: translate(22px, -8px) rotate(1deg); }
+    }
+    @keyframes bookGlow {
+      50% { box-shadow: 0 12px 0 #1e293b, 0 0 28px rgba(56,189,248,.65); }
+    }
+    @keyframes dumbbellLift {
+      0%, 100% { transform: translate(-50%, 22px) rotate(-3deg); }
+      50% { transform: translate(-50%, -38px) rotate(3deg); }
+    }
+    @keyframes roadMove {
+      to { transform: translateX(-230px); }
+    }
+    @keyframes bubbleFloat {
+      50% { transform: translateY(-7px); }
+    }
+    @keyframes energyAttack {
+      0% { opacity: 0; transform: scale(.2); }
+      15% { opacity: 1; }
+      100% { opacity: 1; left: 73%; transform: scale(1.35); }
+    }
+    @keyframes attackFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes bossHit {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(24px) rotate(3deg); filter: brightness(2); }
+      35% { transform: translateX(-18px) rotate(-2deg); }
+      55% { transform: translateX(12px); }
+      75% { transform: translateX(-7px); }
+    }
+    @keyframes damagePop {
+      0% { opacity: 0; transform: translateY(30px) scale(.4) rotate(-7deg); }
+      25% { opacity: 1; transform: translateY(-12px) scale(1.25) rotate(-7deg); }
+      70% { opacity: 1; transform: translateY(-20px) scale(1) rotate(-7deg); }
+      100% { opacity: 0; transform: translateY(-65px) scale(.9) rotate(-7deg); }
+    }
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-8px, 4px); }
+      40% { transform: translate(7px, -4px); }
+      60% { transform: translate(-5px, -2px); }
+      80% { transform: translate(4px, 2px); }
+    }
+    @keyframes captionPop {
+      0% { opacity: 0; transform: translate(-50%, 15px) scale(.8); }
+      20%, 75% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -10px) scale(.96); }
+    }
+
+    .player-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 20px;
+      border-color: rgba(167, 139, 250, .45);
+      background:
+        linear-gradient(145deg, rgba(167, 139, 250, .13), rgba(56, 189, 248, .08)),
+        rgba(17, 24, 39, .94);
+    }
+
+    .pixel-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 360px;
+      border: 1px solid rgba(167, 139, 250, .32);
+      border-radius: 16px;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+        #0b1220;
+      background-size: 16px 16px;
+    }
+
+    .custom-avatar {
+      display: none;
+      width: min(250px, 88%);
+      height: 320px;
+      object-fit: cover;
+      object-position: center 20%;
+      border: 4px solid #111827;
+      border-radius: 22px;
+      box-shadow:
+        0 0 0 2px rgba(167, 139, 250, .6),
+        0 22px 34px rgba(0, 0, 0, .5);
+    }
+
+    .pixel-stage.has-custom .pixel-person { display: none; }
+    .pixel-stage.has-custom .custom-avatar { display: block; }
+
+    .pixel-person {
+      position: relative;
+      width: 88px;
+      height: 126px;
+      filter: drop-shadow(0 12px 12px rgba(0,0,0,.35));
+    }
+
+    .pixel-head {
+      position: absolute;
+      top: 9px;
+      left: 25px;
+      width: 40px;
+      height: 40px;
+      border: 6px solid #111827;
+      border-radius: 8px;
+      background: #f0b98d;
+      box-shadow: inset 0 8px #2b211f;
+    }
+
+    .pixel-body {
+      position: absolute;
+      top: 50px;
+      left: 17px;
+      width: 56px;
+      height: 54px;
+      border: 7px solid #111827;
+      border-radius: 8px 8px 3px 3px;
+      background: var(--suit, #334155);
+    }
+
+    .pixel-tie {
+      position: absolute;
+      top: 58px;
+      left: 40px;
+      width: 10px;
+      height: 32px;
+      background: var(--danger);
+      clip-path: polygon(50% 0, 100% 20%, 70% 100%, 30% 100%, 0 20%);
+    }
+
+    .pixel-legs {
+      position: absolute;
+      top: 98px;
+      left: 24px;
+      width: 42px;
+      height: 28px;
+      border-left: 13px solid #111827;
+      border-right: 13px solid #111827;
+    }
+
+    .pixel-aura {
+      position: absolute;
+      inset: 0;
+      border: 2px dashed rgba(251, 191, 36, .55);
+      border-radius: 18px;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    .pixel-person.cyber {
+      filter: drop-shadow(0 0 14px rgba(34, 211, 238, .58));
+    }
+    .pixel-person.cyber .pixel-head {
+      background: #dbeafe;
+      box-shadow: inset 0 9px #172554, 0 0 0 3px #22d3ee;
+    }
+    .pixel-person.cyber .pixel-body {
+      background: linear-gradient(90deg, #0f172a 45%, #06b6d4 46% 54%, #0f172a 55%);
+      border-color: #020617;
+    }
+    .pixel-person.cyber .pixel-tie { background: #67e8f9 !important; }
+    .pixel-person.cyber .pixel-aura {
+      border-color: rgba(34, 211, 238, .8);
+      border-style: solid;
+      box-shadow: 0 0 20px rgba(34, 211, 238, .35);
+    }
+
+    .pixel-person.adventurer .pixel-head {
+      box-shadow: inset 0 9px #713f12;
+    }
+    .pixel-person.adventurer .pixel-body {
+      background: #854d0e;
+      border-color: #1c1917;
+      transform: skew(-2deg);
+    }
+    .pixel-person.adventurer .pixel-tie {
+      width: 34px;
+      height: 9px;
+      left: 28px;
+      top: 68px;
+      clip-path: none;
+      background: #fbbf24 !important;
+    }
+    .pixel-person.adventurer::after {
+      content: "";
+      position: absolute;
+      top: 42px;
+      right: -5px;
+      width: 8px;
+      height: 74px;
+      border-radius: 5px;
+      background: #e5e7eb;
+      transform: rotate(20deg);
+      box-shadow: 0 0 0 3px #451a03;
+    }
+
+    .pixel-person.training .pixel-body {
+      left: 11px;
+      width: 68px;
+      background: #b91c1c;
+      border-radius: 18px 18px 5px 5px;
+    }
+    .pixel-person.training .pixel-tie { display: none; }
+    .pixel-person.training::before,
+    .pixel-person.training::after {
+      content: "";
+      position: absolute;
+      top: 57px;
+      width: 20px;
+      height: 43px;
+      border: 7px solid #111827;
+      border-radius: 12px;
+      background: #b91c1c;
+    }
+    .pixel-person.training::before { left: -4px; transform: rotate(13deg); }
+    .pixel-person.training::after { right: -4px; transform: rotate(-13deg); }
+
+    .pixel-person.royal {
+      filter: drop-shadow(0 0 16px rgba(251, 191, 36, .48));
+    }
+    .pixel-person.royal .pixel-head {
+      box-shadow: inset 0 8px #1e1b4b, 0 -10px 0 -3px #fbbf24;
+    }
+    .pixel-person.royal .pixel-body {
+      background: linear-gradient(90deg, #312e81, #7c3aed 50%, #312e81);
+      border-color: #0f172a;
+      box-shadow: inset 0 0 0 4px #fbbf24;
+    }
+    .pixel-person.royal .pixel-tie { background: #fbbf24 !important; }
+    .pixel-person.royal .pixel-aura {
+      border-color: #fbbf24;
+      box-shadow: 0 0 24px rgba(251, 191, 36, .5);
+    }
+    .pixel-person.royal::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      top: -3px;
+      left: 24px;
+      width: 42px;
+      height: 22px;
+      background: #fbbf24;
+      clip-path: polygon(0 100%, 0 38%, 24% 70%, 50% 0, 76% 70%, 100% 38%, 100% 100%);
+    }
+
+    .wardrobe {
+      grid-column: 1 / -1;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .wardrobe-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .wardrobe-options {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .wardrobe-option {
+      min-width: 0;
+      padding: 9px 7px;
+      font-size: .78rem;
+    }
+
+    .wardrobe-option .kind {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 600;
+    }
+
+    .wardrobe-option.active {
+      color: #cffafe;
+      border-color: #22d3ee;
+      background: rgba(6, 182, 212, .16);
+    }
+
+    .wardrobe-option:disabled {
+      cursor: not-allowed;
+      opacity: .42;
+      border-style: dashed;
+    }
+
+    .unlock-note {
+      margin-top: 9px;
+      color: var(--warn);
+      font-size: .8rem;
+    }
+
+    #avatarFile { display: none; }
+
+    @keyframes pulse {
+      50% { transform: scale(1.05); opacity: .45; }
+    }
+
+    .player-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .level {
+      color: var(--warn);
+      font-size: clamp(2rem, 8vw, 3.35rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .title-badge,
+    .done-badge,
+    .main-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: .76rem;
+      font-weight: 800;
+    }
+
+    .title-badge {
+      margin-top: 7px;
+      color: #ede9fe;
+      border: 1px solid rgba(167, 139, 250, .45);
+      background: rgba(167, 139, 250, .16);
+    }
+
+    .done-badge {
+      color: #d1fae5;
+      border: 1px solid rgba(52, 211, 153, .42);
+      background: rgba(52, 211, 153, .14);
+    }
+
+    .main-badge {
+      color: #fef3c7;
+      border: 1px solid rgba(251, 191, 36, .42);
+      background: rgba(251, 191, 36, .14);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background: rgba(15, 23, 42, .58);
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      font-size: 1.1rem;
+    }
+
+    .bar {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #0b1220;
+    }
+
+    .bar > div {
+      height: 100%;
+      min-width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+    }
+
+    .quest-list,
+    .growth-list,
+    .achievement-list,
+    .log-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .quest,
+    .growth,
+    .achievement,
+    .log-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background: rgba(31, 41, 55, .68);
+    }
+
+    .quest > div,
+    .growth > div,
+    .achievement > div,
+    .log-item > div { min-width: 0; }
+
+    .quest-title,
+    .log-title {
+      font-weight: 750;
+      overflow-wrap: anywhere;
+    }
+
+    .remaining {
+      flex: 0 0 auto;
+      color: var(--warn);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .boss-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .boss {
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid rgba(251, 113, 133, .25);
+      border-radius: 15px;
+      background: linear-gradient(145deg, rgba(251, 113, 133, .08), rgba(15, 23, 42, .55));
+    }
+
+    .boss-scene {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: 230px;
+      margin: -2px 0 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 13px;
+      background:
+        radial-gradient(circle at 50% 70%, rgba(251, 113, 133, .16), transparent 42%),
+        linear-gradient(#111827, #090e19);
+    }
+
+    .boss-art {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      transition: transform .35s ease, filter .35s ease;
+    }
+
+    .boss:hover .boss-art {
+      transform: scale(1.035);
+      filter: saturate(1.1) contrast(1.05);
+    }
+
+    .boss-scene::before {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      inset: auto 0 0;
+      height: 42%;
+      pointer-events: none;
+      background: linear-gradient(transparent, rgba(9, 14, 25, .92));
+    }
+
+    .boss-scene::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      height: 2px;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 9px rgba(255,255,255,.035);
+    }
+
+    .boss-monster {
+      position: relative;
+      z-index: 1;
+      width: 94px;
+      height: 100px;
+      filter: drop-shadow(0 14px 12px rgba(0,0,0,.55));
+    }
+
+    .boss-core {
+      position: absolute;
+      inset: 23px 11px 8px;
+      border: 7px solid #020617;
+      border-radius: 20px 20px 12px 12px;
+      background: var(--boss-color, #7f1d1d);
+      box-shadow: inset 0 0 0 4px var(--boss-light, #fb7185);
+    }
+
+    .boss-eye {
+      position: absolute;
+      z-index: 2;
+      top: 47px;
+      width: 13px;
+      height: 10px;
+      border-radius: 2px;
+      background: #fef3c7;
+      box-shadow: 0 0 10px var(--boss-light, #fb7185);
+    }
+    .boss-eye.left { left: 29px; }
+    .boss-eye.right { right: 29px; }
+
+    .boss-horn {
+      position: absolute;
+      z-index: 0;
+      top: 4px;
+      width: 25px;
+      height: 43px;
+      background: var(--boss-light, #fb7185);
+      clip-path: polygon(50% 0, 100% 100%, 0 78%);
+    }
+    .boss-horn.left { left: 8px; transform: rotate(-22deg); }
+    .boss-horn.right { right: 8px; transform: rotate(22deg) scaleX(-1); }
+
+    .boss-monster.it {
+      --boss-color: #172554;
+      --boss-light: #38bdf8;
+    }
+    .boss-monster.it .boss-core {
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, transparent 46%, #38bdf8 47% 53%, transparent 54%),
+        linear-gradient(#1e3a8a, #172554);
+    }
+    .boss-monster.it .boss-horn { background: #94a3b8; }
+    .boss-monster.it::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      left: 38px;
+      bottom: 19px;
+      width: 18px;
+      height: 8px;
+      background: #38bdf8;
+      box-shadow: 0 0 9px #38bdf8;
+    }
+
+    .boss-monster.toeic {
+      --boss-color: #581c87;
+      --boss-light: #c084fc;
+    }
+    .boss-monster.toeic .boss-core {
+      border-radius: 48% 48% 20px 20px;
+    }
+    .boss-monster.toeic::before,
+    .boss-monster.toeic::after {
+      content: "";
+      position: absolute;
+      top: 39px;
+      width: 35px;
+      height: 52px;
+      border: 6px solid #020617;
+      background: #6b21a8;
+    }
+    .boss-monster.toeic::before { left: -12px; transform: rotate(24deg); }
+    .boss-monster.toeic::after { right: -12px; transform: rotate(-24deg); }
+
+    .boss-monster.hsk {
+      --boss-color: #7f1d1d;
+      --boss-light: #fbbf24;
+    }
+    .boss-monster.hsk .boss-core {
+      border-radius: 50% 50% 18px 18px;
+      background: linear-gradient(135deg, #991b1b, #7f1d1d);
+    }
+    .boss-monster.hsk .boss-horn {
+      width: 35px;
+      height: 48px;
+      background: #fbbf24;
+    }
+    .boss-monster.hsk::after {
+      content: "";
+      position: absolute;
+      z-index: 3;
+      left: 31px;
+      bottom: 18px;
+      width: 32px;
+      height: 12px;
+      border-bottom: 5px solid #fbbf24;
+      border-radius: 50%;
+    }
+
+    .boss.primary {
+      border-color: rgba(251, 191, 36, .55);
+      box-shadow: inset 0 0 24px rgba(251, 191, 36, .06);
+    }
+
+    .boss-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 11px 0;
+      font-size: .84rem;
+    }
+
+    .hp > div {
+      background: linear-gradient(90deg, var(--danger), var(--warn));
+    }
+
+    .status-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
+
+    .status-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: .88rem;
+      font-weight: 750;
+    }
+
+    .status .bar { height: 8px; }
+    .status:nth-child(2n) .bar > div { background: linear-gradient(90deg, var(--purple), var(--accent)); }
+
+    .achievement {
+      align-items: flex-start;
+      border-color: rgba(251, 191, 36, .2);
+    }
+
+    .achievement-mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      color: #111827;
+      background: var(--warn);
+      font-weight: 900;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      border-radius: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .refresh-note {
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    @media (max-width: 760px) {
+      body { padding: 12px; }
+      header { align-items: flex-start; }
+      .player-card { grid-template-columns: 1fr; }
+      .pixel-stage { min-height: 330px; }
+      .wardrobe-options { grid-template-columns: 1fr 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .boss-grid { grid-template-columns: 1fr; }
+      .status-list { grid-template-columns: 1fr; }
+      .quest, .growth, .achievement, .log-item { align-items: flex-start; }
+      .goal-dashboard { grid-template-columns: 1fr; padding: 10px 12px 0; }
+      .live-adventure { min-height: 0; }
+      .battle-stage { min-height: 0; }
+      .canvas-stage { padding: 0 8px 12px; }
+      #adventureCanvas { min-height: 360px; object-fit: cover; }
+      .boss-switcher { padding: 10px 12px 0; }
+      .canvas-stage .boss-hud {
+        top: 12px;
+        right: 18px;
+        width: 48%;
+      }
+      .canvas-stage .action-bubble {
+        left: 18px;
+        top: 12px;
+        max-width: 37%;
+      }
+      .canvas-route { left: 20px; right: 20px; bottom: 20px; }
+      .battle-character {
+        left: 2%;
+        width: 48%;
+        height: 330px;
+      }
+      .battle-boss {
+        right: -4%;
+        width: 55%;
+        height: 340px;
+      }
+      .boss-hud {
+        top: 10px;
+        right: 4%;
+        width: 58%;
+      }
+      .activity-prop { left: 28%; }
+      .action-bubble {
+        left: 8%;
+        top: 13%;
+        max-width: 42%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>たろちゃん育成RPG</h1>
+        <div class="small">記録した1分が、そのまま会社とキャラクターの成長になります。</div>
+      </div>
+      <div class="header-actions">
+        <button id="motivationVideoBtn" type="button">激励動画</button>
+        <button id="refreshBtn" type="button">最新記録を反映</button>
+      </div>
+    </header>
+
+    <main class="stack">
+      <section class="panel live-adventure mode-study" id="liveAdventure">
+        <div class="live-head">
+          <div>
+            <div class="live-kicker">LIVE ADVENTURE</div>
+            <div class="live-title" id="liveTitle">たろちゃん、集中任務中</div>
+            <div class="live-status" id="liveStatus">直近の記録から現在の行動を再現しています。</div>
+          </div>
+          <button class="replay-button" id="replayBattleBtn" type="button">演出をもう一度</button>
+        </div>
+        <div class="boss-switcher" id="bossSwitcher" aria-label="表示する目標を選択">
+          <span class="boss-switch-label">表示する目標</span>
+          <button type="button" data-project="auto">自動</button>
+          <button type="button" data-project="it-passport">IT</button>
+          <button type="button" data-project="toeic-900">TOEIC</button>
+          <button type="button" data-project="hsk-3">HSK</button>
+        </div>
+        <div class="goal-dashboard" id="goalDashboard" aria-label="目標の進捗一覧"></div>
+        <div class="battle-stage canvas-stage" id="battleStage">
+          <canvas id="adventureCanvas" width="960" height="420" aria-label="現在地から中間地点を通ってゴールへ進む、たろちゃんのドット絵冒険画面"></canvas>
+          <div class="action-bubble" id="actionBubble">次の一歩を積み上げています。</div>
+          <div class="boss-hud">
+            <div class="boss-hud-top">
+              <span id="battleBossName">ITパスポート試験</span>
+              <div class="boss-numbers">
+                <span id="battleBossProgressText">進行度 0%</span>
+                <span id="battleBossHpText">HP 7,200 / 7,200</span>
+              </div>
+            </div>
+            <div class="bar hp"><div id="battleBossHpBar"></div></div>
+          </div>
+          <div class="canvas-route" aria-hidden="true">
+            <span>スタート地点</span>
+            <span>中間地点 50%</span>
+            <span>ゴール・目標</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel player-card">
+        <div class="pixel-stage">
+          <div class="pixel-person" id="pixelPerson" aria-label="たろちゃんのキャラクター">
+            <div class="pixel-aura"></div>
+            <div class="pixel-head"></div>
+            <div class="pixel-body"></div>
+            <div class="pixel-tie"></div>
+            <div class="pixel-legs"></div>
+          </div>
+          <img class="custom-avatar" id="customAvatar" alt="登録したたろちゃんの画像" />
+        </div>
+        <div>
+          <div class="player-top">
+            <div>
+              <div class="small">PLAYER</div>
+              <div class="level" id="playerLevel">Lv.1</div>
+              <div id="playerStage">起業準備中</div>
+              <div class="title-badge" id="playerTitle">称号：新人経営者</div>
+            </div>
+            <div class="small" id="streakText">連続記録 0日</div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span class="small">総EXP</span><strong id="totalExp">0</strong></div>
+            <div class="metric"><span class="small">今日の獲得EXP</span><strong id="todayExp">0</strong></div>
+            <div class="metric"><span class="small">次のLvまで</span><strong id="nextLevelExp">60 EXP</strong></div>
+          </div>
+          <div class="bar" aria-label="レベル進捗"><div id="levelBar"></div></div>
+          <div class="small refresh-note" id="updatedText"></div>
+        </div>
+        <div class="wardrobe">
+          <div class="wardrobe-head">
+            <div>
+              <h3 style="margin-bottom:3px;">たろちゃんの着せ替え</h3>
+              <div class="small">レベルアップで新しい姿が解放されます。</div>
+            </div>
+            <div class="title-badge" id="wardrobeCount">1 / 6 解放</div>
+          </div>
+          <div class="wardrobe-options" id="wardrobeOptions">
+            <button class="wardrobe-option" data-avatar="executive" type="button">Lv.1 スーツ社長<span class="kind">ドット絵</span></button>
+            <button class="wardrobe-option" data-avatar="school" type="button">Lv.3 学園主人公<span class="kind">かわいいアニメ</span></button>
+            <button class="wardrobe-option" data-avatar="cozy" type="button">Lv.5 日常系たろちゃん<span class="kind">かわいいアニメ</span></button>
+            <button class="wardrobe-option" data-avatar="chibi" type="button">Lv.8 ちびCEO<span class="kind">ミニキャラ</span></button>
+            <button class="wardrobe-option" data-avatar="cyberArt" type="button">Lv.10 電脳CEO<span class="kind">かっこいい</span></button>
+            <button class="wardrobe-option" data-avatar="custom" type="button">Lv.15 好きな画像<span class="kind">自分で選択</span></button>
+            <button class="wardrobe-option" data-avatar="darkArt" type="button">Lv.20 黒衣のCEO<span class="kind">ダークRPG</span></button>
+            <button class="wardrobe-option" data-avatar="royalArt" type="button">Lv.30 覇王CEO<span class="kind">最高レア</span></button>
+          </div>
+          <div class="unlock-note" id="unlockNote">次の衣装はLv.5で解放されます。</div>
+          <input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp" />
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>今日のクエスト</h2>
+        <div class="quest-list" id="questList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>次の成長</h2>
+        <div class="growth-list" id="growthList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ボス戦</h2>
+        <div class="boss-grid" id="bossGrid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ステータス</h2>
+        <div class="status-list" id="statusList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>実績解除</h2>
+        <div class="achievement-list" id="achievementList"></div>
+      </section>
+
+      <section class="panel">
+        <h2>最近の冒険ログ</h2>
+        <div class="log-list" id="adventureLog"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="video-overlay" id="motivationVideoOverlay" aria-hidden="true">
+    <div class="video-box" role="dialog" aria-modal="true" aria-labelledby="motivationVideoTitle">
+      <div class="video-head">
+        <div>
+          <h2 id="motivationVideoTitle">今日の激励動画</h2>
+          <div class="small">集中に入る前のスイッチとして、いつでも再生できます。</div>
+        </div>
+        <button id="closeMotivationVideoBtn" type="button">閉じる</button>
+      </div>
+      <div class="video-frame-wrap">
+        <iframe
+          id="motivationVideoFrame"
+          title="激励動画"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+      </div>
+      <div class="video-note">YouTubeから再生します。GitHubで公開する場合は、埋め込みが許可されている動画だけを使ってください。</div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "focus_dashboard_v1";
+    const AVATAR_STORAGE_KEY = "taro_rpg_avatar_v1";
+    const LAST_BATTLE_SESSION_KEY = "taro_rpg_last_battle_session_v1";
+    const SELECTED_PROJECT_KEY = "taro_rpg_selected_project_v1";
+    const MOTIVATION_VIDEO_EMBED_URL = "https://www.youtube-nocookie.com/embed/fXVAaffCMh8?autoplay=1&rel=0&modestbranding=1";
+    const $ = id => document.getElementById(id);
+    let currentPlayerLevel = 1;
+    let latestBattleData = null;
+    let adventureAnimationId = 0;
+    const HERO_SPRITE = new Image();
+    HERO_SPRITE.onload = () => {
+      if (latestBattleData) startCanvasAdventure(latestBattleData, false);
+    };
+    HERO_SPRITE.src = "assets/rpg/hero-jrpg-sprites.webp?v=20260615-2";
+
+    const AVATAR_UNLOCKS = {
+      executive: 1,
+      school: 3,
+      cozy: 5,
+      chibi: 8,
+      cyberArt: 10,
+      custom: 15,
+      darkArt: 20,
+      royalArt: 30
+    };
+
+    const AVATAR_IMAGES = {
+      school: "assets/rpg/hero-school.webp",
+      cozy: "assets/rpg/hero-cozy.webp",
+      chibi: "assets/rpg/hero-chibi.webp",
+      cyberArt: "assets/rpg/hero-cyber.webp",
+      darkArt: "assets/rpg/hero-dark.webp",
+      royalArt: "assets/rpg/hero-royal.webp"
+    };
+
+    const SKILLS = [
+      { key: "global", label: "海外展開力" },
+      { key: "asia", label: "アジア展開力" },
+      { key: "it", label: "IT基礎力" },
+      { key: "academic", label: "学術力" },
+      { key: "fitness", label: "社長体力" },
+      { key: "judgment", label: "経営判断力" },
+      { key: "action", label: "行動力" }
+    ];
+
+    const PROJECTS = [
+      {
+        id: "it-passport",
+        name: "ITパスポート試験",
+        shortName: "ITパスポート",
+        category: "ITパスポート",
+        startDate: "2026-06-10",
+        deadline: "2026-07-31",
+        requiredMinutes: 120 * 60
+      },
+      {
+        id: "toeic-900",
+        name: "TOEIC 900超え",
+        shortName: "TOEIC",
+        category: "TOEIC",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-10-25",
+        requiredMinutes: 300 * 60
+      },
+      {
+        id: "hsk-3",
+        name: "中国語 HSK3級",
+        shortName: "HSK",
+        category: "中国語",
+        startDate: "2026-06-10",
+        planStartDate: "2026-08-01",
+        deadline: "2026-11-07",
+        requiredMinutes: 150 * 60
+      }
+    ];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+          sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : []
+        };
+      } catch {
+        return { sessions: [], tasks: [] };
+      }
+    }
+
+    function loadAvatarConfig() {
+      try {
+        const raw = localStorage.getItem(AVATAR_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+        return {
+          style: parsed.style || "executive",
+          image: parsed.image || ""
+        };
+      } catch {
+        return { style: "executive", image: "" };
+      }
+    }
+
+    function saveAvatarConfig(config) {
+      localStorage.setItem(AVATAR_STORAGE_KEY, JSON.stringify(config));
+    }
+
+    function applyAvatar(level) {
+      currentPlayerLevel = level;
+      const config = loadAvatarConfig();
+      const selected = level >= (AVATAR_UNLOCKS[config.style] || 1) ? config.style : "executive";
+      const stage = document.querySelector(".pixel-stage");
+      const person = $("pixelPerson");
+      const custom = $("customAvatar");
+      const presetImage = AVATAR_IMAGES[selected] || "";
+      const displayedImage = selected === "custom" ? config.image : presetImage;
+
+      stage.classList.toggle("has-custom", Boolean(displayedImage));
+      person.className = "pixel-person";
+      if (displayedImage) custom.src = displayedImage;
+
+      let unlockedCount = 0;
+      document.querySelectorAll("[data-avatar]").forEach(button => {
+        const style = button.dataset.avatar;
+        const required = AVATAR_UNLOCKS[style];
+        const unlocked = level >= required;
+        if (unlocked) unlockedCount += 1;
+        button.disabled = !unlocked;
+        button.classList.toggle("active", selected === style);
+        button.title = unlocked ? "この姿に着せ替える" : `Lv.${required}で解放`;
+      });
+      $("wardrobeCount").textContent = `${unlockedCount} / ${Object.keys(AVATAR_UNLOCKS).length} 解放`;
+
+      const next = Object.entries(AVATAR_UNLOCKS)
+        .map(([style, required]) => ({ style, required }))
+        .filter(row => row.required > level)
+        .sort((a, b) => a.required - b.required)[0];
+      $("unlockNote").textContent = next
+        ? `次の衣装はLv.${next.required}で解放されます。`
+        : "すべての衣装を解放しました。";
+    }
+
+    function selectAvatar(style) {
+      const required = AVATAR_UNLOCKS[style] || 1;
+      if (currentPlayerLevel < required) return;
+      if (style === "custom") {
+        $("avatarFile").click();
+        return;
+      }
+      const config = loadAvatarConfig();
+      saveAvatarConfig({ ...config, style });
+      applyAvatar(currentPlayerLevel);
+    }
+
+    function resizeAvatarFile(file) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        const url = URL.createObjectURL(file);
+        image.onload = () => {
+          const size = 360;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext("2d");
+          const scale = Math.max(size / image.width, size / image.height);
+          const width = image.width * scale;
+          const height = image.height * scale;
+          context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/webp", .82));
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("画像を読み込めませんでした。"));
+        };
+        image.src = url;
+      });
+    }
+
+    function toDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function todayKey() {
+      return toDateKey(new Date());
+    }
+
+    function parseDateKey(key) {
+      const [y, m, d] = String(key || "").split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function dateOffsetKey(offset) {
+      const date = new Date();
+      date.setDate(date.getDate() + offset);
+      return toDateKey(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function minutesOf(session) {
+      return Math.max(0, Number(session.minutes || 0));
+    }
+
+    function sumMinutes(sessions, filter = () => true) {
+      return sessions.filter(filter).reduce((sum, session) => sum + minutesOf(session), 0);
+    }
+
+    function sessionText(session) {
+      return `${session.category || ""} ${session.taskTitle || session.title || ""}`.toLowerCase();
+    }
+
+    function skillForSession(session) {
+      const text = sessionText(session);
+      if (text.includes("中国語") || text.includes("hsk") || text.includes("chinese") || text.includes("中検")) return "asia";
+      if (text.includes("toeic") || text.includes("英語") || text.includes("english") || text.includes("part 7") || text.includes("単語") || text.includes("精読")) return "global";
+      if (text.includes("itパスポート") || text.includes("過去問") || text.includes("情報") || /(^|\\s)it(\\s|$)/.test(text)) return "it";
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) return "academic";
+      if (text.includes("ジム") || text.includes("筋トレ") || text.includes("トレーニング") || text.includes("胸") || text.includes("背中") || text.includes("脚")) return "fitness";
+      if (text.includes("新聞") || text.includes("読書") || text.includes("ニュース") || text.includes("本")) return "judgment";
+      return "action";
+    }
+
+    function skillTotals(sessions) {
+      const totals = Object.fromEntries(SKILLS.map(skill => [skill.key, 0]));
+      sessions.forEach(session => {
+        totals[skillForSession(session)] += minutesOf(session);
+      });
+      return totals;
+    }
+
+    function isProjectSession(session, project) {
+      const text = sessionText(session);
+      const isChinese =
+        session.category === "中国語" ||
+        text.includes("中国語") ||
+        text.includes("hsk") ||
+        text.includes("chinese") ||
+        text.includes("中検");
+      const isEnglish =
+        session.category === "TOEIC" ||
+        text.includes("toeic") ||
+        text.includes("英語") ||
+        text.includes("english") ||
+        text.includes("part 7") ||
+        (!isChinese && (text.includes("単語") || text.includes("精読")));
+      if (project.id === "it-passport") {
+        return !isChinese && !isEnglish && (
+          session.category === "ITパスポート" ||
+          text.includes("itパスポート") ||
+          text.includes("過去問") ||
+          text.includes("情報")
+        );
+      }
+      if (project.id === "toeic-900") {
+        return isEnglish;
+      }
+      return isChinese;
+    }
+
+    function activityForSession(session) {
+      if (!session) return "walking";
+      const text = sessionText(session);
+      if (text.includes("歩") || text.includes("散歩") || text.includes("ウォーキング") ||
+          text.includes("移動") || text.includes("通学") || text.includes("通勤")) {
+        return "walking";
+      }
+      if (skillForSession(session) === "fitness") return "training";
+      return "study";
+    }
+
+    function sortedSessions(sessions) {
+      return [...sessions].sort((a, b) => {
+        const aTime = String(a.endedAt || a.ended_at || a.date || "");
+        const bTime = String(b.endedAt || b.ended_at || b.date || "");
+        return bTime.localeCompare(aTime);
+      });
+    }
+
+    function projectData(sessions, project) {
+      const damage = sumMinutes(sessions, session => isProjectSession(session, project));
+      const remaining = Math.max(0, project.requiredMinutes - damage);
+      const progress = Math.min(100, (damage / project.requiredMinutes) * 100);
+      const days = Math.max(1, Math.ceil((parseDateKey(project.deadline) - parseDateKey(todayKey())) / 86400000) + 1);
+      return { project, damage, remaining, progress, dailyNeed: Math.ceil(remaining / days) };
+    }
+
+    function primaryProject(rows) {
+      const today = todayKey();
+      const unfinished = rows.filter(row => row.remaining > 0);
+      const active = unfinished
+        .filter(row => (row.project.planStartDate || row.project.startDate) <= today && row.project.deadline >= today)
+        .sort((a, b) => a.project.deadline.localeCompare(b.project.deadline));
+      if (active.length) return active[0];
+      return unfinished.sort((a, b) => {
+        const aStart = a.project.planStartDate || a.project.startDate;
+        const bStart = b.project.planStartDate || b.project.startDate;
+        return aStart.localeCompare(bStart) || a.project.deadline.localeCompare(b.project.deadline);
+      })[0] || rows[rows.length - 1];
+    }
+
+    function applyGeneralStudyDamage(sessions, primary) {
+      const generalMinutes = sumMinutes(sessions, session =>
+        activityForSession(session) === "study" &&
+        !PROJECTS.some(project => isProjectSession(session, project))
+      );
+      if (!generalMinutes || !primary) return;
+      primary.damage = Math.min(primary.project.requiredMinutes, primary.damage + generalMinutes);
+      primary.remaining = Math.max(0, primary.project.requiredMinutes - primary.damage);
+      primary.progress = Math.min(100, (primary.damage / primary.project.requiredMinutes) * 100);
+      const days = Math.max(
+        1,
+        Math.ceil((parseDateKey(primary.project.deadline) - parseDateKey(todayKey())) / 86400000) + 1
+      );
+      primary.dailyNeed = Math.ceil(primary.remaining / days);
+    }
+
+    function getWeekStart(key) {
+      const date = parseDateKey(key);
+      const day = date.getDay();
+      date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
+      return toDateKey(date);
+    }
+
+    function getWeekEnd(key) {
+      const date = parseDateKey(getWeekStart(key));
+      date.setDate(date.getDate() + 6);
+      return toDateKey(date);
+    }
+
+    function currentWeekMinutes(sessions) {
+      const start = getWeekStart(todayKey());
+      const end = getWeekEnd(todayKey());
+      return sumMinutes(sessions, session => session.date >= start && session.date <= end);
+    }
+
+    function activeDates(sessions) {
+      return [...new Set(sessions.filter(session => minutesOf(session) > 0 && session.date).map(session => session.date))].sort();
+    }
+
+    function currentStreak(sessions) {
+      const dates = new Set(activeDates(sessions));
+      if (!dates.size) return 0;
+      let cursor = new Date();
+      if (!dates.has(toDateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+      let count = 0;
+      while (dates.has(toDateKey(cursor))) {
+        count += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return count;
+    }
+
+    function levelFromExp(exp) {
+      return Math.floor(Math.sqrt(Math.max(0, exp) / 60)) + 1;
+    }
+
+    function stageForLevel(level) {
+      if (level >= 50) return "覇王企業";
+      if (level >= 30) return "グローバルCEO";
+      if (level >= 20) return "全国展開企業";
+      if (level >= 10) return "成長企業CEO";
+      if (level >= 5) return "スーツ社長";
+      return "起業準備中";
+    }
+
+    function titleForPlayer(totals, streak, weekMinutes) {
+      if (weekMinutes >= 1000) return "急成長企業";
+      if (weekMinutes >= 500) return "高稼働CEO";
+      if (streak >= 3) return "継続稼働社長";
+
+      const levels = SKILLS.map(skill => ({ ...skill, level: Math.floor(totals[skill.key] / 60) }));
+      const max = Math.max(...levels.map(row => row.level));
+      const min = Math.min(...levels.map(row => row.level));
+      if (max > 0 && max - min <= 2) return "バランス型経営者";
+
+      const top = levels.sort((a, b) => b.level - a.level)[0];
+      const titles = {
+        global: "グローバル挑戦者",
+        asia: "アジア市場開拓者",
+        it: "デジタル武装社長",
+        academic: "知識経営CEO",
+        fitness: "フィジカルCEO",
+        judgment: "情報収集型CEO",
+        action: "即断即行社長"
+      };
+      return max > 0 ? titles[top.key] : "新人経営者";
+    }
+
+    function renderPlayer(sessions, totals) {
+      const total = sumMinutes(sessions);
+      const today = sumMinutes(sessions, session => session.date === todayKey());
+      const level = levelFromExp(total);
+      const levelStart = Math.pow(level - 1, 2) * 60;
+      const nextAt = Math.pow(level, 2) * 60;
+      const need = Math.max(0, nextAt - total);
+      const progress = nextAt === levelStart ? 100 : ((total - levelStart) / (nextAt - levelStart)) * 100;
+      const streak = currentStreak(sessions);
+      const weekMinutes = currentWeekMinutes(sessions);
+
+      $("playerLevel").textContent = `Lv.${level}`;
+      $("playerStage").textContent = stageForLevel(level);
+      $("playerTitle").textContent = `称号：${titleForPlayer(totals, streak, weekMinutes)}`;
+      $("totalExp").textContent = total.toLocaleString();
+      $("todayExp").textContent = today.toLocaleString();
+      $("nextLevelExp").textContent = `あと ${need.toLocaleString()} EXP`;
+      $("levelBar").style.width = `${Math.max(0, Math.min(100, progress))}%`;
+      $("streakText").textContent = `連続記録 ${streak}日 / 今週 ${weekMinutes}分`;
+      $("updatedText").textContent = `${new Date().toLocaleString("ja-JP")} 時点`;
+
+      const colors = level >= 30 ? ["#7c3aed", "#fbbf24"] :
+        level >= 20 ? ["#1d4ed8", "#fbbf24"] :
+        level >= 10 ? ["#334155", "#38bdf8"] :
+        level >= 5 ? ["#334155", "#fb7185"] : ["#475569", "#94a3b8"];
+      $("pixelPerson").style.setProperty("--suit", colors[0]);
+      $("pixelPerson").querySelector(".pixel-tie").style.background = colors[1];
+      applyAvatar(level);
+    }
+
+    function questRow(title, current, target, unit = "分") {
+      const done = current >= target;
+      const status = done
+        ? '<span class="done-badge">達成</span>'
+        : `<span class="remaining">あと${Math.ceil(target - current)}${unit}</span>`;
+      return `<div class="quest"><div class="quest-title">${escapeHtml(title)}</div>${status}</div>`;
+    }
+
+    function renderQuests(sessions, primary) {
+      const todaySessions = sessions.filter(session => session.date === todayKey());
+      const todayTotal = sumMinutes(todaySessions);
+      const projectToday = sumMinutes(todaySessions, session => isProjectSession(session, primary.project));
+      const readingToday = sumMinutes(todaySessions, session => {
+        const skill = skillForSession(session);
+        return skill === "judgment";
+      });
+      const manualCount = todaySessions.filter(session => session.type === "manual").length;
+
+      $("questList").innerHTML = [
+        questRow("25分集中する", todayTotal, 25),
+        questRow("合計100分記録する", todayTotal, 100),
+        questRow(`主力PJ「${primary.project.shortName}」を60分進める`, projectToday, 60),
+        questRow("新聞か読書を15分やる", readingToday, 15),
+        questRow("手動ログを1件つける", manualCount, 1, "件")
+      ].join("");
+    }
+
+    function bossArtForProject(projectId) {
+      return projectId === "it-passport"
+        ? "assets/rpg/boss-it.webp?v=20260614-2"
+        : projectId === "toeic-900"
+          ? "assets/rpg/boss-toeic.webp?v=20260614-2"
+          : "assets/rpg/boss-hsk.webp?v=20260614-2";
+    }
+
+    function bossVisual(projectId) {
+      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
+      const art = bossArtForProject(projectId);
+      const label = projectId === "it-passport"
+        ? "電脳試験機兵"
+        : projectId === "toeic-900"
+          ? "ワールド・グリフォン"
+          : "黄金語学龍";
+      return `
+        <div class="boss-scene" aria-label="${label}">
+          <img class="boss-art" src="${art}" alt="${label}" />
+          <div class="boss-monster ${type}">
+            <div class="boss-horn left"></div>
+            <div class="boss-horn right"></div>
+            <div class="boss-core"></div>
+            <div class="boss-eye left"></div>
+            <div class="boss-eye right"></div>
+          </div>
+        </div>
+        <div class="small" style="margin:-5px 0 10px; text-align:center;">${label}</div>
+      `;
+    }
+
+    function renderBosses(rows, primary) {
+      $("bossGrid").innerHTML = rows.map(row => {
+        const isPrimary = row.project.id === primary.project.id;
+        const status = row.remaining <= 0 ? '<span class="done-badge">撃破</span>' :
+          isPrimary ? '<span class="main-badge">次のボス</span>' : "";
+        return `
+          <article class="boss ${isPrimary ? "primary" : ""}">
+            ${bossVisual(row.project.id)}
+            <div class="player-top">
+              <h3>${escapeHtml(row.project.name)}</h3>
+              ${status}
+            </div>
+            <div class="small">期限 ${row.project.deadline}</div>
+            <div class="boss-stats">
+              <div>ボスHP<br><strong>${row.project.requiredMinutes.toLocaleString()}</strong></div>
+              <div>与えたダメージ<br><strong>${row.damage.toLocaleString()}</strong></div>
+              <div>残りHP<br><strong>${row.remaining.toLocaleString()}</strong></div>
+              <div>必要ダメージ<br><strong>${row.remaining ? `${row.dailyNeed}/日` : "撃破済み"}</strong></div>
+            </div>
+            <div class="bar hp"><div style="width:${row.progress.toFixed(1)}%"></div></div>
+            <div class="small" style="margin-top:7px;">進捗率 ${row.progress.toFixed(1)}%</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function targetProjectForSession(session, rows, primary) {
+      if (session) {
+        const matched = rows.find(row => isProjectSession(session, row.project));
+        if (matched) return matched;
+      }
+      return primary;
+    }
+
+    function selectedProjectMode() {
+      const saved = localStorage.getItem(SELECTED_PROJECT_KEY) || "auto";
+      return saved === "auto" || PROJECTS.some(project => project.id === saved) ? saved : "auto";
+    }
+
+    function selectedProjectRow(rows, latest, primary) {
+      const mode = selectedProjectMode();
+      if (mode === "auto") return targetProjectForSession(latest, rows, primary);
+      return rows.find(row => row.project.id === mode) || primary;
+    }
+
+    function updateBossSwitcher() {
+      const selected = selectedProjectMode();
+      document.querySelectorAll("#bossSwitcher [data-project]").forEach(button => {
+        const active = button.dataset.project === selected;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+    }
+
+    function renderGoalDashboard(rows, activeTarget) {
+      const wrap = $("goalDashboard");
+      if (!wrap) return;
+      wrap.innerHTML = rows.map(row => {
+        const percent = Math.round(row.progress);
+        const daysLeft = Math.max(0, Math.ceil((parseDateKey(row.project.deadline) - parseDateKey(todayKey())) / 86400000));
+        const active = activeTarget && row.project.id === activeTarget.project.id;
+        return `
+          <button class="goal-card ${active ? "active" : ""}" type="button" data-goal-project="${escapeHtml(row.project.id)}">
+            <div class="goal-card-title">
+              <span>${escapeHtml(row.project.shortName)}</span>
+              <span class="goal-card-percent">${percent}%</span>
+            </div>
+            <div class="bar"><div style="width:${percent}%"></div></div>
+            <div class="goal-card-meta">
+              <span>残り ${row.remaining.toLocaleString()} 分</span>
+              <span>締切まで ${daysLeft} 日 / 1日 ${row.dailyNeed.toLocaleString()} 分</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function attackTheme(projectId) {
+      if (projectId === "it-passport") {
+        return {
+          accent: "#22d3ee",
+          windup: "ネットワーク解析ビーム！",
+          hit: "脆弱性を突破！",
+          kind: "it"
+        };
+      }
+      if (projectId === "toeic-900") {
+        return {
+          accent: "#a78bfa",
+          windup: "英単語フラッシュ！",
+          hit: "リスニングコンボ成功！",
+          kind: "toeic"
+        };
+      }
+      return {
+        accent: "#f59e0b",
+        windup: "漢字符術・声調連撃！",
+        hit: "語学の壁を破った！",
+        kind: "hsk"
+      };
+    }
+
+    function sessionDamagesTarget(session, target, primary) {
+      if (!session || activityForSession(session) !== "study") return false;
+      if (isProjectSession(session, target.project)) return true;
+      const matchesAnyProject = PROJECTS.some(project => isProjectSession(session, project));
+      return !matchesAnyProject && primary && target.project.id === primary.project.id;
+    }
+
+    function canvasPalette() {
+      const style = loadAvatarConfig().style;
+      const palettes = {
+        executive: { coat: "#0f172a", trim: "#fbbf24", hair: "#111827", accent: "#38bdf8" },
+        school: { coat: "#1d4ed8", trim: "#f8fafc", hair: "#3f2d20", accent: "#60a5fa" },
+        cozy: { coat: "#b45309", trim: "#fde68a", hair: "#4a2c20", accent: "#fb923c" },
+        chibi: { coat: "#db2777", trim: "#fce7f3", hair: "#713f12", accent: "#f472b6" },
+        cyberArt: { coat: "#111827", trim: "#22d3ee", hair: "#0f172a", accent: "#a78bfa" },
+        custom: { coat: "#334155", trim: "#f8fafc", hair: "#111827", accent: "#38bdf8" },
+        darkArt: { coat: "#2e1065", trim: "#c084fc", hair: "#09090b", accent: "#e879f9" },
+        royalArt: { coat: "#172554", trim: "#fbbf24", hair: "#e5e7eb", accent: "#60a5fa" }
+      };
+      return palettes[style] || palettes.executive;
+    }
+
+    function pixelRect(ctx, x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
+    }
+
+    function drawLimb(ctx, x, y, width, height, angle, color) {
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(y));
+      ctx.rotate(angle);
+      pixelRect(ctx, -width / 2, 0, width, height, color);
+      ctx.restore();
+    }
+
+    function drawSegment(ctx, x1, y1, x2, y2, width, color) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      drawLimb(ctx, x1, y1, width, Math.hypot(dx, dy), Math.atan2(dy, dx) - Math.PI / 2, color);
+    }
+
+    function drawPixelSegment(ctx, x1, y1, x2, y2, size, color) {
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 4));
+      for (let i = 0; i <= steps; i += 1) {
+        const ratio = i / steps;
+        pixelRect(
+          ctx,
+          x1 + (x2 - x1) * ratio - size / 2,
+          y1 + (y2 - y1) * ratio - size / 2,
+          size,
+          size,
+          color
+        );
+      }
+    }
+
+    function legJoints(hipX, hipY, footX, footY) {
+      const upper = 25;
+      const lower = 25;
+      const dx = footX - hipX;
+      const dy = footY - hipY;
+      const distance = Math.max(8, Math.min(upper + lower - 1, Math.hypot(dx, dy)));
+      const direction = Math.atan2(dy, dx);
+      const offset = Math.acos(
+        Math.max(-1, Math.min(1, (upper * upper + distance * distance - lower * lower) / (2 * upper * distance)))
+      );
+      const thighAngle = direction - offset;
+      return {
+        kneeX: hipX + Math.cos(thighAngle) * upper,
+        kneeY: hipY + Math.sin(thighAngle) * upper,
+        footX,
+        footY
+      };
+    }
+
+    function drawWalkingLeg(ctx, hipX, hipY, footX, footY, backLeg) {
+      const joints = legJoints(hipX, hipY, footX, footY);
+      const trouser = backLeg ? "#1e293b" : "#475569";
+      drawPixelSegment(ctx, hipX, hipY, joints.kneeX, joints.kneeY, 9, trouser);
+      drawPixelSegment(ctx, joints.kneeX, joints.kneeY, joints.footX, joints.footY, 8, trouser);
+      const facing = joints.footX >= hipX ? 1 : -1;
+      pixelRect(
+        ctx,
+        joints.footX + (facing > 0 ? -2 : -14),
+        joints.footY - 2,
+        16,
+        7,
+        backLeg ? "#020617" : "#0f172a"
+      );
+    }
+
+    function drawSpriteLeg(ctx, hipX, hipY, kneeX, kneeY, footX, footY, backLeg) {
+      const trouser = backLeg ? "#1e293b" : "#475569";
+      drawPixelSegment(ctx, hipX, hipY, kneeX, kneeY, 9, trouser);
+      drawPixelSegment(ctx, kneeX, kneeY, footX, footY, 8, trouser);
+      const facing = footX >= hipX ? 1 : -1;
+      pixelRect(
+        ctx,
+        footX + (facing > 0 ? -2 : -14),
+        footY - 2,
+        16,
+        7,
+        backLeg ? "#020617" : "#0f172a"
+      );
+    }
+
+    function drawHeroSprite(ctx, x, groundY, activity, elapsed, moving, attackPhase) {
+      if (!HERO_SPRITE.complete || !HERO_SPRITE.naturalWidth) return false;
+      let row = 0;
+      let frame = Math.floor(elapsed / 170) % 4;
+
+      if (activity === "training") {
+        row = 4;
+        frame = Math.floor(elapsed / 320) % 4;
+      } else if (attackPhase) {
+        row = 3;
+        frame = Math.min(3, Math.max(0, Math.floor((elapsed - 2550) / 330)));
+      } else if (moving || activity === "walking") {
+        row = 1;
+      } else if (activity === "study") {
+        row = 2;
+        frame = Math.floor(elapsed / 300) % 4;
+      }
+
+      const gridX = 60;
+      const gridY = 5;
+      const cellWidth = 1130 / 4;
+      const cellHeight = 1200 / 5;
+      const sourceX = gridX + frame * cellWidth;
+      const sourceY = gridY + row * cellHeight;
+      const drawWidth = row === 4 ? 174 : row === 3 ? 158 : 138;
+      const drawHeight = row === 4 ? 148 : 132;
+      const drawX = Math.round(x - drawWidth / 2);
+      const drawY = Math.round(groundY - drawHeight + 5);
+
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = .34;
+      pixelRect(ctx, x - 33, groundY + 2, 66, 8, "#020617");
+      ctx.globalAlpha = 1;
+      ctx.drawImage(
+        HERO_SPRITE,
+        sourceX,
+        sourceY,
+        cellWidth,
+        cellHeight,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
+      ctx.restore();
+      return true;
+    }
+
+    function drawPixelHero(ctx, x, groundY, activity, phase, actionAmount) {
+      const colors = canvasPalette();
+      const walking = activity === "walking" || actionAmount < .52;
+      const rawWalkFrame = walking ? Math.floor(phase / 1.7) : 1;
+      const walkFrame = ((rawWalkFrame % 4) + 4) % 4;
+      const poses = [
+        {
+          left: { kneeX: 7, kneeY: 20, footX: 20, lift: 0 },
+          right: { kneeX: -9, kneeY: 18, footX: -14, lift: 10 },
+          arm: -1
+        },
+        {
+          left: { kneeX: -5, kneeY: 21, footX: -8, lift: 0 },
+          right: { kneeX: 6, kneeY: 21, footX: 9, lift: 0 },
+          arm: 0
+        },
+        {
+          left: { kneeX: -9, kneeY: 18, footX: -14, lift: 10 },
+          right: { kneeX: 7, kneeY: 20, footX: 20, lift: 0 },
+          arm: 1
+        },
+        {
+          left: { kneeX: 5, kneeY: 21, footX: 8, lift: 0 },
+          right: { kneeX: -6, kneeY: 21, footX: -9, lift: 0 },
+          arm: 0
+        }
+      ];
+      const pose = poses[walkFrame];
+      const bob = walking && walkFrame % 2 === 0 ? 1 : 0;
+      const squat = activity === "training" ? (Math.sin(phase * .7) + 1) * 6 : 0;
+      const baseY = groundY + squat - bob;
+
+      ctx.globalAlpha = .35;
+      pixelRect(ctx, x - 25, groundY + 3, 50, 7, "#020617");
+      ctx.globalAlpha = 1;
+
+      if (walking) {
+        const hipY = baseY - 43;
+        drawSpriteLeg(
+          ctx,
+          x - 7,
+          hipY,
+          x + pose.left.kneeX,
+          hipY + pose.left.kneeY,
+          x + pose.left.footX,
+          groundY - 5 - pose.left.lift,
+          true
+        );
+        drawSpriteLeg(
+          ctx,
+          x + 7,
+          hipY,
+          x + pose.right.kneeX,
+          hipY + pose.right.kneeY,
+          x + pose.right.footX,
+          groundY - 5 - pose.right.lift,
+          false
+        );
+      } else {
+        pixelRect(ctx, x - 13, baseY - 43, 10, 39, "#1e293b");
+        pixelRect(ctx, x + 4, baseY - 43, 10, 39, "#475569");
+        pixelRect(ctx, x - 17, groundY - 7, 18, 7, "#020617");
+        pixelRect(ctx, x + 3, groundY - 7, 18, 7, "#0f172a");
+      }
+
+      pixelRect(ctx, x - 16, baseY - 82, 32, 43, colors.coat);
+      pixelRect(ctx, x - 3, baseY - 80, 6, 38, colors.trim);
+      pixelRect(ctx, x - 18, baseY - 84, 36, 7, colors.accent);
+
+      let armSwing = walking ? pose.arm * .52 : 0;
+      if (activity === "training") {
+        armSwing = -1.7 + Math.sin(phase * .7) * .18;
+      } else if (activity === "study" && actionAmount > .72) {
+        armSwing = -1.25;
+      }
+      drawLimb(ctx, x - 16, baseY - 77, 7, 34, armSwing, colors.coat);
+      drawLimb(ctx, x + 16, baseY - 77, 7, 34, -armSwing, colors.coat);
+
+      pixelRect(ctx, x - 12, baseY - 106, 24, 23, "#f1c7a5");
+      pixelRect(ctx, x - 14, baseY - 111, 28, 10, colors.hair);
+      pixelRect(ctx, x - 14, baseY - 104, 5, 12, colors.hair);
+      pixelRect(ctx, x + 9, baseY - 104, 5, 12, colors.hair);
+      pixelRect(ctx, x - 7, baseY - 98, 4, 4, "#0f172a");
+      pixelRect(ctx, x + 5, baseY - 98, 4, 4, "#0f172a");
+
+      if (activity === "training") {
+        pixelRect(ctx, x - 35, baseY - 118, 70, 6, "#94a3b8");
+        pixelRect(ctx, x - 42, baseY - 125, 9, 20, "#475569");
+        pixelRect(ctx, x + 33, baseY - 125, 9, 20, "#475569");
+      } else if (activity === "study" && actionAmount > .72) {
+        pixelRect(ctx, x + 17, baseY - 83, 22, 17, "#fbbf24");
+        pixelRect(ctx, x + 20, baseY - 80, 16, 3, "#7c2d12");
+      }
+    }
+
+    function drawPixelBoss(ctx, x, groundY, projectId, damageRatio, phase, shake = 0, dimmed = false, hit = false) {
+      const type = projectId === "it-passport" ? "it" : projectId === "toeic-900" ? "toeic" : "hsk";
+      const colors = type === "it"
+        ? { body: "#172554", armor: "#2563eb", trim: "#fbbf24", glow: "#22d3ee" }
+        : type === "toeic"
+          ? { body: "#2e1065", armor: "#6d28d9", trim: "#fbbf24", glow: "#c084fc" }
+          : { body: "#450a0a", armor: "#b91c1c", trim: "#fbbf24", glow: "#fb923c" };
+      const sx = x + shake;
+      ctx.save();
+      ctx.globalAlpha = dimmed ? .45 : 1;
+      ctx.shadowColor = hit ? "#ffffff" : colors.glow;
+      ctx.shadowBlur = dimmed ? 4 : 18;
+      pixelRect(ctx, sx - 32, groundY - 94, 64, 83, colors.body);
+      pixelRect(ctx, sx - 42, groundY - 82, 84, 19, colors.armor);
+      pixelRect(ctx, sx - 26, groundY - 125, 52, 37, colors.armor);
+      pixelRect(ctx, sx - 19, groundY - 118, 38, 25, "#111827");
+      pixelRect(ctx, sx - 13, groundY - 109, 8, 6, colors.glow);
+      pixelRect(ctx, sx + 5, groundY - 109, 8, 6, colors.glow);
+      pixelRect(ctx, sx - 31, groundY - 137, 12, 18, colors.trim);
+      pixelRect(ctx, sx + 19, groundY - 137, 12, 18, colors.trim);
+      pixelRect(ctx, sx - 25, groundY - 62, 50, 7, colors.trim);
+      pixelRect(ctx, sx - 34, groundY - 11, 25, 9, "#0f172a");
+      pixelRect(ctx, sx + 9, groundY - 11, 25, 9, "#0f172a");
+      if (type === "toeic") {
+        pixelRect(ctx, sx - 4, groundY - 155, 8, 25, colors.trim);
+        pixelRect(ctx, sx + 33, groundY - 122, 7, 80, colors.trim);
+        pixelRect(ctx, sx + 27, groundY - 132, 19, 19, colors.glow);
+      } else if (type === "hsk") {
+        pixelRect(ctx, sx - 35, groundY - 148, 70, 9, colors.trim);
+        pixelRect(ctx, sx - 19, groundY - 158, 38, 11, colors.armor);
+      } else {
+        pixelRect(ctx, sx - 50, groundY - 84, 12, 58, colors.glow);
+        pixelRect(ctx, sx + 38, groundY - 84, 12, 58, colors.glow);
+      }
+
+      if (damageRatio > 0) {
+        pixelRect(ctx, sx - 25, groundY - 76, 24, 4, "#f8fafc");
+        pixelRect(ctx, sx - 10, groundY - 72, 4, 13, "#94a3b8");
+        pixelRect(ctx, sx + 12, groundY - 48, 20, 4, "#0f172a");
+      }
+      if (damageRatio >= .35) {
+        pixelRect(ctx, sx + 9, groundY - 121, 4, 18, "#020617");
+        pixelRect(ctx, sx + 13, groundY - 106, 11, 4, "#020617");
+        pixelRect(ctx, sx - 34, groundY - 62, 7, 7, "#f97316");
+      }
+      if (damageRatio >= .55) {
+        const spark = Math.floor(phase / 3) % 2 === 0;
+        pixelRect(ctx, sx - 45, groundY - 76, 9, 30, "#020617");
+        if (spark) {
+          pixelRect(ctx, sx - 51, groundY - 64, 7, 4, "#fde047");
+          pixelRect(ctx, sx - 47, groundY - 72, 4, 7, "#fb923c");
+          pixelRect(ctx, sx - 47, groundY - 57, 4, 7, "#fb923c");
+        }
+      }
+      if (damageRatio >= .72) {
+        pixelRect(ctx, sx + 30, groundY - 83, 20, 58, "#020617");
+        pixelRect(ctx, sx + 36, groundY - 34, 18, 8, "#475569");
+        pixelRect(ctx, sx - 18, groundY - 91, 15, 12, "#64748b");
+      }
+      if (damageRatio >= .45) {
+        const smokeY = (phase * 2) % 34;
+        ctx.globalAlpha = dimmed ? .18 : .42;
+        pixelRect(ctx, sx + 19, groundY - 137 - smokeY, 18, 15, "#94a3b8");
+        pixelRect(ctx, sx + 8, groundY - 151 - smokeY, 24, 17, "#475569");
+        ctx.globalAlpha = dimmed ? .45 : 1;
+      }
+      if (damageRatio >= .9 && Math.floor(phase / 2) % 2 === 0) {
+        ctx.globalAlpha = .35;
+        pixelRect(ctx, sx - 48, groundY - 143, 96, 136, "#ef4444");
+      }
+      if (hit) {
+        ctx.globalAlpha = .48;
+        pixelRect(ctx, sx - 51, groundY - 151, 102, 145, "#ffffff");
+      }
+      ctx.restore();
+    }
+
+    function drawCheckpoint(ctx, x, roadY, label, active, completed) {
+      pixelRect(ctx, x - 4, roadY - 75, 8, 75, active ? "#fbbf24" : "#64748b");
+      pixelRect(ctx, x - 22, roadY - 82, 44, 21, completed ? "#16a34a" : active ? "#d97706" : "#334155");
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(completed ? "CLEAR" : label, x, roadY - 67);
+    }
+
+    function drawWorldLandmarks(ctx, projectId, roadY, phase) {
+      if (projectId === "it-passport") {
+        [150, 580].forEach((x, index) => {
+          pixelRect(ctx, x, roadY - 116 - index * 14, 58, 116 + index * 14, "#0f2747");
+          pixelRect(ctx, x + 7, roadY - 105 - index * 14, 44, 8, "#1d4ed8");
+          for (let y = roadY - 87; y < roadY - 15; y += 17) {
+            pixelRect(ctx, x + 10, y, 7, 5, "#22d3ee");
+            pixelRect(ctx, x + 23, y, 21, 5, "#334155");
+          }
+        });
+        ctx.strokeStyle = "rgba(34, 211, 238, .35)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(208, roadY - 92);
+        ctx.lineTo(580, roadY - 124);
+        ctx.stroke();
+      } else if (projectId === "toeic-900") {
+        pixelRect(ctx, 145, roadY - 88, 88, 88, "#312e81");
+        pixelRect(ctx, 155, roadY - 76, 68, 62, "#faf5ff");
+        ctx.strokeStyle = "#7c3aed";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(189, roadY - 45, 25, 0, Math.PI * 2);
+        ctx.stroke();
+        drawSegment(ctx, 189, roadY - 45, 189, roadY - 63, 4, "#1e1b4b");
+        drawSegment(ctx, 189, roadY - 45, 205, roadY - 39, 4, "#1e1b4b");
+        [565, 590, 615].forEach((x, index) => {
+          pixelRect(ctx, x, roadY - 42 - index * 12, 54, 42 + index * 12, index % 2 ? "#5b21b6" : "#3730a3");
+          pixelRect(ctx, x + 7, roadY - 34 - index * 12, 40, 5, "#fbbf24");
+        });
+      } else {
+        pixelRect(ctx, 150, roadY - 118, 12, 118, "#7f1d1d");
+        pixelRect(ctx, 225, roadY - 118, 12, 118, "#7f1d1d");
+        pixelRect(ctx, 135, roadY - 126, 117, 13, "#dc2626");
+        pixelRect(ctx, 151, roadY - 142, 85, 14, "#fbbf24");
+        [570, 650].forEach((x, index) => {
+          const glow = Math.floor(phase / 4 + index) % 2 ? "#fb923c" : "#fbbf24";
+          pixelRect(ctx, x, roadY - 105, 7, 105, "#78350f");
+          pixelRect(ctx, x - 15, roadY - 104, 37, 28, "#991b1b");
+          pixelRect(ctx, x - 10, roadY - 99, 27, 18, glow);
+        });
+      }
+    }
+
+    function drawBattleMessage(ctx, text, accent) {
+      pixelRect(ctx, 305, 77, 350, 58, "#020617");
+      pixelRect(ctx, 309, 81, 342, 50, "#111827");
+      pixelRect(ctx, 318, 91, 8, 30, accent);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 18px system-ui";
+      ctx.textAlign = "left";
+      ctx.fillText(text, 340, 112);
+    }
+
+    function drawAttackProjectile(ctx, theme, fromX, toX, roadY, elapsed) {
+      const shotProgress = Math.min(1, Math.max(0, (elapsed - 2750) / 650));
+      const shotX = fromX + 38 + (toX - fromX - 70) * shotProgress;
+      const shotY = roadY - 86 - Math.sin(shotProgress * Math.PI) * 48;
+      ctx.save();
+      ctx.shadowColor = theme.accent;
+      ctx.shadowBlur = 22;
+      if (theme.kind === "it") {
+        pixelRect(ctx, shotX - 14, shotY - 14, 28, 28, "#e0f2fe");
+        pixelRect(ctx, shotX - 8, shotY - 8, 16, 16, theme.accent);
+        for (let i = 0; i < 4; i += 1) {
+          pixelRect(ctx, shotX - 52 - i * 16, shotY - 3 + (i % 2) * 10, 12, 6, "#38bdf8");
+        }
+        ctx.strokeStyle = "rgba(34, 211, 238, .8)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(fromX + 55, roadY - 88);
+        ctx.lineTo(shotX, shotY);
+        ctx.stroke();
+      } else if (theme.kind === "toeic") {
+        ctx.fillStyle = "#ede9fe";
+        ctx.font = "900 24px Georgia";
+        ctx.textAlign = "center";
+        ["A", "B", "V"].forEach((letter, index) => {
+          ctx.fillText(letter, shotX - 30 + index * 28, shotY + (index % 2 ? -16 : 12));
+        });
+        ctx.strokeStyle = theme.accent;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(shotX, shotY, 24 + Math.sin(elapsed / 80) * 5, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "900 22px system-ui";
+        ctx.textAlign = "center";
+        ["学", "語", "声"].forEach((letter, index) => {
+          pixelRect(ctx, shotX - 42 + index * 33, shotY - 22 + (index % 2) * 16, 27, 32, "#92400e");
+          ctx.fillText(letter, shotX - 28 + index * 33, shotY + 2 + (index % 2) * 16);
+        });
+        ctx.strokeStyle = "rgba(251, 191, 36, .85)";
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(fromX + 48, roadY - 72);
+        ctx.quadraticCurveTo((fromX + toX) / 2, roadY - 170, shotX, shotY);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawCanvasScene(state, now) {
+      const canvas = $("adventureCanvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const elapsed = now - state.startedAt;
+      const roadY = 340;
+      const routeStart = 105;
+      const routeEnd = 855;
+      const routeMid = (routeStart + routeEnd) / 2;
+      const duration = state.animate ? 5200 : 1;
+      const walkRatio = state.animate ? Math.min(1, elapsed / 2350) : 1;
+      const easedWalk = 1 - Math.pow(1 - walkRatio, 3);
+      const visualFrom = state.animate ? Math.max(0, Math.min(state.fromProgress, state.toProgress - .08)) : state.toProgress;
+      const shownProgress = visualFrom + (state.toProgress - visualFrom) * easedWalk;
+      const destinationX = routeStart + (routeEnd - routeStart) * state.toProgress;
+      const recordedStartX = routeStart + (routeEnd - routeStart) * state.fromProgress;
+      const walkingStartX = state.animate
+        ? Math.max(42, Math.min(recordedStartX, destinationX - 90))
+        : destinationX;
+      let heroX = walkingStartX + (destinationX - walkingStartX) * easedWalk;
+      const actionAmount = state.animate ? Math.min(1, elapsed / duration) : 1;
+      const attackPhase = state.canAttack && state.animate && elapsed >= 2550 && elapsed <= 4100;
+      const impactPhase = attackPhase && elapsed >= 3350;
+      const roaming = state.activity === "walking" && !state.animate;
+      const moving = state.animate && elapsed < 2350;
+      const theme = attackTheme(state.target.project.id);
+      if (roaming) heroX += Math.sin(elapsed / 900) * 22;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+
+      const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      if (state.activity === "training") {
+        sky.addColorStop(0, "#2b0b12");
+        sky.addColorStop(1, "#111827");
+      } else if (state.activity === "walking") {
+        sky.addColorStop(0, "#17365f");
+        sky.addColorStop(1, "#101827");
+      } else {
+        sky.addColorStop(0, "#071b35");
+        sky.addColorStop(1, "#120a24");
+      }
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < 32; i += 1) {
+        const sx = (i * 83 + 31) % canvas.width;
+        const sy = (i * 47 + 19) % 190;
+        pixelRect(ctx, sx, sy, i % 3 === 0 ? 3 : 2, i % 3 === 0 ? 3 : 2, i % 2 ? "#93c5fd" : "#fde68a");
+      }
+      ctx.fillStyle = "rgba(15, 23, 42, .92)";
+      ctx.beginPath();
+      ctx.moveTo(0, 270);
+      for (let x = 0; x <= canvas.width; x += 80) {
+        ctx.lineTo(x, 215 + ((x / 80) % 3) * 22);
+      }
+      ctx.lineTo(canvas.width, 340);
+      ctx.lineTo(0, 340);
+      ctx.fill();
+
+      drawWorldLandmarks(ctx, state.target.project.id, roadY, elapsed / 115);
+      pixelRect(ctx, 0, roadY, canvas.width, 80, "#111827");
+      pixelRect(ctx, routeStart, roadY - 8, routeEnd - routeStart, 10, "#475569");
+      pixelRect(ctx, routeStart, roadY - 8, Math.max(0, heroX - routeStart), 10, "#fbbf24");
+      for (let x = routeStart; x < routeEnd; x += 42) {
+        pixelRect(ctx, x, roadY + 21, 22, 4, "#334155");
+      }
+
+      drawCheckpoint(ctx, routeStart, roadY, "START", shownProgress > .02, shownProgress > .02);
+      drawCheckpoint(ctx, routeMid, roadY, "MID", shownProgress >= .48, shownProgress >= .5);
+      drawCheckpoint(ctx, routeEnd, roadY, "GOAL", shownProgress >= .98, shownProgress >= 1);
+
+      const bossShake = impactPhase ? Math.sin(elapsed / 22) * 9 : 0;
+      const beforeHit = state.canAttack && state.animate && elapsed < 3350;
+      const displayedDamage = beforeHit
+        ? Math.max(0, state.target.damage - state.minutes)
+        : state.target.damage;
+      const damageRatio = Math.max(0, Math.min(1, displayedDamage / state.target.project.requiredMinutes));
+      const hitFlash = impactPhase && Math.floor(elapsed / 70) % 2 === 0;
+      drawPixelBoss(
+        ctx,
+        routeEnd,
+        roadY,
+        state.target.project.id,
+        damageRatio,
+        elapsed / 115,
+        bossShake,
+        state.activity !== "study",
+        hitFlash
+      );
+      const heroLabelX = Math.min(heroX, routeEnd - 78);
+      const spriteDrawn = drawHeroSprite(
+        ctx,
+        heroLabelX,
+        roadY,
+        state.activity,
+        elapsed,
+        moving,
+        attackPhase
+      );
+      if (!spriteDrawn) {
+        drawPixelHero(ctx, heroLabelX, roadY, state.activity, elapsed / 115, actionAmount);
+      }
+      pixelRect(ctx, heroLabelX - 17, roadY - 151, 34, 21, "rgba(2, 6, 23, .88)");
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "900 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("俺", heroLabelX, roadY - 136);
+
+      if (attackPhase) drawAttackProjectile(ctx, theme, heroLabelX, routeEnd, roadY, elapsed);
+
+      if (impactPhase) {
+        const rise = Math.min(50, (elapsed - 3350) / 12);
+        ctx.fillStyle = "#fef3c7";
+        ctx.font = "900 30px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(`-${state.minutes}`, routeEnd - 18, roadY - 155 - rise);
+        ctx.strokeStyle = `rgba(251, 191, 36, ${Math.max(0, 1 - (elapsed - 3350) / 800)})`;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(routeEnd, roadY - 82, 28 + rise, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      if (attackPhase) {
+        drawBattleMessage(
+          ctx,
+          impactPhase
+            ? `${theme.hit} ${state.minutes} ダメージ！`
+            : theme.windup,
+          impactPhase ? "#f97316" : theme.accent
+        );
+      }
+
+      adventureAnimationId = requestAnimationFrame(next => drawCanvasScene(state, next));
+    }
+
+    function startCanvasAdventure(data, replay = false) {
+      if (!data) return;
+      cancelAnimationFrame(adventureAnimationId);
+      const state = {
+        ...data,
+        animate: replay || data.shouldAttack || data.activity === "training",
+        canAttack: data.activity === "study" && data.minutes > 0,
+        startedAt: performance.now()
+      };
+      adventureAnimationId = requestAnimationFrame(now => drawCanvasScene(state, now));
+    }
+
+    function playBattleAnimation() {
+      if (!latestBattleData) return;
+      startCanvasAdventure(latestBattleData, true);
+    }
+
+    function openMotivationVideo() {
+      const overlay = $("motivationVideoOverlay");
+      const frame = $("motivationVideoFrame");
+      if (!overlay || !frame) return;
+      frame.src = MOTIVATION_VIDEO_EMBED_URL;
+      overlay.classList.add("show");
+      overlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMotivationVideo() {
+      const overlay = $("motivationVideoOverlay");
+      const frame = $("motivationVideoFrame");
+      if (!overlay || !frame) return;
+      frame.src = "";
+      overlay.classList.remove("show");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+
+    function renderLiveAdventure(sessions, rows, primary, forceReplay = false) {
+      const latestOverall = sortedSessions(sessions)[0] || null;
+      const target = selectedProjectRow(rows, latestOverall, primary);
+      const mode = selectedProjectMode();
+      const latestForTarget = sortedSessions(sessions)
+        .find(session => sessionDamagesTarget(session, target, primary)) || null;
+      const latest = mode === "auto" ? latestOverall : latestForTarget;
+      const activity = mode === "auto" ? activityForSession(latest) : "study";
+      const minutes = latest ? minutesOf(latest) : 0;
+      const title = latest ? (latest.taskTitle || latest.title || latest.category || "記録") : "次の冒険";
+      const seenId = localStorage.getItem(LAST_BATTLE_SESSION_KEY);
+      const isLatestRecord = Boolean(latest && latestOverall && latest.id === latestOverall.id);
+      const isNewSession = Boolean(isLatestRecord && latest.id && latest.id !== seenId);
+      const damagesTarget = sessionDamagesTarget(latest, target, primary);
+      const shouldAttack = damagesTarget && (forceReplay || isNewSession);
+
+      const toProgress = Math.max(0, Math.min(1, target.damage / target.project.requiredMinutes));
+      const fromDamage = damagesTarget ? Math.max(0, target.damage - minutes) : target.damage;
+      const fromProgress = Math.max(0, Math.min(1, fromDamage / target.project.requiredMinutes));
+      latestBattleData = { latest, activity, target, minutes, title, shouldAttack, fromProgress, toProgress };
+      const live = $("liveAdventure");
+      live.className = `panel live-adventure mode-${activity}`;
+      updateBossSwitcher();
+      renderGoalDashboard(rows, target);
+
+      const copy = {
+        study: {
+          heading: "たろちゃん、集中任務中",
+          bubble: "理解した分だけ、攻撃力に変わる。",
+          status: latest
+            ? `${title}を${minutes}分進めました。学習記録がボスへのダメージになります。`
+            : `${target.project.shortName}を選択中。対応する学習記録が増えるとボスが傷つきます。`
+        },
+        training: {
+          heading: "たろちゃん、社長体力を強化中",
+          bubble: "身体を鍛えて、長期戦に備える。",
+          status: `${title}を${minutes}分記録。筋トレ中の動きを再現しています。`
+        },
+        walking: {
+          heading: latest ? "たろちゃん、次の任務へ移動中" : "たろちゃん、冒険の準備中",
+          bubble: latest ? "歩いた距離も、前進の証になる。" : "最初の記録を待っています。",
+          status: latest
+            ? `${title}を${minutes}分記録。次の目的地へ歩いています。`
+            : "本体で勉強・筋トレ・移動を記録すると、この場面が変化します。"
+        }
+      }[activity];
+
+      $("liveTitle").textContent = copy.heading;
+      $("liveStatus").textContent = copy.status;
+      $("actionBubble").textContent = copy.bubble;
+      $("battleBossName").textContent = target.project.name;
+      $("battleBossProgressText").textContent = `進行度 ${Math.round(toProgress * 100)}%`;
+      $("battleBossHpText").textContent =
+        `HP ${target.remaining.toLocaleString()} / ${target.project.requiredMinutes.toLocaleString()}`;
+      const remainingPercent = Math.max(0, Math.min(100, (target.remaining / target.project.requiredMinutes) * 100));
+      const beforeRemaining = Math.min(target.project.requiredMinutes, target.remaining + minutes);
+      const beforePercent = Math.max(0, Math.min(100, (beforeRemaining / target.project.requiredMinutes) * 100));
+      $("battleBossHpBar").style.width = `${shouldAttack ? beforePercent : remainingPercent}%`;
+
+      if (isNewSession && latest.id) {
+        localStorage.setItem(LAST_BATTLE_SESSION_KEY, latest.id);
+      }
+      startCanvasAdventure(latestBattleData, forceReplay);
+      if (shouldAttack) window.setTimeout(() => {
+        $("battleBossHpBar").style.width = `${remainingPercent}%`;
+      }, 3450);
+    }
+
+    function renderStatuses(totals) {
+      $("statusList").innerHTML = SKILLS.map(skill => {
+        const minutes = totals[skill.key];
+        const level = Math.floor(minutes / 60);
+        const progress = ((minutes % 60) / 60) * 100;
+        return `
+          <div class="status">
+            <div class="status-head">
+              <span>${escapeHtml(skill.label)}</span>
+              <span>Lv.${level}</span>
+            </div>
+            <div class="bar"><div style="width:${progress}%"></div></div>
+            <div class="small" style="margin-top:5px;">累計 ${minutes.toLocaleString()}分 / 次まで ${60 - (minutes % 60 || 60) || 60}分</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function dailyTotals(sessions) {
+      const totals = {};
+      sessions.forEach(session => {
+        if (!session.date) return;
+        totals[session.date] = (totals[session.date] || 0) + minutesOf(session);
+      });
+      return totals;
+    }
+
+    function firstDateAtDailyThreshold(sessions, threshold) {
+      const totals = dailyTotals(sessions);
+      return Object.keys(totals).sort().find(date => totals[date] >= threshold) || null;
+    }
+
+    function firstStreakDate(sessions, target) {
+      const dates = activeDates(sessions);
+      let streak = 0;
+      let previous = null;
+      for (const date of dates) {
+        if (previous) {
+          const diff = (parseDateKey(date) - parseDateKey(previous)) / 86400000;
+          streak = diff === 1 ? streak + 1 : 1;
+        } else {
+          streak = 1;
+        }
+        if (streak >= target) return date;
+        previous = date;
+      }
+      return null;
+    }
+
+    function firstWeekThresholdDate(sessions, threshold) {
+      const totals = {};
+      sessions.forEach(session => {
+        if (!session.date) return;
+        const week = getWeekStart(session.date);
+        totals[week] = (totals[week] || 0) + minutesOf(session);
+      });
+      const week = Object.keys(totals).sort().find(key => totals[key] >= threshold);
+      return week ? getWeekEnd(week) : null;
+    }
+
+    function firstCumulativeDate(sessions, filter, target) {
+      let total = 0;
+      const sorted = [...sessions].sort((a, b) =>
+        String(a.date || "").localeCompare(String(b.date || "")) ||
+        String(a.endedAt || "").localeCompare(String(b.endedAt || ""))
+      );
+      for (const session of sorted) {
+        if (!filter(session)) continue;
+        total += minutesOf(session);
+        if (total >= target) return session.date || todayKey();
+      }
+      return null;
+    }
+
+    function buildAchievements(sessions) {
+      const items = [];
+      const add = (date, title) => {
+        if (date) items.push({ date, title });
+      };
+
+      add(firstCumulativeDate(sessions, () => true, 25), "初めて25分集中");
+      [100, 180, 240].forEach(value => add(firstDateAtDailyThreshold(sessions, value), `初の本日出来高${value}分突破`));
+      [3, 7].forEach(value => add(firstStreakDate(sessions, value), `${value}日連続記録`));
+      [300, 500, 1000].forEach(value => add(firstWeekThresholdDate(sessions, value), `週間${value}分突破`));
+
+      const itProject = PROJECTS[0];
+      add(firstCumulativeDate(sessions, session => isProjectSession(session, itProject), 60), "ITパスポート累計1時間突破");
+      add(firstCumulativeDate(sessions, session => isProjectSession(session, itProject), 300), "ITパスポート累計5時間突破");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "global", 300), "TOEIC累計5時間突破");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "asia", 300), "中国語累計5時間突破");
+
+      [5, 10, 20].forEach(level => {
+        const target = Math.pow(level - 1, 2) * 60;
+        add(firstCumulativeDate(sessions, () => true, target), `Lv.${level}到達`);
+      });
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "fitness", 600), "社長体力Lv.10到達");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "it", 600), "IT基礎力Lv.10到達");
+      add(firstCumulativeDate(sessions, session => skillForSession(session) === "judgment", 300), "経営判断力Lv.5到達");
+
+      const unique = new Map();
+      items.forEach(item => {
+        if (!unique.has(item.title)) unique.set(item.title, item);
+      });
+      return [...unique.values()]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 20);
+    }
+
+    function renderAchievements(sessions) {
+      const items = buildAchievements(sessions);
+      $("achievementList").innerHTML = items.length ? items.map(item => `
+        <div class="achievement">
+          <div class="achievement-mark">A</div>
+          <div>
+            <div class="quest-title">${escapeHtml(item.title)}</div>
+            <div class="small">${item.date} に解除</div>
+          </div>
+          <span class="done-badge">達成</span>
+        </div>
+      `).join("") : '<div class="empty">最初の25分で、最初の実績が解除されます。</div>';
+    }
+
+    function nextStreakNeed(sessions) {
+      const streak = currentStreak(sessions);
+      if (streak < 3) return { value: 3 - streak, text: `${3 - streak}日記録で 3日連続ログ達成`, type: "day" };
+      if (streak < 7) return { value: 7 - streak, text: `${7 - streak}日記録で 7日連続ログ達成`, type: "day" };
+      return null;
+    }
+
+    function renderGrowth(sessions, totals, primary) {
+      const total = sumMinutes(sessions);
+      const level = levelFromExp(total);
+      const nextLevelAt = Math.pow(level, 2) * 60;
+      const todaySessions = sessions.filter(session => session.date === todayKey());
+      const todayTotal = sumMinutes(todaySessions);
+      const projectDamage = primary.damage;
+      const nextProjectMilestone = Math.min(primary.project.requiredMinutes, (Math.floor(projectDamage / 60) + 1) * 60);
+      const skillRows = SKILLS.map(skill => {
+        const minutes = totals[skill.key];
+        return { text: `${skill.label} Lv.${Math.floor(minutes / 60) + 1}`, value: 60 - (minutes % 60) };
+      }).sort((a, b) => a.value - b.value);
+
+      const rows = [
+        { value: nextLevelAt - total, text: `Lv.${level + 1}` },
+        { value: Math.max(0, nextProjectMilestone - projectDamage), text: `${primary.project.shortName}ボスへ累計${Math.ceil(nextProjectMilestone / 60)}時間ダメージ` },
+        todayTotal < 100 ? { value: 100 - todayTotal, text: "今日のクエスト「合計100分」達成" } : null,
+        { value: skillRows[0].value, text: skillRows[0].text },
+        nextStreakNeed(sessions)
+      ].filter(Boolean).slice(0, 5);
+
+      $("growthList").innerHTML = rows.map(row => `
+        <div class="growth">
+          <div>
+            <div class="quest-title">${escapeHtml(row.text)}</div>
+            <div class="small">次の区切りが見えています。</div>
+          </div>
+          <span class="remaining">あと${row.value}${row.type === "day" ? "日" : "分"}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAdventureLog(sessions) {
+      const rows = [...sessions]
+        .sort((a, b) => String(b.endedAt || b.date || "").localeCompare(String(a.endedAt || a.date || "")))
+        .slice(0, 10);
+      const labels = Object.fromEntries(SKILLS.map(skill => [skill.key, skill.label]));
+
+      $("adventureLog").innerHTML = rows.length ? rows.map(session => {
+        const skill = labels[skillForSession(session)];
+        const title = session.taskTitle || session.title || session.category || "記録";
+        return `
+          <div class="log-item">
+            <div>
+              <div class="log-title">${escapeHtml(title)} ${minutesOf(session)}分</div>
+              <div class="small">${escapeHtml(skill)}に +${minutesOf(session)} EXP</div>
+            </div>
+            <div class="small">${escapeHtml(session.date || "")}</div>
+          </div>
+        `;
+      }).join("") : '<div class="empty">本体で記録を作ると、ここに冒険ログが表示されます。</div>';
+    }
+
+    function render(forceReplay = false) {
+      const state = loadState();
+      const sessions = state.sessions.filter(session => minutesOf(session) > 0 && session.date);
+      const totals = skillTotals(sessions);
+      const projectRows = PROJECTS.map(project => projectData(sessions, project));
+      const primary = primaryProject(projectRows);
+      applyGeneralStudyDamage(sessions, primary);
+
+      renderPlayer(sessions, totals);
+      renderLiveAdventure(sessions, projectRows, primary, forceReplay);
+      renderQuests(sessions, primary);
+      renderGrowth(sessions, totals, primary);
+      renderBosses(projectRows, primary);
+      renderStatuses(totals);
+      renderAchievements(sessions);
+      renderAdventureLog(sessions);
+    }
+
+    $("refreshBtn").addEventListener("click", () => render(false));
+    $("replayBattleBtn").addEventListener("click", () => {
+      if (latestBattleData && latestBattleData.activity === "study" && latestBattleData.minutes > 0) {
+        playBattleAnimation();
+      } else {
+        render(true);
+      }
+    });
+    $("bossSwitcher").addEventListener("click", event => {
+      const button = event.target.closest("[data-project]");
+      if (!button) return;
+      localStorage.setItem(SELECTED_PROJECT_KEY, button.dataset.project);
+      render(false);
+    });
+    $("goalDashboard").addEventListener("click", event => {
+      const card = event.target.closest("[data-goal-project]");
+      if (!card) return;
+      localStorage.setItem(SELECTED_PROJECT_KEY, card.dataset.goalProject);
+      render(false);
+    });
+    $("motivationVideoBtn").addEventListener("click", openMotivationVideo);
+    $("closeMotivationVideoBtn").addEventListener("click", closeMotivationVideo);
+    $("motivationVideoOverlay").addEventListener("click", event => {
+      if (event.target === $("motivationVideoOverlay")) closeMotivationVideo();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeMotivationVideo();
+    });
+    $("wardrobeOptions").addEventListener("click", event => {
+      const button = event.target.closest("[data-avatar]");
+      if (button) selectAvatar(button.dataset.avatar);
+    });
+    $("avatarFile").addEventListener("change", async event => {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (!file || currentPlayerLevel < AVATAR_UNLOCKS.custom) return;
+      try {
+        const image = await resizeAvatarFile(file);
+        saveAvatarConfig({ style: "custom", image });
+        applyAvatar(currentPlayerLevel);
+      } catch (error) {
+        alert(error.message || "画像の登録に失敗しました。");
+      }
+    });
+    window.addEventListener("storage", event => {
+      if (event.key === STORAGE_KEY) render(false);
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) render(false);
+    });
+
+    render(false);
+  </script>
+</body>
+</html>
