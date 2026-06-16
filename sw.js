@@ -1,79 +1,46 @@
-const CACHE_NAME = "taro-focus-rpg-20260616-1";
-const APP_FILES = [
-  "./",
-  "./index.html",
-  "./log.html",
-  "./rpg.html",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./assets/rpg/boss-it.webp",
-  "./assets/rpg/boss-toeic.webp",
-  "./assets/rpg/boss-hsk.webp",
-  "./assets/rpg/hero-school.webp",
-  "./assets/rpg/hero-cozy.webp",
-  "./assets/rpg/hero-chibi.webp",
-  "./assets/rpg/hero-cyber.webp",
-  "./assets/rpg/hero-dark.webp",
-  "./assets/rpg/hero-royal.webp",
-  "./assets/rpg/hero-jrpg-sprites.webp"
-];
+# たろちゃん育成RPG・集中ダッシュボード
 
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_FILES))
-      .then(() => self.skipWaiting())
-  );
-});
+学習記録、カレンダー、育成RPGをまとめたWebアプリです。
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
-  );
-});
+## GitHubへアップロードする方法
 
-self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+1. GitHubで新しいリポジトリを作ります。
+2. このフォルダの「中身」をすべてリポジトリ直下へアップロードします。
+3. GitHubの `Settings` → `Pages` を開きます。
+4. `Deploy from a branch` を選びます。
+5. ブランチを `main`、フォルダを `/ (root)` にして保存します。
+6. 数分後に表示されるGitHub PagesのURLを開きます。
 
-  const isPage = event.request.mode === "navigate" || url.pathname.endsWith(".html");
-  if (isPage) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => caches.match(event.request).then(response => response || caches.match("./index.html")))
-    );
-    return;
-  }
+最初に開かれるファイルは `index.html` です。
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        return response;
-      });
-    })
-  );
-});
+## 必要な構成
 
-self.addEventListener("message", event => {
-  if (!event.data) return;
-  if (event.data.type === "SKIP_WAITING") self.skipWaiting();
-  if (event.data.type === "CLEAR_CACHE") {
-    event.waitUntil(
-      caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
-    );
-  }
-});
+```text
+index.html
+log.html
+rpg.html
+manifest.json
+sw.js
+icon-192.png
+icon-512.png
+assets/
+  rpg/
+```
+
+フォルダ構成を変えると画像やRPG画面が表示されなくなるため、そのままアップロードしてください。
+
+## データについて
+
+- 学習記録はブラウザのローカルストレージにも保存されます。
+- Supabase同期を使うにはインターネット接続が必要です。
+- 激励動画はYouTube埋め込みで再生します。埋め込みが禁止された動画や削除された動画は再生できません。
+- 映画や音楽など権利のある動画を公開ページで使う場合は、YouTube側で埋め込みが許可されていることを確認してください。
+- 公開リポジトリではSupabaseの接続情報も閲覧できます。匿名キーは公開利用を前提としたキーですが、Supabase側でRow Level Securityを設定してください。
+- 現在の同期ユーザーIDは `default-user` です。複数人へ一般公開する場合は、ログイン機能と利用者ごとのID分離が必要です。
+
+## 主な画面
+
+- 本体：学習記録、タスク、タイマー
+- カレンダー：日別・週別の学習履歴
+- RPG：IT、TOEIC、HSKの目標、ボス戦、JRPG風スプライト
+- 激励動画：本体画面・RPG画面のどちらからでも再生可能
