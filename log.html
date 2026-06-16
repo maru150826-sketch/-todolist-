@@ -1010,6 +1010,17 @@
         </section>
 
         <section class="panel" style="margin-top:16px;">
+          <h2>分析</h2>
+          <div class="summary" id="logAnalyticsSummary"></div>
+          <div class="section-title">直近30日のカテゴリ別</div>
+          <div class="summary" id="logCategorySummary"></div>
+          <details style="margin-top:12px;">
+            <summary>履歴一覧</summary>
+            <div class="group-list" id="logHistoryList" style="margin-top:10px;"></div>
+          </details>
+        </section>
+
+        <section class="panel" style="margin-top:16px;">
           <h2>成長イベント</h2>
           <div class="small" style="margin-bottom:10px;">日次・週次・PJ累計・株価の節目を、保存済み履歴から自動で表示します。</div>
           <div class="growth-events" id="growthEvents"></div>
@@ -2120,10 +2131,62 @@ ${segmentLines}
       `;
     }
 
+    function getRecentStartKey(days) {
+      const d = parseDateKey(todayKey());
+      d.setDate(d.getDate() - (days - 1));
+      return toDateKey(d);
+    }
+
+    function renderLogAnalytics() {
+      const box = $("logAnalyticsSummary");
+      const catBox = $("logCategorySummary");
+      const historyBox = $("logHistoryList");
+      if (!box || !catBox || !historyBox) return;
+
+      const state = loadState();
+      const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+      const today = todayKey();
+      const start7 = getRecentStartKey(7);
+      const start30 = getRecentStartKey(30);
+      const last7 = sessions.filter(s => s.date >= start7 && s.date <= today);
+      const last30 = sessions.filter(s => s.date >= start30 && s.date <= today);
+      const total7 = last7.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const total30 = last30.reduce((sum, s) => sum + Number(s.minutes || 0), 0);
+      const active7 = new Set(last7.filter(s => Number(s.minutes || 0) > 0).map(s => s.date)).size;
+      const active30 = new Set(last30.filter(s => Number(s.minutes || 0) > 0).map(s => s.date)).size;
+
+      box.innerHTML = `
+        <span class="pill">7日 ${formatMinutes(total7)}</span>
+        <span class="pill">7日稼働 ${active7}日</span>
+        <span class="pill">30日 ${formatMinutes(total30)}</span>
+        <span class="pill">30日稼働 ${active30}日</span>
+      `;
+
+      catBox.innerHTML = categorySummary(last30) || `<span class="pill">記録なし</span>`;
+
+      const history = sessions
+        .slice()
+        .sort((a, b) => new Date(b.endedAt || b.date) - new Date(a.endedAt || a.date))
+        .slice(0, 40);
+
+      historyBox.innerHTML = history.length
+        ? history.map(s => `
+          <div class="group-item">
+            <div>
+              <div class="group-title">${escapeHtml(s.taskTitle || s.title || "未選択")}</div>
+              <div class="group-meta">${escapeHtml(s.date || "")} / ${escapeHtml(s.category || "その他")}</div>
+            </div>
+            <div class="group-time">${formatMinutes(Number(s.minutes || 0))}</div>
+          </div>
+        `).join("")
+        : `<div class="small">履歴はまだありません。</div>`;
+    }
+
     function render() {
       renderCalendar();
       renderSelectedDay();
       renderWeekSummary();
+      renderLogAnalytics();
       renderGrowthEvents();
       renderTaroCompanyForLog();
     }
