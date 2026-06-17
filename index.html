@@ -649,6 +649,26 @@
       border: 0;
     }
 
+    .video-choice-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(15, 23, 42, .72);
+    }
+
+    .video-choice-row button {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+
+    .video-choice-row button.active-video {
+      border-color: rgba(56,189,248,.62);
+      background: rgba(56,189,248,.18);
+      color: #e0f2fe;
+    }
+
     .video-note {
       padding: 12px 18px 18px;
       color: var(--muted);
@@ -2841,6 +2861,7 @@
         </div>
         <button class="ghost" id="closeMotivationVideoBtn" type="button">閉じる</button>
       </div>
+      <div class="video-choice-row" id="motivationVideoChoices"></div>
       <div class="video-frame-wrap">
         <iframe
           id="motivationVideoFrame"
@@ -2859,7 +2880,12 @@
     const SUPABASE_URL = "https://ghmitazvjjmeaydofflq.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdobWl0YXp2amptZWF5ZG9mZmxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2ODQ3MTMsImV4cCI6MjA5NjI2MDcxM30.1jIDXBidNrSHzUJTOPTp8hN5uImT6OpsVQoWVn6AVdM";
     const SUPABASE_USER_ID = "default-user";
-    const MOTIVATION_VIDEO_EMBED_URL = "https://www.youtube-nocookie.com/embed/fXVAaffCMh8?autoplay=1&rel=0&modestbranding=1";
+    const MOTIVATION_VIDEOS = [
+      { id: "fXVAaffCMh8", label: "ロッキー" },
+      { id: "ZXsQAXx_ao0", label: "Just Do It" },
+      { id: "f5sTX3jCokY", label: "激励 2" }
+    ];
+    const motivationEmbedUrl = (id) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
     const supabaseClient = window.supabase
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
       : null;
@@ -6239,11 +6265,27 @@ ${issue}
       $("alarmOverlay").classList.remove("show");
     }
 
-    function openMotivationVideo() {
+    function renderMotivationVideoChoices(activeId = MOTIVATION_VIDEOS[0].id) {
+      const box = $("motivationVideoChoices");
+      if (!box) return;
+      box.innerHTML = MOTIVATION_VIDEOS.map(video => `
+        <button class="ghost ${video.id === activeId ? "active-video" : ""}" type="button" data-video-id="${escapeHtml(video.id)}">
+          ${escapeHtml(video.label)}
+        </button>
+      `).join("");
+
+      box.querySelectorAll("[data-video-id]").forEach(button => {
+        button.addEventListener("click", () => openMotivationVideo(button.dataset.videoId));
+      });
+    }
+
+    function openMotivationVideo(videoId = MOTIVATION_VIDEOS[0].id) {
       const overlay = $("motivationVideoOverlay");
       const frame = $("motivationVideoFrame");
       if (!overlay || !frame) return;
-      frame.src = MOTIVATION_VIDEO_EMBED_URL;
+      const selected = MOTIVATION_VIDEOS.some(video => video.id === videoId) ? videoId : MOTIVATION_VIDEOS[0].id;
+      renderMotivationVideoChoices(selected);
+      frame.src = motivationEmbedUrl(selected);
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
     }
