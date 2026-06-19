@@ -330,6 +330,300 @@
       max-width: 34%;
     }
 
+    .command-battle {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(56, 189, 248, .32);
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(15, 23, 42, .82)),
+        radial-gradient(circle at 70% 16%, rgba(56, 189, 248, .18), transparent 35%);
+    }
+
+    .command-battle::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 10px 10px;
+      opacity: .22;
+      image-rendering: pixelated;
+    }
+
+    .command-scene {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      min-height: 250px;
+    }
+
+    .enemy-side,
+    .hero-side {
+      position: relative;
+      min-height: 210px;
+      border: 2px solid rgba(148, 163, 184, .18);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(2, 6, 23, .35), rgba(15, 23, 42, .72));
+    }
+
+    .enemy-side {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 12px;
+    }
+
+    .enemy-hud,
+    .hero-hud {
+      z-index: 2;
+      padding: 9px 11px;
+      border: 2px solid rgba(15, 23, 42, .85);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      box-shadow: 4px 4px 0 rgba(15, 23, 42, .55);
+      font-weight: 900;
+    }
+
+    .enemy-hud-line,
+    .hero-hud-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: .82rem;
+    }
+
+    .pixel-hp {
+      height: 9px;
+      margin-top: 7px;
+      overflow: hidden;
+      border: 1px solid #0f172a;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .pixel-hp > div {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #22c55e, #facc15);
+      transition: width .45s ease;
+    }
+
+    .enemy-sprite-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 145px;
+    }
+
+    .enemy-sprite {
+      max-width: min(70%, 220px);
+      max-height: 160px;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 12px rgba(0,0,0,.55));
+      image-rendering: pixelated;
+    }
+
+    .hero-side {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      align-items: end;
+      padding: 12px;
+    }
+
+    .hero-back {
+      justify-self: start;
+      width: 128px;
+      height: 128px;
+      margin-left: 8%;
+      border-radius: 28px 28px 18px 18px;
+      background:
+        radial-gradient(circle at 50% 24%, #f8fafc 0 13%, transparent 14%),
+        linear-gradient(90deg, transparent 0 32%, var(--hero-coat, #1d4ed8) 33% 67%, transparent 68%),
+        linear-gradient(#0f172a 0 0);
+      box-shadow: inset 0 -22px 0 rgba(15, 23, 42, .8), 0 20px 18px rgba(0,0,0,.42);
+      transform: scaleX(-1);
+      image-rendering: pixelated;
+    }
+
+    .battle-effect {
+      position: absolute;
+      z-index: 5;
+      left: 40%;
+      top: 42%;
+      width: 34px;
+      height: 34px;
+      opacity: 0;
+      border-radius: 999px;
+      background: #38bdf8;
+      box-shadow: 0 0 24px #38bdf8;
+      pointer-events: none;
+    }
+
+    .command-battle.attack-basic .battle-effect {
+      animation: commandShot .75s ease-out;
+    }
+
+    .command-battle.attack-combo .battle-effect {
+      width: 18px;
+      height: 78px;
+      border-radius: 10px;
+      animation: commandSlash .9s ease-out;
+    }
+
+    .command-battle.attack-ultimate .battle-effect {
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, #fef3c7, #f59e0b 40%, transparent 70%);
+      box-shadow: 0 0 46px #f59e0b;
+      animation: commandUltimate 1.15s ease-out;
+    }
+
+    .command-battle.enemy-hit .enemy-sprite {
+      animation: commandEnemyHit .55s ease-out;
+    }
+
+    .command-battle.enemy-hit {
+      animation: commandScreenShake .35s linear;
+    }
+
+    .command-menu {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .battle-message,
+    .move-panel {
+      border: 2px solid rgba(226, 232, 240, .75);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, .86);
+      box-shadow: 4px 4px 0 rgba(15, 23, 42, .7);
+    }
+
+    .battle-message {
+      min-height: 118px;
+      padding: 14px;
+      color: #e0f2fe;
+      font-size: .95rem;
+      line-height: 1.65;
+      font-weight: 800;
+    }
+
+    .move-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .move-button {
+      min-height: 56px;
+      padding: 9px 10px;
+      border: 1px solid rgba(148, 163, 184, .3);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, .78);
+      color: #f8fafc;
+      text-align: left;
+    }
+
+    .move-button:disabled {
+      opacity: .38;
+      cursor: not-allowed;
+    }
+
+    .move-name {
+      display: block;
+      font-weight: 1000;
+    }
+
+    .move-meta {
+      display: block;
+      color: var(--muted);
+      font-size: .72rem;
+      margin-top: 3px;
+    }
+
+    .battle-rule-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .battle-rule {
+      padding: 9px;
+      border: 1px solid rgba(148, 163, 184, .16);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, .58);
+      color: #cbd5e1;
+      font-size: .72rem;
+      line-height: 1.45;
+    }
+
+    .battle-rule strong {
+      display: block;
+      color: #f8fafc;
+      margin-bottom: 2px;
+    }
+
+    @keyframes commandShot {
+      0% { opacity: 0; transform: translate(-160px, 70px) scale(.5); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translate(185px, -60px) scale(1.2); }
+    }
+
+    @keyframes commandSlash {
+      0% { opacity: 0; transform: translate(150px, -80px) rotate(45deg) scale(.4); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translate(220px, 25px) rotate(45deg) scale(1.5); }
+    }
+
+    @keyframes commandUltimate {
+      0% { opacity: 0; transform: translate(180px, -60px) scale(.2); }
+      35% { opacity: 1; transform: translate(220px, -38px) scale(1.15); }
+      100% { opacity: 0; transform: translate(220px, -38px) scale(1.85); }
+    }
+
+    @keyframes commandEnemyHit {
+      0%, 100% { transform: translateX(0); filter: brightness(1); }
+      20% { transform: translateX(18px); filter: brightness(2); }
+      40% { transform: translateX(-12px); }
+      60% { transform: translateX(8px); }
+    }
+
+    @keyframes commandScreenShake {
+      0%, 100% { transform: translate(0); }
+      25% { transform: translate(-5px, 3px); }
+      50% { transform: translate(5px, -2px); }
+      75% { transform: translate(-3px, 2px); }
+    }
+
+    @media (max-width: 760px) {
+      .command-scene,
+      .command-menu,
+      .battle-rule-list {
+        grid-template-columns: 1fr;
+      }
+
+      .move-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-back {
+        margin-left: 4%;
+      }
+    }
+
     .video-overlay {
       position: fixed;
       inset: 0;
@@ -1450,6 +1744,60 @@
         </div>
       </section>
 
+      <section class="panel command-battle" id="mpBattle">
+        <div class="live-head">
+          <div>
+            <div class="live-kicker">MP COMMAND BATTLE</div>
+            <div class="live-title">貯めたMPで技を選ぶ</div>
+            <div class="live-status" id="mpBattleStatus">勉強時間はMPとして貯まります。好きなタイミングで技を選んでボスに攻撃できます。</div>
+          </div>
+          <button class="replay-button" id="mpBattleRefreshBtn" type="button">MPを反映</button>
+        </div>
+        <div class="command-scene">
+          <div class="enemy-side">
+            <div class="enemy-hud">
+              <div class="enemy-hud-line">
+                <span id="mpEnemyName">ボス</span>
+                <span id="mpEnemyWeak">弱点：-</span>
+              </div>
+              <div class="pixel-hp"><div id="mpEnemyHpBar"></div></div>
+              <div class="enemy-hud-line" style="margin-top:5px;">
+                <span id="mpEnemyHpText">HP 0 / 0</span>
+                <span id="mpEnemyProgress">0%</span>
+              </div>
+            </div>
+            <div class="enemy-sprite-wrap">
+              <img class="enemy-sprite" id="mpEnemySprite" alt="選択中のボス" />
+              <div class="battle-effect" id="mpBattleEffect"></div>
+            </div>
+          </div>
+          <div class="hero-side">
+            <div class="hero-back" aria-hidden="true"></div>
+            <div class="hero-hud">
+              <div class="hero-hud-line">
+                <span>たろちゃん</span>
+                <span id="mpHeroMp">MP 0</span>
+              </div>
+              <div class="hero-hud-line" style="margin-top:5px;">
+                <span id="mpStreakBonus">連続 x1.00</span>
+                <span id="mpCritBonus">CRIT 10%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="command-menu">
+          <div class="battle-message" id="mpBattleMessage">勉強してMPを貯めよう。</div>
+          <div class="move-panel" id="movePanel"></div>
+        </div>
+        <div class="battle-rule-list">
+          <div class="battle-rule"><strong>連続学習</strong><span id="ruleStreak">ダメージ倍率UP</span></div>
+          <div class="battle-rule"><strong>25分以上</strong><span id="ruleCrit">クリティカル率UP</span></div>
+          <div class="battle-rule"><strong>2セット</strong><span id="ruleUltimate">必殺技解放</span></div>
+          <div class="battle-rule"><strong>日替わり弱点</strong><span id="ruleWeakness">弱点一致で増加</span></div>
+          <div class="battle-rule"><strong>MP選択</strong><span>貯める/使うは自由</span></div>
+        </div>
+      </section>
+
       <section class="panel player-card">
         <div class="pixel-stage">
           <div class="pixel-person" id="pixelPerson" aria-label="たろちゃんのキャラクター">
@@ -1560,6 +1908,7 @@
     const AVATAR_STORAGE_KEY = "taro_rpg_avatar_v1";
     const LAST_BATTLE_SESSION_KEY = "taro_rpg_last_battle_session_v1";
     const SELECTED_PROJECT_KEY = "taro_rpg_selected_project_v1";
+    const MP_BATTLE_STORAGE_KEY = "taro_rpg_mp_battle_v1";
     const MOTIVATION_VIDEOS = [
       { id: "fXVAaffCMh8", label: "ロッキー" },
       { id: "ZXsQAXx_ao0", label: "Just Do It" },
@@ -1637,6 +1986,36 @@
         requiredMinutes: 150 * 60
       }
     ];
+
+    const MOVE_SETS = {
+      "it-passport": [
+        { id: "basic", name: "ネットワークショット", cost: 10, power: 12, element: "tech", kind: "basic" },
+        { id: "combo", name: "アルゴリズム斬り", cost: 25, power: 35, element: "logic", kind: "combo" },
+        { id: "ultimate", name: "セキュリティ雷撃", cost: 50, power: 82, element: "security", kind: "ultimate" }
+      ],
+      "toeic-900": [
+        { id: "basic", name: "単語ショット", cost: 10, power: 12, element: "word", kind: "basic" },
+        { id: "combo", name: "リスニング連撃", cost: 25, power: 35, element: "listen", kind: "combo" },
+        { id: "ultimate", name: "Part7ブレイク", cost: 50, power: 82, element: "reading", kind: "ultimate" }
+      ],
+      "hsk-3": [
+        { id: "basic", name: "声調斬り", cost: 10, power: 12, element: "tone", kind: "basic" },
+        { id: "combo", name: "漢字連撃", cost: 25, power: 35, element: "kanji", kind: "combo" },
+        { id: "ultimate", name: "HSK奥義", cost: 50, power: 82, element: "hsk", kind: "ultimate" }
+      ]
+    };
+
+    const ELEMENT_LABELS = {
+      tech: "技術",
+      logic: "論理",
+      security: "安全",
+      word: "単語",
+      listen: "聴解",
+      reading: "読解",
+      tone: "声調",
+      kanji: "漢字",
+      hsk: "総合"
+    };
 
     function loadState() {
       try {
@@ -1779,6 +2158,45 @@
       return sessions.filter(filter).reduce((sum, session) => sum + minutesOf(session), 0);
     }
 
+    function defaultBattleState() {
+      return {
+        mp: Object.fromEntries(PROJECTS.map(project => [project.id, 0])),
+        bossDamage: Object.fromEntries(PROJECTS.map(project => [project.id, 0])),
+        earnedSessionIds: [],
+        attacks: [],
+        message: "勉強時間がMPになります。技を選んでボスに攻撃できます。"
+      };
+    }
+
+    function normalizeBattleState(parsed = {}) {
+      const base = defaultBattleState();
+      return {
+        ...base,
+        ...parsed,
+        mp: { ...base.mp, ...(parsed.mp || {}) },
+        bossDamage: { ...base.bossDamage, ...(parsed.bossDamage || {}) },
+        earnedSessionIds: Array.isArray(parsed.earnedSessionIds) ? parsed.earnedSessionIds : [],
+        attacks: Array.isArray(parsed.attacks) ? parsed.attacks : []
+      };
+    }
+
+    function loadBattleState() {
+      try {
+        const raw = localStorage.getItem(MP_BATTLE_STORAGE_KEY);
+        return normalizeBattleState(raw ? JSON.parse(raw) : {});
+      } catch {
+        return defaultBattleState();
+      }
+    }
+
+    function saveBattleState(battle) {
+      localStorage.setItem(MP_BATTLE_STORAGE_KEY, JSON.stringify(normalizeBattleState(battle)));
+    }
+
+    function sessionBattleId(session, index = 0) {
+      return session.id || `${session.date || "nodate"}-${session.endedAt || ""}-${session.taskTitle || session.title || ""}-${minutesOf(session)}-${index}`;
+    }
+
     function sessionText(session) {
       return `${session.category || ""} ${session.taskTitle || session.title || ""}`.toLowerCase();
     }
@@ -1831,6 +2249,39 @@
       return isChinese;
     }
 
+    function projectForSession(session, fallbackProjectId = "it-passport") {
+      return PROJECTS.find(project => isProjectSession(session, project))
+        || PROJECTS.find(project => project.id === fallbackProjectId)
+        || PROJECTS[0];
+    }
+
+    function selectedProjectIdForMp() {
+      const selected = selectedProjectMode();
+      return selected === "auto" ? "it-passport" : selected;
+    }
+
+    function syncBattleMpFromSessions(sessions) {
+      const battle = loadBattleState();
+      const earned = new Set(battle.earnedSessionIds);
+      let changed = false;
+
+      sessions.forEach((session, index) => {
+        const id = sessionBattleId(session, index);
+        if (earned.has(id) || minutesOf(session) <= 0) return;
+        const project = projectForSession(session, selectedProjectIdForMp());
+        battle.mp[project.id] = Math.max(0, Number(battle.mp[project.id] || 0)) + minutesOf(session);
+        battle.earnedSessionIds.push(id);
+        earned.add(id);
+        changed = true;
+      });
+
+      if (changed) {
+        battle.message = "新しい学習記録をMPに変換しました。使うタイミングは自由です。";
+        saveBattleState(battle);
+      }
+      return normalizeBattleState(battle);
+    }
+
     function activityForSession(session) {
       if (!session) return "walking";
       const text = sessionText(session);
@@ -1851,7 +2302,8 @@
     }
 
     function projectData(sessions, project) {
-      const damage = sumMinutes(sessions, session => isProjectSession(session, project));
+      const battle = loadBattleState();
+      const damage = Math.max(0, Number(battle.bossDamage[project.id] || 0));
       const remaining = Math.max(0, project.requiredMinutes - damage);
       const progress = Math.min(100, (damage / project.requiredMinutes) * 100);
       const days = Math.max(1, Math.ceil((parseDateKey(project.deadline) - parseDateKey(todayKey())) / 86400000) + 1);
@@ -1873,19 +2325,7 @@
     }
 
     function applyGeneralStudyDamage(sessions, primary) {
-      const generalMinutes = sumMinutes(sessions, session =>
-        activityForSession(session) === "study" &&
-        !PROJECTS.some(project => isProjectSession(session, project))
-      );
-      if (!generalMinutes || !primary) return;
-      primary.damage = Math.min(primary.project.requiredMinutes, primary.damage + generalMinutes);
-      primary.remaining = Math.max(0, primary.project.requiredMinutes - primary.damage);
-      primary.progress = Math.min(100, (primary.damage / primary.project.requiredMinutes) * 100);
-      const days = Math.max(
-        1,
-        Math.ceil((parseDateKey(primary.project.deadline) - parseDateKey(todayKey())) / 86400000) + 1
-      );
-      primary.dailyNeed = Math.ceil(primary.remaining / days);
+      return;
     }
 
     function getWeekStart(key) {
@@ -2100,6 +2540,158 @@
         button.classList.toggle("active", active);
         button.setAttribute("aria-pressed", String(active));
       });
+    }
+
+    function dailyWeakness(projectId) {
+      const moves = MOVE_SETS[projectId] || MOVE_SETS["it-passport"];
+      const seed = `${todayKey()}-${projectId}`.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+      return moves[seed % moves.length].element;
+    }
+
+    function projectSessionsToday(sessions, project) {
+      return sessions
+        .filter(session => session.date === todayKey())
+        .filter(session => isProjectSession(session, project))
+        .sort((a, b) => String(b.endedAt || b.date || "").localeCompare(String(a.endedAt || a.date || "")));
+    }
+
+    function battleBonuses(sessions, project, move) {
+      const streak = currentStreak(sessions);
+      const streakMultiplier = 1 + Math.min(.5, streak * .05);
+      const todayProjectSessions = projectSessionsToday(sessions, project);
+      const hasLongSession = todayProjectSessions.some(session => minutesOf(session) >= 25);
+      const critChance = hasLongSession ? .35 : .1;
+      const weakness = dailyWeakness(project.id);
+      const weaknessMultiplier = move.element === weakness ? 1.3 : 1;
+      const ultimateUnlocked = todayProjectSessions.filter(session => minutesOf(session) >= 25).length >= 2;
+      return { streak, streakMultiplier, hasLongSession, critChance, weakness, weaknessMultiplier, ultimateUnlocked };
+    }
+
+    function calculateMoveDamage(sessions, project, move) {
+      const bonuses = battleBonuses(sessions, project, move);
+      const critical = Math.random() < bonuses.critChance;
+      const criticalMultiplier = critical ? 1.5 : 1;
+      const raw = move.power * bonuses.streakMultiplier * bonuses.weaknessMultiplier * criticalMultiplier;
+      return {
+        damage: Math.max(1, Math.round(raw)),
+        critical,
+        ...bonuses
+      };
+    }
+
+    function latestBattleLogText(battle) {
+      const latest = Array.isArray(battle.attacks) ? battle.attacks[battle.attacks.length - 1] : null;
+      if (!latest) return battle.message || "勉強してMPを貯めよう。";
+      return latest.message || battle.message || "攻撃しました。";
+    }
+
+    function playMpAttackAnimation(kind = "basic") {
+      const panel = $("mpBattle");
+      if (!panel) return;
+      panel.classList.remove("attack-basic", "attack-combo", "attack-ultimate", "enemy-hit");
+      void panel.offsetWidth;
+      panel.classList.add(`attack-${kind}`, "enemy-hit");
+      window.setTimeout(() => {
+        panel.classList.remove("attack-basic", "attack-combo", "attack-ultimate", "enemy-hit");
+      }, 1250);
+    }
+
+    function useBattleMove(projectId, moveId) {
+      const appState = loadState();
+      const sessions = appState.sessions.filter(session => minutesOf(session) > 0 && session.date);
+      const battle = syncBattleMpFromSessions(sessions);
+      const project = PROJECTS.find(row => row.id === projectId) || PROJECTS[0];
+      const move = (MOVE_SETS[project.id] || [])[Number(moveId)] || (MOVE_SETS[project.id] || [])[0];
+      if (!move) return;
+
+      const bonuses = battleBonuses(sessions, project, move);
+      if (move.kind === "ultimate" && !bonuses.ultimateUnlocked) {
+        battle.message = "必殺技は、今日同じ目標で25分以上を2セット記録すると解放されます。";
+        saveBattleState(battle);
+        render(false);
+        return;
+      }
+
+      const currentMp = Number(battle.mp[project.id] || 0);
+      if (currentMp < move.cost) {
+        battle.message = `${move.name}にはMPが${move.cost}必要です。あと${move.cost - currentMp}MP貯めよう。`;
+        saveBattleState(battle);
+        render(false);
+        return;
+      }
+
+      const result = calculateMoveDamage(sessions, project, move);
+      const beforeDamage = Number(battle.bossDamage[project.id] || 0);
+      const remainingBefore = Math.max(0, project.requiredMinutes - beforeDamage);
+      const appliedDamage = Math.min(remainingBefore, result.damage);
+      battle.mp[project.id] = currentMp - move.cost;
+      battle.bossDamage[project.id] = Math.min(project.requiredMinutes, beforeDamage + appliedDamage);
+
+      const weakText = result.weaknessMultiplier > 1 ? " 弱点を突いた！" : "";
+      const critText = result.critical ? " クリティカル！" : "";
+      const koText = battle.bossDamage[project.id] >= project.requiredMinutes ? " ボス撃破！" : "";
+      const message = `${move.name}！ ${appliedDamage}ダメージ！${weakText}${critText}${koText}`;
+      battle.message = message;
+      battle.attacks.push({
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        date: todayKey(),
+        projectId: project.id,
+        moveId: move.id,
+        moveName: move.name,
+        cost: move.cost,
+        damage: appliedDamage,
+        critical: result.critical,
+        weakness: result.weakness,
+        message,
+        createdAt: new Date().toISOString()
+      });
+      saveBattleState(battle);
+      render(false);
+      playMpAttackAnimation(move.kind);
+    }
+
+    function renderMpBattle(sessions, rows, primary) {
+      const battle = loadBattleState();
+      const latest = sortedSessions(sessions)[0] || null;
+      const target = selectedProjectRow(rows, latest, primary);
+      const project = target.project;
+      const moves = MOVE_SETS[project.id] || MOVE_SETS["it-passport"];
+      const mp = Number(battle.mp[project.id] || 0);
+      const damage = Number(battle.bossDamage[project.id] || 0);
+      const remaining = Math.max(0, project.requiredMinutes - damage);
+      const hpPct = Math.max(0, Math.min(100, (remaining / project.requiredMinutes) * 100));
+      const progressPct = Math.round((damage / project.requiredMinutes) * 100);
+      const probe = battleBonuses(sessions, project, moves[0]);
+
+      $("mpBattleStatus").textContent = `${project.shortName} MPを貯めて、好きなタイミングで攻撃できます。`;
+      $("mpEnemyName").textContent = project.name;
+      $("mpEnemyWeak").textContent = `弱点：${ELEMENT_LABELS[probe.weakness] || probe.weakness}`;
+      $("mpEnemyHpBar").style.width = `${hpPct}%`;
+      $("mpEnemyHpText").textContent = `HP ${remaining.toLocaleString()} / ${project.requiredMinutes.toLocaleString()}`;
+      $("mpEnemyProgress").textContent = `${progressPct}%`;
+      $("mpEnemySprite").src = bossArtForProject(project.id);
+      $("mpHeroMp").textContent = `MP ${mp.toLocaleString()}`;
+      $("mpStreakBonus").textContent = `連続 x${probe.streakMultiplier.toFixed(2)}`;
+      $("mpCritBonus").textContent = `CRIT ${Math.round(probe.critChance * 100)}%`;
+      $("mpBattleMessage").textContent = latestBattleLogText(battle);
+
+      $("ruleStreak").textContent = `${probe.streak}日連続 / x${probe.streakMultiplier.toFixed(2)}`;
+      $("ruleCrit").textContent = probe.hasLongSession ? "25分以上あり / CRIT 35%" : "25分以上で CRIT 35%";
+      $("ruleUltimate").textContent = probe.ultimateUnlocked ? "必殺技 使用可能" : "25分以上 x2セットで解放";
+      $("ruleWeakness").textContent = `今日の弱点：${ELEMENT_LABELS[probe.weakness] || probe.weakness}`;
+
+      $("movePanel").innerHTML = moves.map((move, index) => {
+        const moveBonus = battleBonuses(sessions, project, move);
+        const disabled = mp < move.cost || (move.kind === "ultimate" && !moveBonus.ultimateUnlocked);
+        const weak = move.element === moveBonus.weakness ? " / 弱点" : "";
+        const locked = move.kind === "ultimate" && !moveBonus.ultimateUnlocked ? " / 未解放" : "";
+        return `
+          <button class="move-button" type="button" data-project-id="${escapeHtml(project.id)}" data-move-index="${index}" ${disabled ? "disabled" : ""}>
+            <span class="move-name">${escapeHtml(move.name)}</span>
+            <span class="move-meta">MP ${move.cost} / 威力 ${move.power} / ${escapeHtml(ELEMENT_LABELS[move.element] || move.element)}${weak}${locked}</span>
+          </button>
+        `;
+      }).join("");
     }
 
     function renderGoalDashboard(rows, activeTarget) {
@@ -2805,10 +3397,10 @@
       const copy = {
         study: {
           heading: "たろちゃん、集中任務中",
-          bubble: "理解した分だけ、攻撃力に変わる。",
+          bubble: "理解した分だけ、MPに変わる。",
           status: latest
-            ? `${title}を${minutes}分進めました。学習記録がボスへのダメージになります。`
-            : `${target.project.shortName}を選択中。対応する学習記録が増えるとボスが傷つきます。`
+            ? `${title}を${minutes}分進めました。学習記録はMPになり、下のコマンド戦闘で使えます。`
+            : `${target.project.shortName}を選択中。対応する学習記録が増えるとMPが貯まります。`
         },
         training: {
           heading: "たろちゃん、社長体力を強化中",
@@ -3030,6 +3622,7 @@
     function render(forceReplay = false) {
       const state = loadState();
       const sessions = state.sessions.filter(session => minutesOf(session) > 0 && session.date);
+      syncBattleMpFromSessions(sessions);
       const totals = skillTotals(sessions);
       const projectRows = PROJECTS.map(project => projectData(sessions, project));
       const primary = primaryProject(projectRows);
@@ -3037,6 +3630,7 @@
 
       renderPlayer(sessions, totals);
       renderLiveAdventure(sessions, projectRows, primary, forceReplay);
+      renderMpBattle(sessions, projectRows, primary);
       renderQuests(sessions, primary);
       renderGrowth(sessions, totals, primary);
       renderBosses(projectRows, primary);
@@ -3064,6 +3658,11 @@
       if (!card) return;
       localStorage.setItem(SELECTED_PROJECT_KEY, card.dataset.goalProject);
       render(false);
+    });
+    $("movePanel").addEventListener("click", event => {
+      const button = event.target.closest("[data-project-id][data-move-index]");
+      if (!button || button.disabled) return;
+      useBattleMove(button.dataset.projectId, button.dataset.moveIndex);
     });
     $("motivationVideoBtn").addEventListener("click", openMotivationVideo);
     $("closeMotivationVideoBtn").addEventListener("click", closeMotivationVideo);

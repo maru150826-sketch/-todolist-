@@ -1,4 +1,4 @@
-const CACHE_NAME = "taro-focus-rpg-20260619-video2-1";
+const CACHE_NAME = "taro-focus-rpg-20260619-mp-battle-1";
 const APP_FILES = [
   "./",
   "./index.html",
