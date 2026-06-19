@@ -355,29 +355,35 @@
     .command-scene {
       position: relative;
       z-index: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      min-height: 250px;
+      min-height: 360px;
+      overflow: hidden;
+      border: 3px solid rgba(226, 232, 240, .7);
+      border-radius: 18px;
+      background:
+        radial-gradient(ellipse at 72% 24%, rgba(148, 163, 184, .42), transparent 16%),
+        radial-gradient(ellipse at 25% 78%, rgba(56, 189, 248, .22), transparent 18%),
+        linear-gradient(180deg, #a7d8f0 0 34%, #7cc37a 35% 59%, #33533f 60% 100%);
+      box-shadow: inset 0 0 0 4px rgba(15, 23, 42, .34);
     }
 
     .enemy-side,
     .hero-side {
-      position: relative;
-      min-height: 210px;
-      border: 2px solid rgba(148, 163, 184, .18);
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(2, 6, 23, .35), rgba(15, 23, 42, .72));
+      position: absolute;
+      border: 0;
+      background: transparent;
     }
 
     .enemy-side {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      padding: 12px;
+      top: 18px;
+      right: 12px;
+      width: min(56%, 500px);
+      height: 260px;
+      padding: 0;
     }
 
     .enemy-hud,
     .hero-hud {
+      position: relative;
       z-index: 2;
       padding: 9px 11px;
       border: 2px solid rgba(15, 23, 42, .85);
@@ -414,47 +420,201 @@
     }
 
     .enemy-sprite-wrap {
-      position: relative;
+      position: absolute;
+      right: -8px;
+      top: 56px;
       display: grid;
       place-items: center;
-      min-height: 145px;
+      width: min(92%, 430px);
+      height: 220px;
     }
 
     .enemy-sprite {
-      max-width: min(70%, 220px);
-      max-height: 160px;
+      max-width: 100%;
+      max-height: 250px;
       object-fit: contain;
-      filter: drop-shadow(0 18px 12px rgba(0,0,0,.55));
+      filter: drop-shadow(0 22px 16px rgba(0,0,0,.58));
       image-rendering: pixelated;
     }
 
     .hero-side {
-      display: grid;
-      grid-template-rows: 1fr auto;
-      align-items: end;
-      padding: 12px;
+      left: 18px;
+      bottom: 14px;
+      width: min(49%, 400px);
+      height: 230px;
+      padding: 0;
     }
 
     .hero-back {
-      justify-self: start;
-      width: 128px;
-      height: 128px;
-      margin-left: 8%;
-      border-radius: 28px 28px 18px 18px;
-      background:
-        radial-gradient(circle at 50% 24%, #f8fafc 0 13%, transparent 14%),
-        linear-gradient(90deg, transparent 0 32%, var(--hero-coat, #1d4ed8) 33% 67%, transparent 68%),
-        linear-gradient(#0f172a 0 0);
-      box-shadow: inset 0 -22px 0 rgba(15, 23, 42, .8), 0 20px 18px rgba(0,0,0,.42);
-      transform: scaleX(-1);
+      position: absolute;
+      left: 8%;
+      bottom: 52px;
+      width: 182px;
+      height: 182px;
+      filter: drop-shadow(0 22px 14px rgba(0,0,0,.48));
       image-rendering: pixelated;
+    }
+
+    .hero-back::before {
+      content: "";
+      position: absolute;
+      left: 20px;
+      right: 16px;
+      bottom: 6px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .36);
+      filter: blur(1px);
+    }
+
+    .hero-back::after {
+      content: "";
+      position: absolute;
+      left: 71px;
+      top: 57px;
+      width: 36px;
+      height: 18px;
+      border: 4px solid #0f172a;
+      border-top: 0;
+      border-radius: 0 0 16px 16px;
+      background: #f6c99b;
+      z-index: 3;
+    }
+
+    .hero-hair {
+      position: absolute;
+      left: 51px;
+      top: 5px;
+      width: 78px;
+      height: 52px;
+      border: 5px solid #0f172a;
+      border-radius: 24px 24px 15px 15px;
+      background:
+        linear-gradient(135deg, transparent 0 18%, rgba(255,255,255,.22) 19% 27%, transparent 28%),
+        #111827;
+      box-shadow: 0 13px 0 #111827, inset 0 -7px 0 rgba(59, 130, 246, .22);
+      z-index: 5;
+    }
+
+    .hero-head {
+      position: absolute;
+      left: 61px;
+      top: 29px;
+      width: 58px;
+      height: 47px;
+      border: 5px solid #0f172a;
+      border-radius: 18px 18px 15px 15px;
+      background: #f6c99b;
+      box-shadow: inset 0 -9px 0 #e6a878;
+      z-index: 4;
+    }
+
+    .hero-body {
+      position: absolute;
+      left: 49px;
+      top: 73px;
+      width: 84px;
+      height: 73px;
+      border: 5px solid #0f172a;
+      border-radius: 20px 20px 13px 13px;
+      background:
+        linear-gradient(90deg, #1d4ed8 0 42%, #e0f2fe 43% 54%, #1d4ed8 55%),
+        var(--hero-coat, #1d4ed8);
+      box-shadow: inset 0 -15px 0 rgba(15, 23, 42, .34);
+      z-index: 3;
+    }
+
+    .hero-body::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 11px;
+      width: 12px;
+      height: 12px;
+      border: 3px solid #0f172a;
+      border-radius: 50%;
+      background: #facc15;
+      box-shadow: 33px 0 0 #facc15, 33px 0 0 3px #0f172a;
+    }
+
+    .hero-arm {
+      position: absolute;
+      top: 85px;
+      width: 25px;
+      height: 62px;
+      border: 5px solid #0f172a;
+      border-radius: 16px;
+      background: #1e40af;
+      box-shadow: inset 0 -10px 0 rgba(15, 23, 42, .32);
+      z-index: 2;
+    }
+
+    .hero-arm.left {
+      left: 25px;
+      transform: rotate(13deg);
+    }
+
+    .hero-arm.right {
+      right: 28px;
+      transform: rotate(-20deg);
+    }
+
+    .hero-leg {
+      position: absolute;
+      bottom: 11px;
+      width: 30px;
+      height: 54px;
+      border: 5px solid #0f172a;
+      border-radius: 11px 11px 8px 8px;
+      background: #111827;
+      box-shadow: inset 0 -9px 0 #020617;
+      z-index: 2;
+    }
+
+    .hero-leg.left {
+      left: 54px;
+      transform: rotate(5deg);
+    }
+
+    .hero-leg.right {
+      right: 55px;
+      transform: rotate(-5deg);
+    }
+
+    .hero-book {
+      position: absolute;
+      right: 8px;
+      top: 111px;
+      width: 54px;
+      height: 38px;
+      border: 5px solid #0f172a;
+      border-radius: 7px;
+      background:
+        linear-gradient(90deg, #f8fafc 0 45%, #bfdbfe 46% 54%, #f8fafc 55%);
+      transform: rotate(-10deg);
+      box-shadow: 0 7px 0 rgba(15, 23, 42, .2), inset 0 -7px 0 #dbeafe;
+      z-index: 6;
+    }
+
+    .hero-side .hero-hud {
+      position: absolute;
+      left: 0;
+      right: 12px;
+      bottom: 0;
+    }
+
+    .enemy-side .enemy-hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
     }
 
     .battle-effect {
       position: absolute;
-      z-index: 5;
-      left: 40%;
-      top: 42%;
+      z-index: 8;
+      left: 28%;
+      top: 62%;
       width: 34px;
       height: 34px;
       opacity: 0;
@@ -462,17 +622,18 @@
       background: #38bdf8;
       box-shadow: 0 0 24px #38bdf8;
       pointer-events: none;
+      display: none;
     }
 
     .command-battle.attack-basic .battle-effect {
-      animation: commandShot .75s ease-out;
+      animation: commandShot 1s ease-out;
     }
 
     .command-battle.attack-combo .battle-effect {
       width: 18px;
       height: 78px;
       border-radius: 10px;
-      animation: commandSlash .9s ease-out;
+      animation: commandSlash 1.05s ease-out;
     }
 
     .command-battle.attack-ultimate .battle-effect {
@@ -480,15 +641,626 @@
       height: 120px;
       background: radial-gradient(circle, #fef3c7, #f59e0b 40%, transparent 70%);
       box-shadow: 0 0 46px #f59e0b;
-      animation: commandUltimate 1.15s ease-out;
+      animation: commandUltimate 1.35s ease-out;
     }
 
-    .command-battle.enemy-hit .enemy-sprite {
-      animation: commandEnemyHit .55s ease-out;
+    /* Cinematic attack direction: these layers are driven by playMpAttackAnimation(). */
+    .command-battle {
+      --fx-main: #38bdf8;
+      --fx-second: #a78bfa;
+      --fx-hot: #facc15;
+      --fx-shadow: rgba(2, 6, 23, .84);
     }
 
-    .command-battle.enemy-hit {
+    .command-battle.fx-tech,
+    .command-battle.fx-word {
+      --fx-main: #38bdf8;
+      --fx-second: #22d3ee;
+      --fx-hot: #e0f2fe;
+    }
+
+    .command-battle.fx-logic,
+    .command-battle.fx-listen,
+    .command-battle.fx-kanji {
+      --fx-main: #a78bfa;
+      --fx-second: #f0abfc;
+      --fx-hot: #fef3c7;
+    }
+
+    .command-battle.fx-security,
+    .command-battle.fx-reading,
+    .command-battle.fx-hsk {
+      --fx-main: #facc15;
+      --fx-second: #fb7185;
+      --fx-hot: #ffffff;
+    }
+
+    .command-battle.fx-tone {
+      --fx-main: #fb923c;
+      --fx-second: #facc15;
+      --fx-hot: #fff7ed;
+    }
+
+    .cinematic-dim,
+    .speed-lines,
+    .skill-cutin,
+    .effect-sigil,
+    .energy-beam,
+    .slash-stack,
+    .impact-ring,
+    .cinematic-flash,
+    .effect-particles {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .cinematic-dim {
+      z-index: 6;
+      background:
+        radial-gradient(circle at 28% 68%, rgba(255,255,255,.06), transparent 18%),
+        radial-gradient(circle at 72% 38%, color-mix(in srgb, var(--fx-main) 24%, transparent), transparent 28%),
+        rgba(2, 6, 23, .58);
+      backdrop-filter: blur(1px) saturate(1.25);
+    }
+
+    .speed-lines {
+      z-index: 13;
+      background:
+        repeating-linear-gradient(112deg, transparent 0 19px, color-mix(in srgb, var(--fx-main) 40%, transparent) 20px 22px, transparent 23px 42px);
+      mix-blend-mode: screen;
+      transform: translateX(-9%);
+    }
+
+    .skill-cutin {
+      z-index: 22;
+      inset: auto 4% 42% 4%;
+      display: grid;
+      gap: 7px;
+      place-items: center;
+      padding: 18px 16px;
+      border-block: 2px solid color-mix(in srgb, var(--fx-main) 72%, white);
+      background:
+        linear-gradient(90deg, transparent, rgba(2, 6, 23, .9) 14%, rgba(15, 23, 42, .96) 50%, rgba(2, 6, 23, .9) 86%, transparent),
+        linear-gradient(110deg, transparent 0 30%, color-mix(in srgb, var(--fx-main) 34%, transparent) 31% 38%, transparent 39%);
+      box-shadow: 0 0 36px color-mix(in srgb, var(--fx-main) 44%, transparent);
+      transform: skewX(-10deg) translateX(-10%);
+      text-align: center;
+    }
+
+    .skill-cutin .cutin-label {
+      color: var(--fx-main);
+      font-size: .76rem;
+      font-weight: 1000;
+      letter-spacing: .28em;
+      text-shadow: 0 0 12px var(--fx-main);
+    }
+
+    .skill-cutin strong {
+      color: #fff;
+      font-size: clamp(1.45rem, 5vw, 3.8rem);
+      font-weight: 1000;
+      letter-spacing: .04em;
+      line-height: 1;
+      text-shadow:
+        0 0 12px var(--fx-main),
+        0 0 26px color-mix(in srgb, var(--fx-second) 72%, transparent),
+        3px 3px 0 rgba(2, 6, 23, .92);
+    }
+
+    .effect-sigil {
+      z-index: 14;
+      left: 18%;
+      top: 50%;
+      width: min(34vw, 230px);
+      height: min(34vw, 230px);
+      inset: auto auto 18% 14%;
+      border: 2px solid color-mix(in srgb, var(--fx-main) 72%, white);
+      border-radius: 50%;
+      background:
+        conic-gradient(from 0deg, transparent 0 8%, color-mix(in srgb, var(--fx-main) 72%, transparent) 9% 10%, transparent 11% 20%),
+        radial-gradient(circle, transparent 0 42%, color-mix(in srgb, var(--fx-main) 24%, transparent) 43% 45%, transparent 46%),
+        radial-gradient(circle, color-mix(in srgb, var(--fx-second) 18%, transparent), transparent 68%);
+      box-shadow: 0 0 34px color-mix(in srgb, var(--fx-main) 48%, transparent), inset 0 0 26px color-mix(in srgb, var(--fx-second) 30%, transparent);
+      transform: rotate(0deg) scale(.62);
+    }
+
+    .effect-sigil::before,
+    .effect-sigil::after {
+      content: "";
+      position: absolute;
+      inset: 18%;
+      border: 1px solid color-mix(in srgb, var(--fx-hot) 76%, transparent);
+      transform: rotate(45deg);
+    }
+
+    .effect-sigil::after {
+      inset: 32%;
+      border-radius: 50%;
+      transform: rotate(0deg);
+    }
+
+    .energy-beam {
+      z-index: 18;
+      inset: auto auto 30% 24%;
+      width: min(58vw, 560px);
+      height: 82px;
+      transform-origin: left center;
+      transform: rotate(-22deg) scaleX(.08);
+      filter: drop-shadow(0 0 24px var(--fx-main));
+    }
+
+    .beam-core,
+    .beam-aura {
+      position: absolute;
+      inset: 50% auto auto 0;
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, transparent, #fff 8%, var(--fx-main) 28%, var(--fx-second) 72%, transparent);
+      box-shadow: 0 0 22px var(--fx-main), 0 0 42px color-mix(in srgb, var(--fx-second) 72%, transparent);
+    }
+
+    .beam-aura {
+      height: 56px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--fx-main) 34%, transparent), color-mix(in srgb, var(--fx-second) 24%, transparent), transparent);
+      filter: blur(9px);
+    }
+
+    .slash-stack {
+      z-index: 19;
+      inset: 19% 6% auto auto;
+      width: min(52vw, 440px);
+      height: min(34vw, 260px);
+      transform: rotate(-19deg);
+    }
+
+    .slash-stack span {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 14px;
+      border-radius: 999px;
+      opacity: 0;
+      background: linear-gradient(90deg, transparent, #fff, var(--fx-main), transparent);
+      box-shadow: 0 0 20px var(--fx-main), 0 0 38px color-mix(in srgb, var(--fx-second) 62%, transparent);
+    }
+
+    .slash-stack span:nth-child(1) { top: 18%; }
+    .slash-stack span:nth-child(2) { top: 46%; left: 8%; animation-delay: .05s; }
+    .slash-stack span:nth-child(3) { top: 72%; left: -5%; animation-delay: .09s; }
+
+    .impact-ring {
+      z-index: 20;
+      inset: 27% 11% auto auto;
+      width: min(32vw, 250px);
+      height: min(32vw, 250px);
+      border-radius: 50%;
+      border: 3px solid #fff;
+      background:
+        radial-gradient(circle, rgba(255,255,255,.9) 0 8%, color-mix(in srgb, var(--fx-main) 44%, transparent) 9% 28%, transparent 29%),
+        repeating-conic-gradient(from 8deg, color-mix(in srgb, var(--fx-hot) 72%, transparent) 0 4deg, transparent 5deg 14deg);
+      box-shadow: 0 0 34px var(--fx-main), inset 0 0 28px var(--fx-second);
+      transform: scale(.25);
+      mix-blend-mode: screen;
+    }
+
+    .cinematic-flash {
+      z-index: 24;
+      background: radial-gradient(circle at 73% 36%, #fff, color-mix(in srgb, var(--fx-main) 54%, transparent) 18%, transparent 46%);
+      mix-blend-mode: screen;
+    }
+
+    .effect-particles {
+      z-index: 21;
+      overflow: hidden;
+      mix-blend-mode: screen;
+    }
+
+    .effect-particles span {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--s);
+      height: var(--s);
+      border-radius: 999px;
+      opacity: 0;
+      background: var(--fx-hot);
+      box-shadow: 0 0 10px var(--fx-main), 0 0 20px var(--fx-second);
+      transform: translate(-50%, -50%) scale(.25);
+      animation: particleBurst .86s var(--d) ease-out forwards;
+    }
+
+    .command-battle.cinematic-active .cinematic-dim {
+      animation: cinematicDim 1.65s ease-out forwards;
+    }
+
+    .command-battle.cinematic-active .move-panel .move-button:not(.selected-card) {
+      filter: saturate(.6) brightness(.6);
+      transform: scale(.98);
+    }
+
+    .move-button.selected-card {
+      z-index: 28;
+      animation: cardCharge .78s ease-out forwards;
+      border-color: color-mix(in srgb, var(--fx-main) 82%, white) !important;
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--fx-main) 45%, transparent),
+        0 0 30px color-mix(in srgb, var(--fx-main) 62%, transparent),
+        0 18px 34px rgba(0,0,0,.38) !important;
+    }
+
+    .move-button.selected-card::before {
+      animation: cardAura 1.15s ease-out;
+    }
+
+    .command-battle.skill-reveal .skill-cutin {
+      animation: skillCutin .72s cubic-bezier(.19, 1, .22, 1);
+    }
+
+    .command-battle.skill-reveal.attack-ultimate .skill-cutin {
+      inset: auto 2% 38% 2%;
+      animation: ultimateCutin .94s cubic-bezier(.19, 1, .22, 1);
+    }
+
+    .ultimate-portrait {
+      position: absolute;
+      inset: 0;
+      z-index: 23;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        linear-gradient(105deg, rgba(2,6,23,.98) 0 30%, color-mix(in srgb, var(--fx-main) 24%, rgba(15,23,42,.92)) 31% 64%, transparent 65%),
+        radial-gradient(circle at 26% 50%, color-mix(in srgb, var(--fx-main) 28%, transparent), transparent 28%);
+      clip-path: polygon(0 18%, 100% 0, 100% 72%, 0 100%);
+    }
+
+    .ultimate-portrait::before {
+      content: "";
+      position: absolute;
+      left: 7%;
+      bottom: 12%;
+      width: min(34vw, 230px);
+      height: min(34vw, 230px);
+      border: 3px solid color-mix(in srgb, var(--fx-main) 78%, white);
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at 50% 23%, #f6c99b 0 14%, transparent 15%),
+        linear-gradient(90deg, transparent 0 28%, #1d4ed8 29% 70%, transparent 71%),
+        linear-gradient(145deg, rgba(15,23,42,.95), rgba(30,41,59,.82));
+      box-shadow: 0 0 30px var(--fx-main), inset 0 -34px 0 rgba(2, 6, 23, .42);
+      transform: translateX(-24px) scale(.92);
+    }
+
+    .ultimate-portrait::after {
+      content: "LIMIT BREAK";
+      position: absolute;
+      right: 8%;
+      top: 22%;
+      color: #fff;
+      font-size: clamp(2rem, 8vw, 5.6rem);
+      font-weight: 1000;
+      letter-spacing: .1em;
+      line-height: .9;
+      text-align: right;
+      text-shadow: 0 0 18px var(--fx-main), 5px 5px 0 rgba(2,6,23,.82);
+    }
+
+    .command-battle.ultimate-cutin .ultimate-portrait {
+      animation: ultimatePortrait .9s cubic-bezier(.19, 1, .22, 1);
+    }
+
+    .command-battle.effect-release .speed-lines {
+      animation: speedLineRush .72s ease-out;
+    }
+
+    .command-battle.effect-release .effect-sigil {
+      animation: sigilCharge .92s ease-out;
+    }
+
+    .command-battle.effect-release.attack-basic .energy-beam,
+    .command-battle.effect-release.attack-ultimate .energy-beam {
+      animation: beamRelease .9s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .command-battle.effect-release.attack-combo .slash-stack {
+      opacity: 1;
+    }
+
+    .command-battle.effect-release.attack-combo .slash-stack span {
+      animation: slashRelease .62s cubic-bezier(.16, 1, .3, 1) forwards;
+    }
+
+    .command-battle.effect-release.attack-ultimate .effect-sigil {
+      width: min(46vw, 340px);
+      height: min(46vw, 340px);
+      inset: auto auto 12% 11%;
+      animation: sigilCharge 1.15s ease-out, ultimateSigilSpin 1.15s linear;
+    }
+
+    .command-battle.hit-stop .command-scene {
+      animation: cinematicShake .38s linear;
+    }
+
+    .command-battle.hit-stop .cinematic-flash {
+      animation: hitFlash .32s ease-out;
+    }
+
+    .command-battle.hit-stop .impact-ring {
+      animation: impactRing .58s ease-out;
+    }
+
+    .command-battle.hit-stop .enemy-sprite {
+      animation: cinematicEnemyHit .48s steps(2, end);
+    }
+
+    .command-battle.enemy-hit:not(.cinematic-active) .enemy-sprite {
+      animation: commandEnemyHit .7s ease-out;
+    }
+
+    .command-battle.enemy-hit:not(.cinematic-active) {
       animation: commandScreenShake .35s linear;
+    }
+
+    .enemy-counter {
+      position: absolute;
+      z-index: 9;
+      right: 27%;
+      top: 33%;
+      width: 26px;
+      height: 26px;
+      opacity: 0;
+      border-radius: 999px;
+      background: #fb7185;
+      box-shadow: 0 0 24px #fb7185;
+      pointer-events: none;
+    }
+
+    .heal-effect {
+      position: absolute;
+      z-index: 10;
+      left: 22%;
+      bottom: 120px;
+      width: 110px;
+      height: 110px;
+      opacity: 0;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(187,247,208,.95), rgba(34,197,94,.35) 45%, transparent 72%);
+      box-shadow: 0 0 38px rgba(34,197,94,.65);
+      pointer-events: none;
+    }
+
+    .damage-float,
+    .hero-damage-float {
+      position: absolute;
+      z-index: 11;
+      opacity: 0;
+      font-weight: 1000;
+      text-shadow: 2px 2px 0 #0f172a;
+      pointer-events: none;
+    }
+
+    .damage-float {
+      right: 25%;
+      top: 35%;
+      color: #fef3c7;
+      font-size: clamp(2rem, 6vw, 4.5rem);
+    }
+
+    .hero-damage-float {
+      left: 25%;
+      bottom: 150px;
+      color: #fecdd3;
+      font-size: clamp(1.5rem, 4vw, 3rem);
+    }
+
+    .ko-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      color: #fee2e2;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(127, 29, 29, .56), rgba(2, 6, 23, .94) 54%),
+        linear-gradient(180deg, rgba(15, 23, 42, .25), rgba(0, 0, 0, .72));
+      backdrop-filter: blur(2px) saturate(.75);
+      animation: koFadeIn .45s ease-out;
+    }
+
+    .ko-overlay[hidden] {
+      display: none;
+    }
+
+    .ko-card {
+      width: min(92%, 560px);
+      padding: 24px;
+      border: 3px solid rgba(248, 113, 113, .7);
+      border-radius: 18px;
+      background: rgba(2, 6, 23, .9);
+      box-shadow: 0 0 34px rgba(248, 113, 113, .22), inset 0 0 0 2px rgba(15, 23, 42, .9);
+      text-align: center;
+    }
+
+    .ko-title {
+      margin: 0;
+      color: #fecaca;
+      font-family: "Times New Roman", serif;
+      font-size: clamp(2.5rem, 9vw, 5.8rem);
+      letter-spacing: .08em;
+      line-height: .9;
+      text-shadow: 0 0 18px rgba(248, 113, 113, .75), 3px 3px 0 #111827;
+    }
+
+    .ko-subtitle {
+      margin: 12px 0 0;
+      color: #f8fafc;
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .ko-copy {
+      margin: 12px auto 0;
+      max-width: 420px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-weight: 800;
+    }
+
+    .ko-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .ko-action {
+      border: 2px solid rgba(226, 232, 240, .72);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: #f8fafc;
+      background: rgba(15, 23, 42, .92);
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    .ko-action.primary {
+      border-color: rgba(74, 222, 128, .78);
+      color: #052e16;
+      background: linear-gradient(135deg, #bbf7d0, #22c55e);
+    }
+
+    .victory-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 31;
+      display: grid;
+      align-items: start;
+      justify-items: center;
+      padding: 18px 12px;
+      color: #fef3c7;
+      background:
+        radial-gradient(circle at 50% 24%, rgba(250, 204, 21, .26), transparent 24%),
+        linear-gradient(180deg, rgba(2, 6, 23, .42), rgba(2, 6, 23, .1) 68%, transparent);
+      animation: victoryFadeIn .55s ease-out;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .victory-overlay[hidden] {
+      display: none;
+    }
+
+    .victory-overlay::before,
+    .victory-overlay::after {
+      content: "";
+      position: absolute;
+      width: 120%;
+      height: 28%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+      transform: rotate(-14deg);
+      animation: victorySweep 2.4s ease-in-out infinite;
+    }
+
+    .victory-overlay::after {
+      animation-delay: .65s;
+      transform: rotate(13deg);
+    }
+
+    .victory-card {
+      position: relative;
+      z-index: 1;
+      width: min(92%, 540px);
+      padding: 18px 20px;
+      border: 3px solid rgba(250, 204, 21, .78);
+      border-radius: 22px;
+      background:
+        linear-gradient(145deg, rgba(15,23,42,.88), rgba(30,41,59,.74)),
+        radial-gradient(circle at 50% 0%, rgba(250,204,21,.2), transparent 38%);
+      box-shadow: 0 0 38px rgba(250,204,21,.24), 0 22px 44px rgba(0,0,0,.42), inset 0 0 0 2px rgba(255,255,255,.06);
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .victory-title {
+      margin: 0;
+      color: #fff7ed;
+      font-size: clamp(2rem, 7vw, 4.8rem);
+      font-weight: 1000;
+      letter-spacing: .12em;
+      line-height: .9;
+      text-shadow: 0 0 20px #facc15, 4px 4px 0 #111827;
+    }
+
+    .victory-subtitle {
+      margin: 10px 0 0;
+      color: #bae6fd;
+      font-weight: 1000;
+      letter-spacing: .12em;
+    }
+
+    .victory-copy {
+      margin: 14px auto 0;
+      max-width: 480px;
+      color: #e2e8f0;
+      line-height: 1.7;
+      font-weight: 850;
+    }
+
+    .victory-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .victory-action {
+      border: 2px solid rgba(250, 204, 21, .66);
+      border-radius: 999px;
+      padding: 10px 16px;
+      color: #111827;
+      background: linear-gradient(135deg, #fef3c7, #facc15);
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 0 0 18px rgba(250,204,21,.18);
+    }
+
+    .command-battle.battle-dead .hero-back {
+      filter: grayscale(1) brightness(.62) drop-shadow(0 22px 14px rgba(0,0,0,.48));
+    }
+
+    .command-battle.battle-dead .command-scene {
+      box-shadow: inset 0 0 0 4px rgba(127, 29, 29, .5), 0 0 34px rgba(127, 29, 29, .24);
+    }
+
+    .command-battle.counter .enemy-counter {
+      animation: counterShot .8s ease-out;
+    }
+
+    .command-battle.hero-hit .hero-back {
+      animation: heroHit .45s ease-out;
+    }
+
+    .command-battle.heal .heal-effect {
+      animation: healPulse 1.05s ease-out;
+    }
+
+    .command-battle.hit-stop.attack-basic .damage-float,
+    .command-battle.hit-stop.attack-combo .damage-float,
+    .command-battle.hit-stop.attack-ultimate .damage-float {
+      animation: damageFloat 1.1s ease-out;
+    }
+
+    .command-battle.counter .hero-damage-float {
+      animation: damageFloat 1s .32s ease-out;
     }
 
     .command-menu {
@@ -510,45 +1282,261 @@
 
     .battle-message {
       min-height: 118px;
-      padding: 14px;
+      padding: 16px 18px;
+      border-color: rgba(96, 165, 250, .55);
       color: #e0f2fe;
       font-size: .95rem;
       line-height: 1.65;
       font-weight: 800;
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, .94), rgba(30, 41, 59, .78)),
+        radial-gradient(circle at 18% 10%, rgba(56, 189, 248, .18), transparent 34%);
+      box-shadow: 4px 4px 0 rgba(15, 23, 42, .7), inset 0 0 0 1px rgba(148, 163, 184, .16);
     }
 
     .move-panel {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      padding: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-color: rgba(251, 191, 36, .42);
+      background:
+        linear-gradient(135deg, rgba(2, 6, 23, .92), rgba(15, 23, 42, .84)),
+        radial-gradient(circle at 80% 0%, rgba(251, 191, 36, .16), transparent 30%);
     }
 
     .move-button {
-      min-height: 56px;
-      padding: 9px 10px;
-      border: 1px solid rgba(148, 163, 184, .3);
-      border-radius: 12px;
-      background: rgba(15, 23, 42, .78);
+      position: relative;
+      min-height: 104px;
+      overflow: hidden;
+      padding: 12px;
+      border: 2px solid rgba(148, 163, 184, .34);
+      border-radius: 16px;
+      background:
+        linear-gradient(145deg, rgba(15, 23, 42, .95), rgba(30, 41, 59, .84)),
+        radial-gradient(circle at 88% 14%, rgba(56, 189, 248, .15), transparent 34%);
       color: #f8fafc;
       text-align: left;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .06);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+
+    .move-button::before {
+      content: "";
+      position: absolute;
+      inset: -40% auto auto -28%;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(56, 189, 248, .35), transparent 64%);
+      opacity: .76;
+      pointer-events: none;
+    }
+
+    .move-button::after {
+      content: "";
+      position: absolute;
+      right: -28px;
+      bottom: -34px;
+      width: 92px;
+      height: 92px;
+      border: 2px solid rgba(226, 232, 240, .16);
+      border-radius: 24px;
+      transform: rotate(18deg);
+      pointer-events: none;
+    }
+
+    .move-button:hover:not(:disabled),
+    .move-button:focus-visible:not(:disabled) {
+      transform: translateY(-3px);
+      border-color: rgba(251, 191, 36, .78);
+      box-shadow: 0 14px 24px rgba(0, 0, 0, .34), 0 0 24px rgba(251, 191, 36, .16);
+      outline: none;
+    }
+
+    .move-button:hover:not(:disabled) .move-name,
+    .move-button:focus-visible:not(:disabled) .move-name {
+      color: #fef3c7;
+      text-shadow: 0 0 12px rgba(251, 191, 36, .55);
+    }
+
+    .move-button[data-kind="combo"] {
+      border-color: rgba(168, 85, 247, .42);
+      background:
+        linear-gradient(145deg, rgba(30, 27, 75, .98), rgba(15, 23, 42, .84)),
+        radial-gradient(circle at 88% 14%, rgba(168, 85, 247, .22), transparent 36%);
+    }
+
+    .move-button[data-kind="ultimate"] {
+      border-color: rgba(251, 191, 36, .72);
+      background:
+        linear-gradient(145deg, rgba(69, 26, 3, .94), rgba(15, 23, 42, .88)),
+        radial-gradient(circle at 84% 10%, rgba(253, 224, 71, .36), transparent 38%);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .34), inset 0 0 22px rgba(251, 191, 36, .14);
+    }
+
+    .move-button[data-kind="heal"] {
+      border-color: rgba(74, 222, 128, .48);
+      background:
+        linear-gradient(145deg, rgba(5, 46, 22, .95), rgba(15, 23, 42, .84)),
+        radial-gradient(circle at 88% 14%, rgba(34, 197, 94, .24), transparent 36%);
+    }
+
+    .move-panel .move-button:nth-child(1) {
+      border-color: rgba(56, 189, 248, .5);
+    }
+
+    .move-panel .move-button:nth-child(2) {
+      border-color: rgba(168, 85, 247, .5);
+      background:
+        linear-gradient(145deg, rgba(30, 27, 75, .98), rgba(15, 23, 42, .84)),
+        radial-gradient(circle at 88% 14%, rgba(168, 85, 247, .22), transparent 36%);
+    }
+
+    .move-panel .move-button:nth-child(3) {
+      border-color: rgba(251, 191, 36, .72);
+      background:
+        linear-gradient(145deg, rgba(69, 26, 3, .94), rgba(15, 23, 42, .88)),
+        radial-gradient(circle at 84% 10%, rgba(253, 224, 71, .36), transparent 38%);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .34), inset 0 0 22px rgba(251, 191, 36, .14);
+    }
+
+    .move-panel .move-button:nth-child(4) {
+      border-color: rgba(74, 222, 128, .48);
+      background:
+        linear-gradient(145deg, rgba(5, 46, 22, .95), rgba(15, 23, 42, .84)),
+        radial-gradient(circle at 88% 14%, rgba(34, 197, 94, .24), transparent 36%);
     }
 
     .move-button:disabled {
       opacity: .38;
       cursor: not-allowed;
+      filter: grayscale(.65);
     }
 
     .move-name {
       display: block;
+      position: relative;
+      z-index: 1;
+      min-height: 2.5em;
       font-weight: 1000;
+      font-size: .98rem;
+      line-height: 1.25;
+      letter-spacing: .02em;
+    }
+
+    .move-name::before {
+      content: "SKILL";
+      display: inline-flex;
+      align-items: center;
+      margin: 0 7px 5px 0;
+      border: 1px solid rgba(226, 232, 240, .22);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: #bfdbfe;
+      background: rgba(15, 23, 42, .72);
+      font-size: .62rem;
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: .08em;
+      vertical-align: middle;
+    }
+
+    .move-panel .move-button:nth-child(2) .move-name::before {
+      content: "CHAIN";
+      color: #e9d5ff;
+    }
+
+    .move-panel .move-button:nth-child(3) .move-name::before {
+      content: "LIMIT";
+      color: #111827;
+      border-color: rgba(251, 191, 36, .82);
+      background: linear-gradient(135deg, #fde68a, #facc15);
+      box-shadow: 0 0 12px rgba(250, 204, 21, .18);
+    }
+
+    .move-panel .move-button:nth-child(4) .move-name::before {
+      content: "RECOVER";
+      color: #dcfce7;
     }
 
     .move-meta {
       display: block;
-      color: var(--muted);
-      font-size: .72rem;
-      margin-top: 3px;
+      position: relative;
+      z-index: 1;
+      color: #cbd5e1;
+      font-size: .74rem;
+      font-weight: 850;
+      margin-top: 7px;
+      line-height: 1.35;
+    }
+
+    .move-topline {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .move-kind,
+    .move-cost {
+      display: inline-flex;
+      align-items: center;
+      min-height: 21px;
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: .66rem;
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: .06em;
+    }
+
+    .move-kind {
+      border: 1px solid rgba(226, 232, 240, .22);
+      color: #bfdbfe;
+      background: rgba(15, 23, 42, .72);
+    }
+
+    .move-cost {
+      color: #111827;
+      background: linear-gradient(135deg, #fde68a, #facc15);
+      box-shadow: 0 0 12px rgba(250, 204, 21, .18);
+    }
+
+    .move-tags {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 9px;
+    }
+
+    .move-badge {
+      border: 1px solid rgba(148, 163, 184, .28);
+      border-radius: 999px;
+      padding: 3px 7px;
+      color: #dbeafe;
+      background: rgba(15, 23, 42, .68);
+      font-size: .66rem;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .move-badge.weak {
+      border-color: rgba(248, 113, 113, .52);
+      color: #fecaca;
+      background: rgba(127, 29, 29, .42);
+    }
+
+    .move-badge.locked {
+      border-color: rgba(148, 163, 184, .2);
+      color: #94a3b8;
+      background: rgba(15, 23, 42, .55);
     }
 
     .battle-rule-list {
@@ -577,21 +1565,21 @@
     }
 
     @keyframes commandShot {
-      0% { opacity: 0; transform: translate(-160px, 70px) scale(.5); }
+      0% { opacity: 0; transform: translate(0, 0) scale(.5); }
       20% { opacity: 1; }
-      100% { opacity: 0; transform: translate(185px, -60px) scale(1.2); }
+      100% { opacity: 0; transform: translate(430px, -185px) scale(1.25); }
     }
 
     @keyframes commandSlash {
-      0% { opacity: 0; transform: translate(150px, -80px) rotate(45deg) scale(.4); }
+      0% { opacity: 0; transform: translate(330px, -210px) rotate(45deg) scale(.4); }
       20% { opacity: 1; }
-      100% { opacity: 0; transform: translate(220px, 25px) rotate(45deg) scale(1.5); }
+      100% { opacity: 0; transform: translate(455px, -105px) rotate(45deg) scale(1.7); }
     }
 
     @keyframes commandUltimate {
-      0% { opacity: 0; transform: translate(180px, -60px) scale(.2); }
-      35% { opacity: 1; transform: translate(220px, -38px) scale(1.15); }
-      100% { opacity: 0; transform: translate(220px, -38px) scale(1.85); }
+      0% { opacity: 0; transform: translate(360px, -210px) scale(.2); }
+      35% { opacity: 1; transform: translate(430px, -190px) scale(1.15); }
+      100% { opacity: 0; transform: translate(430px, -190px) scale(2); }
     }
 
     @keyframes commandEnemyHit {
@@ -608,6 +1596,153 @@
       75% { transform: translate(-3px, 2px); }
     }
 
+    @keyframes counterShot {
+      0% { opacity: 0; transform: translate(0, 0) scale(.5); }
+      25% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-430px, 190px) scale(1.15); }
+    }
+
+    @keyframes heroHit {
+      0%, 100% { transform: translateX(0) rotate(0deg); filter: brightness(1) drop-shadow(0 22px 14px rgba(0,0,0,.48)); }
+      25% { transform: translateX(-18px) rotate(-3deg); filter: brightness(1.9) drop-shadow(0 0 16px rgba(248, 113, 113, .85)); }
+      55% { transform: translateX(12px) rotate(2deg); }
+    }
+
+    @keyframes healPulse {
+      0% { opacity: 0; transform: scale(.4); }
+      30% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.45); }
+    }
+
+    @keyframes damageFloat {
+      0% { opacity: 0; transform: translateY(18px) scale(.7); }
+      25% { opacity: 1; transform: translateY(-8px) scale(1.18); }
+      100% { opacity: 0; transform: translateY(-55px) scale(.92); }
+    }
+
+    @keyframes cinematicDim {
+      0% { opacity: 0; }
+      18% { opacity: 1; }
+      78% { opacity: .92; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes cardCharge {
+      0% { transform: translateY(0) scale(1); filter: brightness(1); }
+      35% { transform: translateY(-7px) scale(1.045); filter: brightness(1.32); }
+      70% { transform: translateY(-4px) scale(1.025); filter: brightness(1.16); }
+      100% { transform: translateY(0) scale(1); filter: brightness(1); }
+    }
+
+    @keyframes cardAura {
+      0% { opacity: .45; transform: scale(.75); }
+      48% { opacity: 1; transform: scale(1.45); }
+      100% { opacity: 0; transform: scale(1.9); }
+    }
+
+    @keyframes skillCutin {
+      0% { opacity: 0; transform: skewX(-10deg) translateX(-18%) scale(.96); filter: blur(8px); }
+      18% { opacity: 1; transform: skewX(-10deg) translateX(0) scale(1.02); filter: blur(0); }
+      72% { opacity: 1; transform: skewX(-10deg) translateX(0) scale(1); }
+      100% { opacity: 0; transform: skewX(-10deg) translateX(12%) scale(.98); filter: blur(4px); }
+    }
+
+    @keyframes ultimateCutin {
+      0% { opacity: 0; transform: skewX(-10deg) translateY(18px) scale(.88); filter: blur(10px); }
+      16% { opacity: 1; transform: skewX(-10deg) translateY(0) scale(1.08); filter: blur(0); }
+      62% { opacity: 1; transform: skewX(-10deg) translateY(0) scale(1); }
+      100% { opacity: 0; transform: skewX(-10deg) translateY(-12px) scale(1.12); filter: blur(4px); }
+    }
+
+    @keyframes ultimatePortrait {
+      0% { opacity: 0; transform: translateX(-18%) scale(.98); filter: blur(10px) brightness(.8); }
+      16% { opacity: 1; transform: translateX(0) scale(1.02); filter: blur(0) brightness(1.25); }
+      72% { opacity: 1; transform: translateX(0) scale(1); }
+      100% { opacity: 0; transform: translateX(12%) scale(1.04); filter: blur(4px) brightness(1.4); }
+    }
+
+    @keyframes speedLineRush {
+      0% { opacity: 0; transform: translateX(-14%) skewX(-10deg); }
+      24% { opacity: .9; }
+      100% { opacity: 0; transform: translateX(18%) skewX(-10deg); }
+    }
+
+    @keyframes sigilCharge {
+      0% { opacity: 0; transform: rotate(0deg) scale(.48); filter: blur(6px); }
+      32% { opacity: 1; transform: rotate(75deg) scale(1); filter: blur(0); }
+      76% { opacity: .9; transform: rotate(170deg) scale(1.06); }
+      100% { opacity: 0; transform: rotate(240deg) scale(1.28); filter: blur(4px); }
+    }
+
+    @keyframes ultimateSigilSpin {
+      0% { filter: hue-rotate(0deg) brightness(1); }
+      50% { filter: hue-rotate(32deg) brightness(1.45); }
+      100% { filter: hue-rotate(0deg) brightness(1); }
+    }
+
+    @keyframes beamRelease {
+      0% { opacity: 0; transform: rotate(-22deg) scaleX(.04) translateX(-14px); }
+      22% { opacity: 1; transform: rotate(-22deg) scaleX(.42) translateX(0); }
+      48% { opacity: 1; transform: rotate(-22deg) scaleX(1.05) translateX(28px); }
+      100% { opacity: 0; transform: rotate(-22deg) scaleX(1.25) translateX(70px); filter: blur(8px); }
+    }
+
+    @keyframes slashRelease {
+      0% { opacity: 0; transform: translateX(-120px) scaleX(.35); filter: blur(8px); }
+      25% { opacity: 1; transform: translateX(10px) scaleX(1); filter: blur(0); }
+      100% { opacity: 0; transform: translateX(230px) scaleX(1.18); filter: blur(7px); }
+    }
+
+    @keyframes hitFlash {
+      0% { opacity: 0; }
+      18% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes impactRing {
+      0% { opacity: 0; transform: scale(.22) rotate(0deg); filter: blur(0); }
+      22% { opacity: 1; transform: scale(.76) rotate(18deg); }
+      100% { opacity: 0; transform: scale(1.95) rotate(55deg); filter: blur(7px); }
+    }
+
+    @keyframes cinematicShake {
+      0%, 100% { transform: translate(0, 0); }
+      12% { transform: translate(-9px, 5px); }
+      24% { transform: translate(8px, -4px); }
+      36% { transform: translate(-6px, -3px); }
+      48% { transform: translate(7px, 4px); }
+      60% { transform: translate(-4px, 3px); }
+      72% { transform: translate(3px, -2px); }
+    }
+
+    @keyframes cinematicEnemyHit {
+      0%, 100% { transform: translateX(0) scale(1); filter: brightness(1); }
+      25% { transform: translateX(22px) scale(1.04); filter: brightness(2.2) contrast(1.25); }
+      50% { transform: translateX(-14px) scale(.98); filter: brightness(.7) saturate(1.4); }
+      75% { transform: translateX(8px) scale(1.02); filter: brightness(1.7); }
+    }
+
+    @keyframes particleBurst {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+      18% { opacity: 1; }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.05);
+        filter: blur(3px);
+      }
+    }
+
+    @keyframes victoryFadeIn {
+      0% { opacity: 0; transform: scale(.96); filter: blur(8px); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0); }
+    }
+
+    @keyframes victorySweep {
+      0% { opacity: 0; left: -120%; top: 10%; }
+      35% { opacity: .75; }
+      100% { opacity: 0; left: 120%; top: 62%; }
+    }
+
     @media (max-width: 760px) {
       .command-scene,
       .command-menu,
@@ -619,8 +1754,70 @@
         grid-template-columns: 1fr;
       }
 
+      .skill-cutin {
+        inset: auto 3% 40% 3%;
+        padding: 14px 12px;
+      }
+
+      .energy-beam {
+        left: 18%;
+        bottom: 35%;
+        width: 76vw;
+        height: 62px;
+      }
+
+      .slash-stack {
+        right: -5%;
+        width: 78vw;
+        height: 210px;
+      }
+
+      .impact-ring {
+        right: 2%;
+        top: 27%;
+        width: 190px;
+        height: 190px;
+      }
+
+      .effect-sigil {
+        width: 160px;
+        height: 160px;
+        left: 5%;
+        bottom: 24%;
+      }
+
+      .command-scene {
+        min-height: 420px;
+      }
+
+      .enemy-side {
+        top: 14px;
+        right: 6px;
+        width: 78%;
+        height: 235px;
+      }
+
+      .enemy-sprite-wrap {
+        right: -18px;
+        top: 72px;
+        width: 92%;
+        height: 170px;
+      }
+
+      .enemy-sprite {
+        max-height: 205px;
+      }
+
+      .hero-side {
+        left: 12px;
+        width: 72%;
+      }
+
       .hero-back {
-        margin-left: 4%;
+        left: 4%;
+        bottom: 54px;
+        transform: scale(.82);
+        transform-origin: left bottom;
       }
     }
 
@@ -1768,19 +2965,73 @@
             </div>
             <div class="enemy-sprite-wrap">
               <img class="enemy-sprite" id="mpEnemySprite" alt="選択中のボス" />
-              <div class="battle-effect" id="mpBattleEffect"></div>
             </div>
           </div>
           <div class="hero-side">
-            <div class="hero-back" aria-hidden="true"></div>
+            <div class="hero-back" aria-hidden="true">
+              <span class="hero-hair"></span>
+              <span class="hero-head"></span>
+              <span class="hero-body"></span>
+              <span class="hero-arm left"></span>
+              <span class="hero-arm right"></span>
+              <span class="hero-leg left"></span>
+              <span class="hero-leg right"></span>
+              <span class="hero-book"></span>
+            </div>
             <div class="hero-hud">
               <div class="hero-hud-line">
                 <span>たろちゃん</span>
                 <span id="mpHeroMp">MP 0</span>
               </div>
+              <div class="pixel-hp"><div id="mpHeroHpBar"></div></div>
               <div class="hero-hud-line" style="margin-top:5px;">
-                <span id="mpStreakBonus">連続 x1.00</span>
+                <span id="mpHeroHpText">HP 100 / 100</span>
                 <span id="mpCritBonus">CRIT 10%</span>
+              </div>
+            </div>
+          </div>
+          <div class="battle-effect" id="mpBattleEffect"></div>
+          <!-- Cinematic attack FX: card charge -> skill reveal -> impact -> afterglow. -->
+          <div class="cinematic-dim" aria-hidden="true"></div>
+          <div class="speed-lines" aria-hidden="true"></div>
+          <div class="skill-cutin" aria-hidden="true">
+            <span class="cutin-label" id="mpSkillKind">SKILL</span>
+            <strong id="mpSkillName">ATTACK</strong>
+          </div>
+          <div class="ultimate-portrait" aria-hidden="true"></div>
+          <div class="effect-sigil" aria-hidden="true"></div>
+          <div class="energy-beam" aria-hidden="true">
+            <span class="beam-core"></span>
+            <span class="beam-aura"></span>
+          </div>
+          <div class="slash-stack" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="impact-ring" aria-hidden="true"></div>
+          <div class="cinematic-flash" aria-hidden="true"></div>
+          <div class="effect-particles" id="mpEffectParticles" aria-hidden="true"></div>
+          <div class="enemy-counter" id="mpEnemyCounter"></div>
+          <div class="heal-effect" id="mpHealEffect"></div>
+          <div class="damage-float" id="mpDamageFloat">0</div>
+          <div class="hero-damage-float" id="mpHeroDamageFloat">0</div>
+          <div class="ko-overlay" id="mpKoOverlay" hidden>
+            <div class="ko-card">
+              <p class="ko-title">YOU DIED</p>
+              <p class="ko-subtitle">戦闘不能</p>
+              <p class="ko-copy">HPが0になりました。ジム回復で立て直して、MPを貯めてリベンジしよう。</p>
+              <div class="ko-actions">
+                <button class="ko-action primary" type="button" data-heal-action="gym">ジム回復で復帰</button>
+                <button class="ko-action" type="button" data-dismiss-ko>作戦を見直す</button>
+              </div>
+            </div>
+          </div>
+          <div class="victory-overlay" id="mpVictoryOverlay" hidden>
+            <div class="victory-card">
+              <p class="victory-title">VICTORY</p>
+              <p class="victory-subtitle" id="mpVictoryBoss">ボス撃破</p>
+              <p class="victory-copy" id="mpVictoryCopy">積み上げた勉強時間がボスを倒しました。</p>
+              <div class="victory-actions">
+                <button class="victory-action" type="button" data-dismiss-victory>戦果を確認する</button>
               </div>
             </div>
           </div>
@@ -2162,6 +3413,8 @@
       return {
         mp: Object.fromEntries(PROJECTS.map(project => [project.id, 0])),
         bossDamage: Object.fromEntries(PROJECTS.map(project => [project.id, 0])),
+        heroHp: 100,
+        heroMaxHp: 100,
         earnedSessionIds: [],
         attacks: [],
         message: "勉強時間がMPになります。技を選んでボスに攻撃できます。"
@@ -2175,6 +3428,8 @@
         ...parsed,
         mp: { ...base.mp, ...(parsed.mp || {}) },
         bossDamage: { ...base.bossDamage, ...(parsed.bossDamage || {}) },
+        heroHp: Math.max(0, Math.min(Number(parsed.heroMaxHp || base.heroMaxHp), Number(parsed.heroHp ?? base.heroHp))),
+        heroMaxHp: Number(parsed.heroMaxHp || base.heroMaxHp),
         earnedSessionIds: Array.isArray(parsed.earnedSessionIds) ? parsed.earnedSessionIds : [],
         attacks: Array.isArray(parsed.attacks) ? parsed.attacks : []
       };
@@ -2268,8 +3523,13 @@
       sessions.forEach((session, index) => {
         const id = sessionBattleId(session, index);
         if (earned.has(id) || minutesOf(session) <= 0) return;
-        const project = projectForSession(session, selectedProjectIdForMp());
-        battle.mp[project.id] = Math.max(0, Number(battle.mp[project.id] || 0)) + minutesOf(session);
+        const minutes = minutesOf(session);
+        if (skillForSession(session) === "fitness") {
+          battle.heroHp = Math.min(Number(battle.heroMaxHp || 100), Number(battle.heroHp || 0) + minutes);
+        } else {
+          const project = projectForSession(session, selectedProjectIdForMp());
+          battle.mp[project.id] = Math.max(0, Number(battle.mp[project.id] || 0)) + minutes;
+        }
         battle.earnedSessionIds.push(id);
         earned.add(id);
         changed = true;
@@ -2579,21 +3839,152 @@
       };
     }
 
+    function bossCounterDamage(project, move) {
+      const base = project.id === "toeic-900" ? 9 : project.id === "hsk-3" ? 8 : 7;
+      const moveRisk = move.kind === "ultimate" ? 4 : move.kind === "combo" ? 2 : 0;
+      return base + moveRisk;
+    }
+
     function latestBattleLogText(battle) {
       const latest = Array.isArray(battle.attacks) ? battle.attacks[battle.attacks.length - 1] : null;
       if (!latest) return battle.message || "勉強してMPを貯めよう。";
       return latest.message || battle.message || "攻撃しました。";
     }
 
-    function playMpAttackAnimation(kind = "basic") {
+    // Cinematic MP battle animation timeline.
+    // Keep the battle rules/data separate from visuals so new effects can be added safely.
+    const MP_FX_CLASSES = [
+      "attack-basic", "attack-combo", "attack-ultimate",
+      "enemy-hit", "counter", "hero-hit", "heal",
+      "cinematic-active", "cinematic-charge", "skill-reveal", "effect-release", "hit-stop", "ultimate-cutin",
+      "fx-tech", "fx-logic", "fx-security", "fx-word", "fx-listen", "fx-reading", "fx-tone", "fx-kanji", "fx-hsk", "fx-heal"
+    ];
+
+    function clearMpFxTimers(panel) {
+      (panel._mpFxTimers || []).forEach(timer => window.clearTimeout(timer));
+      panel._mpFxTimers = [];
+    }
+
+    function resetMpCinematic(panel) {
+      clearMpFxTimers(panel);
+      panel.classList.remove(...MP_FX_CLASSES);
+      document.querySelectorAll("#movePanel .selected-card").forEach(card => card.classList.remove("selected-card"));
+      const particles = $("mpEffectParticles");
+      if (particles) particles.innerHTML = "";
+    }
+
+    function makeMpParticles(kind = "basic") {
+      const wrap = $("mpEffectParticles");
+      if (!wrap) return;
+      wrap.innerHTML = "";
+      const count = kind === "ultimate" ? 52 : kind === "combo" ? 34 : 26;
+      for (let i = 0; i < count; i += 1) {
+        const dot = document.createElement("span");
+        const angle = Math.random() * Math.PI * 2;
+        const distance = (kind === "ultimate" ? 170 : 115) + Math.random() * 120;
+        dot.style.setProperty("--x", `${62 + Math.random() * 24}%`);
+        dot.style.setProperty("--y", `${22 + Math.random() * 30}%`);
+        dot.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+        dot.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+        dot.style.setProperty("--s", `${3 + Math.random() * (kind === "ultimate" ? 7 : 5)}px`);
+        dot.style.setProperty("--d", `${Math.random() * .22}s`);
+        wrap.appendChild(dot);
+      }
+    }
+
+    function moveCardForAnimation(projectId, moveIndex) {
+      return Array.from(document.querySelectorAll("#movePanel [data-project-id][data-move-index]"))
+        .find(button => button.dataset.projectId === projectId && button.dataset.moveIndex === String(moveIndex));
+    }
+
+    function skillKindLabel(kind = "basic", heal = false) {
+      if (heal) return "RECOVER";
+      if (kind === "ultimate") return "LIMIT BREAK";
+      if (kind === "combo") return "CHAIN ARTS";
+      return "SKILL DRIVE";
+    }
+
+    function showVictoryOverlay(project, damage = 0, delay = 900) {
+      const overlay = $("mpVictoryOverlay");
+      if (!overlay) return;
+      $("mpVictoryBoss").textContent = `${project.name} 撃破`;
+      $("mpVictoryCopy").textContent = `${damage.toLocaleString()}ダメージ。積み上げた勉強時間が勝利に変わりました。`;
+      window.setTimeout(() => {
+        overlay.hidden = false;
+      }, delay);
+    }
+
+    function playMpAttackAnimation(kind = "basic", counter = false, heal = false, detail = {}) {
       const panel = $("mpBattle");
       if (!panel) return;
-      panel.classList.remove("attack-basic", "attack-combo", "attack-ultimate", "enemy-hit");
+      resetMpCinematic(panel);
       void panel.offsetWidth;
-      panel.classList.add(`attack-${kind}`, "enemy-hit");
-      window.setTimeout(() => {
-        panel.classList.remove("attack-basic", "attack-combo", "attack-ultimate", "enemy-hit");
-      }, 1250);
+
+      if (heal) {
+        panel.classList.add("heal", "fx-heal");
+        panel._mpFxTimers = [window.setTimeout(() => resetMpCinematic(panel), 1150)];
+        return;
+      }
+
+      const element = detail.element || "tech";
+      const card = moveCardForAnimation(detail.projectId, detail.moveIndex);
+      const duration = kind === "ultimate" ? 2150 : 1720;
+      const hitAt = kind === "ultimate" ? 1180 : 930;
+      const releaseAt = kind === "ultimate" ? 760 : 620;
+
+      $("mpSkillName").textContent = detail.moveName || "ATTACK";
+      $("mpSkillKind").textContent = skillKindLabel(kind, false);
+      makeMpParticles(kind);
+
+      panel.classList.add("cinematic-active", "cinematic-charge", `attack-${kind}`, `fx-${element}`);
+      if (card) card.classList.add("selected-card");
+
+      const timers = [];
+      if (kind === "ultimate") {
+        panel.classList.add("ultimate-cutin");
+      }
+      timers.push(window.setTimeout(() => panel.classList.add("skill-reveal"), 260));
+      timers.push(window.setTimeout(() => panel.classList.add("effect-release"), releaseAt));
+      timers.push(window.setTimeout(() => panel.classList.add("hit-stop", "enemy-hit"), hitAt));
+      if (detail.victory && detail.project) {
+        timers.push(window.setTimeout(() => {
+          showVictoryOverlay(detail.project, detail.damage || 0, 0);
+        }, hitAt + 360));
+      }
+      if (counter) {
+        timers.push(window.setTimeout(() => panel.classList.add("counter", "hero-hit"), hitAt + 430));
+      }
+      timers.push(window.setTimeout(() => {
+        resetMpCinematic(panel);
+      }, duration));
+      panel._mpFxTimers = timers;
+    }
+
+    function useGymHeal() {
+      const battle = loadBattleState();
+      const missing = Number(battle.heroMaxHp || 100) - Number(battle.heroHp || 0);
+      if (missing <= 0) {
+        battle.message = "HPは満タンです。ジムの成果は次の戦いに備えて温存されています。";
+        saveBattleState(battle);
+        render(false);
+        return;
+      }
+      battle.heroHp = Number(battle.heroMaxHp || 100);
+      battle.message = `ジムの成果でHPを${missing}回復！`;
+      battle.attacks.push({
+        id: `${Date.now()}-heal`,
+        date: todayKey(),
+        projectId: selectedProjectIdForMp(),
+        moveId: "heal",
+        moveName: "ジム回復",
+        cost: 0,
+        damage: 0,
+        message: battle.message,
+        createdAt: new Date().toISOString()
+      });
+      saveBattleState(battle);
+      render(false);
+      playMpAttackAnimation("basic", false, true, { moveName: "ジム回復", element: "heal" });
     }
 
     function useBattleMove(projectId, moveId) {
@@ -2613,6 +4004,12 @@
       }
 
       const currentMp = Number(battle.mp[project.id] || 0);
+      if (Number(battle.heroHp || 0) <= 0) {
+        battle.message = "HPが0です。ジム/筋トレを記録して回復してから攻撃しよう。";
+        saveBattleState(battle);
+        render(false);
+        return;
+      }
       if (currentMp < move.cost) {
         battle.message = `${move.name}にはMPが${move.cost}必要です。あと${move.cost - currentMp}MP貯めよう。`;
         saveBattleState(battle);
@@ -2629,8 +4026,13 @@
 
       const weakText = result.weaknessMultiplier > 1 ? " 弱点を突いた！" : "";
       const critText = result.critical ? " クリティカル！" : "";
-      const koText = battle.bossDamage[project.id] >= project.requiredMinutes ? " ボス撃破！" : "";
-      const message = `${move.name}！ ${appliedDamage}ダメージ！${weakText}${critText}${koText}`;
+      const victory = battle.bossDamage[project.id] >= project.requiredMinutes;
+      const koText = victory ? " ボス撃破！" : "";
+      const counter = battle.bossDamage[project.id] < project.requiredMinutes;
+      const counterDamage = counter ? bossCounterDamage(project, move) : 0;
+      if (counterDamage) battle.heroHp = Math.max(0, Number(battle.heroHp || 0) - counterDamage);
+      const counterText = counterDamage ? ` ボスの反撃！${counterDamage}ダメージ！` : "";
+      const message = `${move.name}！ ${appliedDamage}ダメージ！${weakText}${critText}${counterText}${koText}`;
       battle.message = message;
       battle.attacks.push({
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -2640,6 +4042,8 @@
         moveName: move.name,
         cost: move.cost,
         damage: appliedDamage,
+        counterDamage,
+        heroHp: battle.heroHp,
         critical: result.critical,
         weakness: result.weakness,
         message,
@@ -2647,7 +4051,16 @@
       });
       saveBattleState(battle);
       render(false);
-      playMpAttackAnimation(move.kind);
+      playMpAttackAnimation(move.kind, counterDamage > 0, false, {
+        projectId: project.id,
+        moveIndex: String(moveId),
+        moveName: move.name,
+        element: move.element,
+        critical: result.critical,
+        victory,
+        project,
+        damage: appliedDamage
+      });
     }
 
     function renderMpBattle(sessions, rows, primary) {
@@ -2660,8 +4073,12 @@
       const damage = Number(battle.bossDamage[project.id] || 0);
       const remaining = Math.max(0, project.requiredMinutes - damage);
       const hpPct = Math.max(0, Math.min(100, (remaining / project.requiredMinutes) * 100));
+      const heroHp = Math.max(0, Number(battle.heroHp || 0));
+      const heroMaxHp = Math.max(1, Number(battle.heroMaxHp || 100));
+      const heroHpPct = Math.max(0, Math.min(100, (heroHp / heroMaxHp) * 100));
       const progressPct = Math.round((damage / project.requiredMinutes) * 100);
       const probe = battleBonuses(sessions, project, moves[0]);
+      const latestAttack = Array.isArray(battle.attacks) ? battle.attacks[battle.attacks.length - 1] : null;
 
       $("mpBattleStatus").textContent = `${project.shortName} MPを貯めて、好きなタイミングで攻撃できます。`;
       $("mpEnemyName").textContent = project.name;
@@ -2671,27 +4088,41 @@
       $("mpEnemyProgress").textContent = `${progressPct}%`;
       $("mpEnemySprite").src = bossArtForProject(project.id);
       $("mpHeroMp").textContent = `MP ${mp.toLocaleString()}`;
-      $("mpStreakBonus").textContent = `連続 x${probe.streakMultiplier.toFixed(2)}`;
+      $("mpHeroHpBar").style.width = `${heroHpPct}%`;
+      $("mpHeroHpText").textContent = `HP ${heroHp.toLocaleString()} / ${heroMaxHp.toLocaleString()}`;
       $("mpCritBonus").textContent = `CRIT ${Math.round(probe.critChance * 100)}%`;
-      $("mpBattleMessage").textContent = latestBattleLogText(battle);
+      $("mpBattleMessage").textContent = heroHp <= 0 ? "戦闘不能。ジム回復で復帰できます。" : latestBattleLogText(battle);
+      $("mpDamageFloat").textContent = latestAttack && latestAttack.damage ? latestAttack.damage.toLocaleString() : "";
+      $("mpHeroDamageFloat").textContent = latestAttack && latestAttack.counterDamage ? `-${latestAttack.counterDamage}` : "";
+      $("mpBattle").classList.toggle("battle-dead", heroHp <= 0);
+      $("mpKoOverlay").hidden = heroHp > 0;
+      if (remaining > 0) $("mpVictoryOverlay").hidden = true;
 
       $("ruleStreak").textContent = `${probe.streak}日連続 / x${probe.streakMultiplier.toFixed(2)}`;
       $("ruleCrit").textContent = probe.hasLongSession ? "25分以上あり / CRIT 35%" : "25分以上で CRIT 35%";
       $("ruleUltimate").textContent = probe.ultimateUnlocked ? "必殺技 使用可能" : "25分以上 x2セットで解放";
       $("ruleWeakness").textContent = `今日の弱点：${ELEMENT_LABELS[probe.weakness] || probe.weakness}`;
 
-      $("movePanel").innerHTML = moves.map((move, index) => {
+      const moveButtons = moves.map((move, index) => {
         const moveBonus = battleBonuses(sessions, project, move);
-        const disabled = mp < move.cost || (move.kind === "ultimate" && !moveBonus.ultimateUnlocked);
+        const disabled = heroHp <= 0 || mp < move.cost || (move.kind === "ultimate" && !moveBonus.ultimateUnlocked);
         const weak = move.element === moveBonus.weakness ? " / 弱点" : "";
         const locked = move.kind === "ultimate" && !moveBonus.ultimateUnlocked ? " / 未解放" : "";
         return `
-          <button class="move-button" type="button" data-project-id="${escapeHtml(project.id)}" data-move-index="${index}" ${disabled ? "disabled" : ""}>
+          <button class="move-button" type="button" data-kind="${escapeHtml(move.kind)}" data-project-id="${escapeHtml(project.id)}" data-move-index="${index}" ${disabled ? "disabled" : ""}>
             <span class="move-name">${escapeHtml(move.name)}</span>
             <span class="move-meta">MP ${move.cost} / 威力 ${move.power} / ${escapeHtml(ELEMENT_LABELS[move.element] || move.element)}${weak}${locked}</span>
           </button>
         `;
       }).join("");
+
+      const healDisabled = heroHp >= heroMaxHp;
+      $("movePanel").innerHTML = moveButtons + `
+        <button class="move-button" type="button" data-kind="heal" data-heal-action="gym" ${healDisabled ? "disabled" : ""}>
+          <span class="move-name">ジム回復</span>
+          <span class="move-meta">筋トレ/ジム記録でHP回復 / 現在 ${heroHp}/${heroMaxHp}</span>
+        </button>
+      `;
     }
 
     function renderGoalDashboard(rows, activeTarget) {
@@ -3660,9 +5091,29 @@
       render(false);
     });
     $("movePanel").addEventListener("click", event => {
+      const healButton = event.target.closest("[data-heal-action]");
+      if (healButton && !healButton.disabled) {
+        useGymHeal();
+        return;
+      }
       const button = event.target.closest("[data-project-id][data-move-index]");
       if (!button || button.disabled) return;
       useBattleMove(button.dataset.projectId, button.dataset.moveIndex);
+    });
+    $("mpBattle").addEventListener("click", event => {
+      const healButton = event.target.closest("[data-heal-action]");
+      if (healButton && !healButton.disabled && !$("movePanel").contains(healButton)) {
+        useGymHeal();
+        return;
+      }
+      const dismissButton = event.target.closest("[data-dismiss-ko]");
+      if (dismissButton) {
+        $("mpKoOverlay").hidden = true;
+      }
+      const victoryButton = event.target.closest("[data-dismiss-victory]");
+      if (victoryButton) {
+        $("mpVictoryOverlay").hidden = true;
+      }
     });
     $("motivationVideoBtn").addEventListener("click", openMotivationVideo);
     $("closeMotivationVideoBtn").addEventListener("click", closeMotivationVideo);
