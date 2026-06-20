@@ -1296,7 +1296,8 @@
 
     .move-panel {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(116px, auto);
       gap: 10px;
       padding: 12px;
       border-color: rgba(251, 191, 36, .42);
@@ -1307,7 +1308,11 @@
 
     .move-button {
       position: relative;
-      min-height: 104px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      width: 100%;
+      min-height: 116px;
       overflow: hidden;
       padding: 12px;
       border: 2px solid rgba(148, 163, 184, .34);
@@ -1419,18 +1424,29 @@
       display: block;
       position: relative;
       z-index: 1;
-      min-height: 2.5em;
+      width: 100%;
+      min-width: 0;
+      min-height: 2.6em;
       font-weight: 1000;
-      font-size: .98rem;
-      line-height: 1.25;
-      letter-spacing: .02em;
+      font-family: "Yu Gothic UI", "Meiryo", "Noto Sans JP", "Segoe UI", system-ui, sans-serif;
+      font-size: clamp(.86rem, 1.45vw, 1rem);
+      line-height: 1.3;
+      letter-spacing: .01em;
+      line-break: strict;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+      font-kerning: normal;
+      font-feature-settings: "palt" 1;
     }
 
     .move-name::before {
       content: "SKILL";
-      display: inline-flex;
+      display: flex;
+      width: max-content;
+      max-width: 100%;
       align-items: center;
-      margin: 0 7px 5px 0;
+      margin: 0 0 7px;
       border: 1px solid rgba(226, 232, 240, .22);
       border-radius: 999px;
       padding: 4px 8px;
@@ -1440,7 +1456,15 @@
       font-weight: 1000;
       line-height: 1;
       letter-spacing: .08em;
-      vertical-align: middle;
+    }
+
+    .move-name[data-length="medium"] {
+      font-size: clamp(.82rem, 1.3vw, .94rem);
+    }
+
+    .move-name[data-length="long"] {
+      font-size: clamp(.76rem, 1.15vw, .88rem);
+      letter-spacing: 0;
     }
 
     .move-panel .move-button:nth-child(2) .move-name::before {
@@ -1465,11 +1489,16 @@
       display: block;
       position: relative;
       z-index: 1;
+      width: 100%;
+      min-width: 0;
       color: #cbd5e1;
       font-size: .74rem;
       font-weight: 850;
-      margin-top: 7px;
+      margin-top: auto;
+      padding-top: 8px;
       line-height: 1.35;
+      line-break: strict;
+      overflow-wrap: anywhere;
     }
 
     .move-topline {
@@ -1741,6 +1770,16 @@
       0% { opacity: 0; left: -120%; top: 10%; }
       35% { opacity: .75; }
       100% { opacity: 0; left: 120%; top: 62%; }
+    }
+
+    @media (max-width: 980px) {
+      .command-menu {
+        grid-template-columns: 1fr;
+      }
+
+      .move-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 760px) {
@@ -4108,9 +4147,11 @@
         const disabled = heroHp <= 0 || mp < move.cost || (move.kind === "ultimate" && !moveBonus.ultimateUnlocked);
         const weak = move.element === moveBonus.weakness ? " / 弱点" : "";
         const locked = move.kind === "ultimate" && !moveBonus.ultimateUnlocked ? " / 未解放" : "";
+        const nameLength = Array.from(move.name).length;
+        const nameLengthClass = nameLength >= 14 ? "long" : nameLength >= 9 ? "medium" : "short";
         return `
-          <button class="move-button" type="button" data-kind="${escapeHtml(move.kind)}" data-project-id="${escapeHtml(project.id)}" data-move-index="${index}" ${disabled ? "disabled" : ""}>
-            <span class="move-name">${escapeHtml(move.name)}</span>
+          <button class="move-button" type="button" title="${escapeHtml(move.name)}" data-kind="${escapeHtml(move.kind)}" data-project-id="${escapeHtml(project.id)}" data-move-index="${index}" ${disabled ? "disabled" : ""}>
+            <span class="move-name" data-length="${nameLengthClass}">${escapeHtml(move.name)}</span>
             <span class="move-meta">MP ${move.cost} / 威力 ${move.power} / ${escapeHtml(ELEMENT_LABELS[move.element] || move.element)}${weak}${locked}</span>
           </button>
         `;
@@ -4119,7 +4160,7 @@
       const healDisabled = heroHp >= heroMaxHp;
       $("movePanel").innerHTML = moveButtons + `
         <button class="move-button" type="button" data-kind="heal" data-heal-action="gym" ${healDisabled ? "disabled" : ""}>
-          <span class="move-name">ジム回復</span>
+          <span class="move-name" data-length="short">ジム回復</span>
           <span class="move-meta">筋トレ/ジム記録でHP回復 / 現在 ${heroHp}/${heroMaxHp}</span>
         </button>
       `;
