@@ -2,7 +2,8 @@
   "use strict";
 
   const DASHBOARD_STORAGE_KEY = "focus_dashboard_v1";
-  const ADVICE_STORAGE_KEY = "ai_secretary_advice_v1";
+  const ADVICE_STORAGE_KEY = "ai_secretary_advice_v2";
+  const PREFERENCES_STORAGE_KEY = "ai_secretary_preferences_v1";
   const CATEGORIES = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
   const MODE_LABELS = {
     advice: "今からの提案",
@@ -22,6 +23,19 @@
     const date = new Date(year, month - 1, day);
     date.setDate(date.getDate() + amount);
     return localDateKey(date);
+  }
+
+  function loadPreferences() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PREFERENCES_STORAGE_KEY) || "{}");
+      return { energy: ["energetic", "normal", "tired"].includes(saved.energy) ? saved.energy : "normal" };
+    } catch (_) {
+      return { energy: "normal" };
+    }
+  }
+
+  function savePreferences(preferences) {
+    try { localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences)); } catch (_) {}
   }
 
   function readDashboardState() {
@@ -99,6 +113,11 @@
       return task.date === today;
     });
     const incomplete = data.tasks.filter(task => !task.done);
+    const actionableIncomplete = incomplete.filter(task =>
+      task.date === today
+      || task.doTodayDate === today
+      || (task.deadline && task.deadline <= today)
+    );
     const deadlineIncomplete = incomplete
       .filter(task => task.deadline)
       .sort((a, b) => String(a.deadline).localeCompare(String(b.deadline)));
@@ -129,9 +148,12 @@
       today,
       currentTime: now.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }),
       currentHour: now.getHours(),
+      userEnergy: loadPreferences().energy,
       todayFocusMinutes: sumMinutes(todaySessions),
       completedTasksToday: completedToday.slice(0, 30).map(compactTask),
       incompleteTasks: incomplete.slice(0, 50).map(compactTask),
+      actionableIncompleteTasks: actionableIncomplete.slice(0, 30).map(compactTask),
+      backlogTaskCount: incomplete.length,
       deadlineIncompleteTasks: deadlineIncomplete.slice(0, 30).map(compactTask),
       todayCategoryMinutes: sumByCategory(todaySessions),
       last7DaysCategoryMinutes: sevenDayCategoryMinutes,
@@ -145,17 +167,32 @@
     };
   }
 
-  function priorityTask(summary) {
-    const tasks = summary.incompleteTasks || [];
-    const overdue = (summary.deadlineIncompleteTasks || []).find(task => task.deadline <= summary.today);
-    return overdue || tasks.find(task => task.priority === "high" && (task.date === summary.today || task.deadline === summary.today))
-      || tasks.find(task => task.priority === "high") || tasks[0] || null;
+  function getDeadlineRisk(task, today) {
+    if (!task?.deadline) return { level: "none", label: "締切なし", score: 10000 };
+    const days = Math.round((new Date(`${task.deadline}T00:00:00`) - new Date(`${today}T00:00:00`)) / 86400000);
+    if (days < 0) return { level: "danger", label: `${Math.abs(days)}日超過`, score: days };
+    if (days === 0) return { level: "danger", label: "今日締切", score: 0 };
+    if (days <= 2) return { level: "warning", label: `あと${days}日`, score: days };
+    return { level: "safe", label: `あと${days}日`, score: days };
   }
 
-  function createLocalAdvice(summary, mode = "advice") {
+  function sortedActionableTasks(summary) {
+    const priorityScore = { high: 0, normal: 1, low: 2 };
+    return [...(summary.actionableIncompleteTasks || [])].sort((a, b) => {
+      const riskDiff = getDeadlineRisk(a, summary.today).score - getDeadlineRisk(b, summary.today).score;
+      if (riskDiff) return riskDiff;
+      return (priorityScore[a.priority] ?? 1) - (priorityScore[b.priority] ?? 1);
+    });
+  }
+
+  function priorityTask(summary) {
+    return sortedActionableTasks(summary)[0] || null;
+  }
+
+  function createBaseLocalAdvice(summary, mode = "advice") {
     const total = Number(summary.todayFocusMinutes || 0);
     const hour = Number(summary.currentHour || 0);
-    const incompleteCount = (summary.incompleteTasks || []).length;
+    const incompleteCount = (summary.actionableIncompleteTasks || []).length;
     const task = priorityTask(summary);
     const lowCategory = summary.recentInsufficientCategories?.[0]?.category;
     const topCategory = summary.recentFrequentCategories?.[0]?.category;
@@ -276,6 +313,26 @@
     };
   }
 
+  function createLocalAdvice(summary, mode = "advice") {
+    const advice = createBaseLocalAdvice(summary, mode);
+    const energy = summary.userEnergy || "normal";
+    const currentMinutes = Number(String(advice.timeEstimate).match(/\d+/)?.[0] || 0);
+    if (mode !== "advice" || currentMinutes < 10) return advice;
+
+    if (energy === "tired" && currentMinutes > 10) {
+      advice.timeEstimate = "10分";
+      advice.nextAction = advice.nextAction.replace(/\d+分/, "10分").replace("1セット", "10分");
+      advice.tone = "light";
+      advice.encouragement = "今日は10分で十分です。終わったら休む判断も正解です。";
+    } else if (energy === "energetic" && summary.currentHour < 22 && currentMinutes < 25) {
+      advice.timeEstimate = "25分";
+      advice.nextAction = advice.nextAction.replace(/\d+分/, "25分");
+      advice.tone = "push";
+      advice.encouragement = "余力があるので、今日は25分をきれいに取り切りましょう。";
+    }
+    return advice;
+  }
+
   function sanitizeAdvice(value, fallback) {
     const source = value && typeof value === "object" ? value : {};
     const clean = {};
@@ -312,6 +369,11 @@
     return body.advice || body;
   }
 
+  let currentAdvice = null;
+  let currentSummary = null;
+  let currentMode = "advice";
+  let currentSuggestedTask = null;
+
   function createCard() {
     const card = document.createElement("details");
     card.className = "ai-secretary-card";
@@ -326,11 +388,24 @@
       </summary>
       <div class="ai-secretary-body">
         <p class="ai-secretary-one-line" id="aiSecretarySummary"></p>
+        <div class="ai-secretary-energy" aria-label="現在の体力">
+          <span>今日の体力</span>
+          <div>
+            <button type="button" data-ai-energy="energetic">元気</button>
+            <button type="button" data-ai-energy="normal">普通</button>
+            <button type="button" data-ai-energy="tired">疲れた</button>
+          </div>
+        </div>
         <div class="ai-secretary-focus">
           <span class="ai-secretary-label">NEXT ACTION</span>
           <div class="ai-secretary-action-row"><strong id="aiSecretaryNext"></strong><span class="ai-secretary-time" id="aiSecretaryTime"></span></div>
           <p class="ai-secretary-reason" id="aiSecretaryReason"></p>
         </div>
+        <button class="ai-secretary-start" id="aiSecretaryStartBtn" type="button">この提案で開始</button>
+        <section class="ai-secretary-priorities" aria-labelledby="aiSecretaryPriorityTitle">
+          <div class="ai-secretary-priority-head"><strong id="aiSecretaryPriorityTitle">今日の3つ</strong><span>締切リスク</span></div>
+          <div id="aiSecretaryPriorityList"></div>
+        </section>
         <div class="ai-secretary-grid">
           <div class="ai-secretary-mini"><span>今はやらなくていい</span><p id="aiSecretarySkip"></p></div>
           <div class="ai-secretary-mini"><span>明日に回していい</span><p id="aiSecretaryTomorrow"></p></div>
@@ -346,7 +421,86 @@
     return card;
   }
 
-  function renderAdvice(advice, source, mode) {
+  function renderEnergy(energy) {
+    document.querySelectorAll("[data-ai-energy]").forEach(button => {
+      const active = button.dataset.aiEnergy === energy;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderPriorities(summary) {
+    const list = document.getElementById("aiSecretaryPriorityList");
+    if (!list) return;
+    const labels = ["必須", "できれば", "余力があれば"];
+    const tasks = sortedActionableTasks(summary).slice(0, 3);
+    if (!tasks.length) {
+      list.innerHTML = '<p class="ai-secretary-empty">今日対象の未完了タスクはありません。</p>';
+      return;
+    }
+    list.innerHTML = tasks.map((task, index) => {
+      const risk = getDeadlineRisk(task, summary.today);
+      return `<div class="ai-secretary-priority-item">
+        <span class="ai-secretary-rank">${labels[index]}</span>
+        <span class="ai-secretary-task-name"></span>
+        <span class="ai-secretary-risk ${risk.level}">${risk.label}</span>
+      </div>`;
+    }).join("");
+    list.querySelectorAll(".ai-secretary-task-name").forEach((element, index) => {
+      element.textContent = tasks[index].title;
+    });
+  }
+
+  function resolveSuggestedTask(advice, summary) {
+    const tasks = sortedActionableTasks(summary);
+    const text = String(advice?.nextAction || "");
+    return tasks.find(task => text.includes(task.title)) || tasks[0] || null;
+  }
+
+  function adviceMinutes(advice) {
+    const minutes = Number(String(advice?.timeEstimate || "").match(/\d+/)?.[0] || 25);
+    return Math.max(1, Math.min(180, minutes));
+  }
+
+  function updateStartButton(advice, summary, mode) {
+    const button = document.getElementById("aiSecretaryStartBtn");
+    if (!button) return;
+    currentSuggestedTask = resolveSuggestedTask(advice, summary);
+    const available = mode === "advice" && currentSuggestedTask;
+    button.hidden = mode !== "advice";
+    button.disabled = !available;
+    button.textContent = available
+      ? `「${currentSuggestedTask.title}」で${adviceMinutes(advice)}分開始`
+      : "開始できる今日のタスクがありません";
+  }
+
+  function startSuggestedTask() {
+    if (!currentSuggestedTask || !currentAdvice) return;
+    if (document.body.classList.contains("focus-mode")) {
+      alert("集中タイマーがすでに動いています。停止してから切り替えてください。");
+      return;
+    }
+    const minutes = adviceMinutes(currentAdvice);
+    const confirmed = confirm(`「${currentSuggestedTask.title}」を選び、${minutes}分の集中を開始しますか？`);
+    if (!confirmed) return;
+    if (typeof window.startTaskToday === "function") window.startTaskToday(currentSuggestedTask.id);
+    else if (typeof window.setCurrentTask === "function") window.setCurrentTask(currentSuggestedTask.id);
+    if (typeof window.launchFocus === "function") window.launchFocus(minutes);
+  }
+
+  function setEnergy(energy) {
+    if (!["energetic", "normal", "tired"].includes(energy)) return;
+    savePreferences({ energy });
+    const summary = buildAiSecretarySummary();
+    const advice = createLocalAdvice(summary, currentMode);
+    renderAdvice(advice, "体力反映", currentMode, summary);
+    saveAdvice(advice, "体力反映", currentMode);
+  }
+
+  function renderAdvice(advice, source, mode, summary = buildAiSecretarySummary()) {
+    currentAdvice = advice;
+    currentSummary = summary;
+    currentMode = mode;
     const ids = {
       aiSecretarySummary: advice.summary,
       aiSecretaryNext: advice.nextAction,
@@ -364,6 +518,9 @@
     if (sourceElement) sourceElement.textContent = source;
     const status = document.getElementById("aiSecretaryStatus");
     if (status) status.textContent = `${MODE_LABELS[mode] || MODE_LABELS.advice}・${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`;
+    renderEnergy(summary.userEnergy || "normal");
+    renderPriorities(summary);
+    updateStartButton(advice, summary, mode);
   }
 
   function saveAdvice(advice, source, mode) {
@@ -394,7 +551,7 @@
       card?.classList.remove("is-loading");
       buttons.forEach(button => { button.disabled = false; });
     }
-    renderAdvice(advice, source, mode);
+    renderAdvice(advice, source, mode, summary);
     saveAdvice(advice, source, mode);
   }
 
@@ -409,21 +566,29 @@
     let initial = null;
     try { initial = JSON.parse(localStorage.getItem(ADVICE_STORAGE_KEY) || "null"); } catch (_) {}
     if (initial?.advice) {
-      renderAdvice(initial.advice, initial.source || "保存済み", initial.mode || "advice");
+      const summary = buildAiSecretarySummary();
+      renderAdvice(initial.advice, initial.source || "保存済み", initial.mode || "advice", summary);
     } else {
       const summary = buildAiSecretarySummary();
-      renderAdvice(createLocalAdvice(summary, "advice"), "ローカル提案", "advice");
+      renderAdvice(createLocalAdvice(summary, "advice"), "ローカル提案", "advice", summary);
     }
 
     card.querySelectorAll("[data-ai-secretary-mode]").forEach(button => {
       button.addEventListener("click", () => handleRequest(button.dataset.aiSecretaryMode || "advice"));
     });
+    card.querySelectorAll("[data-ai-energy]").forEach(button => {
+      button.addEventListener("click", () => setEnergy(button.dataset.aiEnergy || "normal"));
+    });
+    document.getElementById("aiSecretaryStartBtn")?.addEventListener("click", startSuggestedTask);
   }
 
   window.AiSecretary = {
     buildSummary: buildAiSecretarySummary,
     createLocalAdvice,
-    ask: handleRequest
+    ask: handleRequest,
+    getTopTasks: summary => sortedActionableTasks(summary).slice(0, 3),
+    getDeadlineRisk,
+    startSuggestion: startSuggestedTask
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initializeAiSecretary);

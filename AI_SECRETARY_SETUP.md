@@ -32,7 +32,9 @@ supabase secrets set OPENAI_MODEL=gpt-4.1-mini
 - 初回表示: APIを呼ばず、ローカル提案を表示
 - ボタン操作: Edge Functionを1回だけ呼ぶ
 - API未設定、通信失敗、JSON不正: ローカル提案へ自動復帰
-- 最後の提案: `ai_secretary_advice_v1`へ保存
+- 最後の提案: `ai_secretary_advice_v2`へ保存
+- 体力設定: `ai_secretary_preferences_v1`へ保存
+- 「この提案で開始」は確認後に既存タスクを選択し、既存タイマーを起動
 - 既存データ: `focus_dashboard_v1`を読み取るだけで変更しない
 
 ## 今後の拡張

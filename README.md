@@ -54,3 +54,8 @@ supabase/
 ## AI書記
 
 API未接続でもローカルルールで動作します。OpenAI APIを使う場合は、`AI_SECRETARY_SETUP.md`の手順でSupabase Edge Functionを公開してください。OpenAI APIキーを`index.html`や`aiSecretary.js`へ書かないでください。
+
+- 提案対象を確認して、そのまま集中タイマーを開始
+- 今日のタスクを「必須・できれば・余力があれば」の3件に整理
+- 「元気・普通・疲れた」で推奨時間を調整
+- 締切を「危険・注意・安全」で表示し、期限超過を優先
