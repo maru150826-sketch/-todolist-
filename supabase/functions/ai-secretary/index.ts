@@ -51,13 +51,7 @@ Deno.serve(async (request) => {
     if (!summary) return json({ error: "summary is required" }, 400);
 
     const compactSummary = JSON.stringify(summary).slice(0, 24000);
-    const instructions = `あなたは集中ダッシュボードのAI書記です。
-ユーザーの記録から、今すぐ実行できる現実的な提案を日本語で返してください。
-優しいが甘やかしすぎず、否定しすぎず、各項目は短く具体的にします。
-summaryのuserEnergyがtiredなら軽く、energeticなら夜間を除いて少し負荷を上げます。
-締切日、優先度、今日対象のタスクを根拠にし、危険な締切を先に扱います。
-存在しない締切、予定、実績を作らないでください。
-モードは ${mode} です。adviceは今から、reviewは今日の振り返り、tomorrowは明日の作戦を重視します。`;
+    const instructions = `あなたは集中ダッシュボードのAI書記です。ユーザーの記録から、今すぐ実行できる現実的な提案を日本語で返してください。優しいが甘やかしすぎず、断定しすぎず、各項目は短く具体的にします。summaryのuserEnergyがtiredなら負荷を軽くし、energeticなら時間を延ばして少し負荷を上げます。締切日、優先度、今日対象のタスクを根拠にし、期限切れを先に扱います。存在しない締切、予定、実績を作らないでください。モードは ${mode} です。adviceは今からの行動、reviewは今日の振り返り、tomorrowは明日の作戦を重視します。`;
 
     const openAiResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",

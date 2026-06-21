@@ -4,6 +4,9 @@
   const DASHBOARD_STORAGE_KEY = "focus_dashboard_v1";
   const ADVICE_STORAGE_KEY = "ai_secretary_advice_v2";
   const PREFERENCES_STORAGE_KEY = "ai_secretary_preferences_v1";
+  const TASK_META_STORAGE_KEY = "ai_secretary_task_meta_v1";
+  const FEEDBACK_STORAGE_KEY = "ai_secretary_feedback_v1";
+  const LOCAL_ONLY = true;
   const CATEGORIES = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
   const MODE_LABELS = {
     advice: "今からの提案",
@@ -28,14 +31,71 @@
   function loadPreferences() {
     try {
       const saved = JSON.parse(localStorage.getItem(PREFERENCES_STORAGE_KEY) || "{}");
-      return { energy: ["energetic", "normal", "tired"].includes(saved.energy) ? saved.energy : "normal" };
+      return {
+        energy: ["energetic", "normal", "tired"].includes(saved.energy) ? saved.energy : "normal",
+        availableMinutes: [10, 25, 45].includes(Number(saved.availableMinutes)) ? Number(saved.availableMinutes) : 25
+      };
     } catch (_) {
-      return { energy: "normal" };
+      return { energy: "normal", availableMinutes: 25 };
     }
   }
 
-  function savePreferences(preferences) {
-    try { localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences)); } catch (_) {}
+  function savePreferences(partial) {
+    try {
+      localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify({ ...loadPreferences(), ...partial }));
+    } catch (_) {}
+  }
+
+  function loadTaskMetadata() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(TASK_META_STORAGE_KEY) || "{}");
+      return saved && typeof saved === "object" ? saved : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveTaskMetadata(taskId, metadata) {
+    if (!taskId) return;
+    try {
+      const all = loadTaskMetadata();
+      all[taskId] = {
+        estimatedMinutes: Math.max(5, Math.min(180, Number(metadata.estimatedMinutes) || 25)),
+        difficulty: ["light", "normal", "hard"].includes(metadata.difficulty) ? metadata.difficulty : "normal",
+        energyRequired: ["low", "normal", "high"].includes(metadata.energyRequired) ? metadata.energyRequired : "normal",
+        nextStep: String(metadata.nextStep || "").slice(0, 120)
+      };
+      localStorage.setItem(TASK_META_STORAGE_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  function loadFeedback() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY) || "{}");
+      return {
+        taskWeights: saved.taskWeights && typeof saved.taskWeights === "object" ? saved.taskWeights : {},
+        categoryWeights: saved.categoryWeights && typeof saved.categoryWeights === "object" ? saved.categoryWeights : {},
+        history: Array.isArray(saved.history) ? saved.history.slice(-100) : []
+      };
+    } catch (_) {
+      return { taskWeights: {}, categoryWeights: {}, history: [] };
+    }
+  }
+
+  function recordFeedback(action, task) {
+    if (!task || !["accepted", "postponed", "poor"].includes(action)) return;
+    const changes = {
+      accepted: { task: 4, category: 2 },
+      postponed: { task: -4, category: -1 },
+      poor: { task: -6, category: -2 }
+    }[action];
+    try {
+      const saved = loadFeedback();
+      saved.taskWeights[task.id] = Math.max(-20, Math.min(20, Number(saved.taskWeights[task.id] || 0) + changes.task));
+      saved.categoryWeights[task.category] = Math.max(-12, Math.min(12, Number(saved.categoryWeights[task.category] || 0) + changes.category));
+      saved.history.push({ action, taskId: task.id, category: task.category, at: new Date().toISOString() });
+      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(saved));
+    } catch (_) {}
   }
 
   function readDashboardState() {
@@ -65,15 +125,28 @@
     }, {});
   }
 
-  function compactTask(task) {
+  function defaultEstimate(task) {
+    const title = String(task.title || "");
+    if (/復習|単語|確認|整理|メモ/.test(title)) return 10;
+    if (task.category === "筋トレ" || task.category === "大学課題") return 45;
+    return 25;
+  }
+
+  function compactTask(task, metadataMap = loadTaskMetadata()) {
+    const metadata = metadataMap[String(task.id || "")] || {};
     return {
       id: String(task.id || ""),
       title: String(task.title || "無題のタスク").slice(0, 120),
       category: String(task.category || "その他"),
       priority: String(task.priority || "normal"),
       date: task.date || null,
+      doTodayDate: task.doTodayDate || null,
       deadline: task.deadline || null,
-      done: Boolean(task.done)
+      done: Boolean(task.done),
+      estimatedMinutes: Math.max(5, Math.min(180, Number(metadata.estimatedMinutes || task.estimatedMinutes) || defaultEstimate(task))),
+      difficulty: ["light", "normal", "hard"].includes(metadata.difficulty) ? metadata.difficulty : "normal",
+      energyRequired: ["low", "normal", "high"].includes(metadata.energyRequired) ? metadata.energyRequired : "normal",
+      nextStep: String(metadata.nextStep || "").slice(0, 120)
     };
   }
 
@@ -100,6 +173,8 @@
   function buildAiSecretarySummary() {
     const data = readDashboardState();
     const now = new Date();
+    const preferences = loadPreferences();
+    const taskMetadata = loadTaskMetadata();
     const today = localDateKey(now);
     const sevenDaysAgo = addDays(today, -6);
     const tomorrow = addDays(today, 1);
@@ -125,7 +200,7 @@
       .filter(task => task.date && task.date >= today && task.date <= twoWeeksLater)
       .sort((a, b) => String(a.date).localeCompare(String(b.date)))
       .slice(0, 30)
-      .map(compactTask);
+      .map(task => compactTask(task, taskMetadata));
     const manualLogs = data.sessions
       .filter(session => session.type === "manual")
       .sort((a, b) => String(b.endedAt || b.date).localeCompare(String(a.endedAt || a.date)))
@@ -148,17 +223,19 @@
       today,
       currentTime: now.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }),
       currentHour: now.getHours(),
-      userEnergy: loadPreferences().energy,
+      userEnergy: preferences.energy,
+      availableMinutes: preferences.availableMinutes,
       todayFocusMinutes: sumMinutes(todaySessions),
-      completedTasksToday: completedToday.slice(0, 30).map(compactTask),
-      incompleteTasks: incomplete.slice(0, 50).map(compactTask),
-      actionableIncompleteTasks: actionableIncomplete.slice(0, 30).map(compactTask),
+      todayLastCategory: todaySessions.length ? String(todaySessions[todaySessions.length - 1].category || "その他") : null,
+      completedTasksToday: completedToday.slice(0, 30).map(task => compactTask(task, taskMetadata)),
+      incompleteTasks: incomplete.slice(0, 50).map(task => compactTask(task, taskMetadata)),
+      actionableIncompleteTasks: actionableIncomplete.slice(0, 30).map(task => compactTask(task, taskMetadata)),
       backlogTaskCount: incomplete.length,
-      deadlineIncompleteTasks: deadlineIncomplete.slice(0, 30).map(compactTask),
+      deadlineIncompleteTasks: deadlineIncomplete.slice(0, 30).map(task => compactTask(task, taskMetadata)),
       todayCategoryMinutes: sumByCategory(todaySessions),
       last7DaysCategoryMinutes: sevenDayCategoryMinutes,
       calendarEvents,
-      tomorrowTasks: incomplete.filter(task => task.date === tomorrow || task.deadline === tomorrow).slice(0, 20).map(compactTask),
+      tomorrowTasks: incomplete.filter(task => task.date === tomorrow || task.deadline === tomorrow).slice(0, 20).map(task => compactTask(task, taskMetadata)),
       manualLogs,
       recentFrequentCategories: trends.frequent,
       recentInsufficientCategories: trends.insufficient,
@@ -176,17 +253,100 @@
     return { level: "safe", label: `あと${days}日`, score: days };
   }
 
+  function daysUntil(dateKey, today) {
+    if (!dateKey) return null;
+    return Math.round((new Date(`${dateKey}T00:00:00`) - new Date(`${today}T00:00:00`)) / 86400000);
+  }
+
+  function scoreTask(task, summary) {
+    const breakdown = [];
+    let score = 0;
+    const add = (value, label) => {
+      if (!value) return;
+      score += value;
+      breakdown.push({ value, label });
+    };
+
+    const dueIn = daysUntil(task.deadline, summary.today);
+    if (dueIn !== null) {
+      if (dueIn < 0) add(50, `締切を${Math.abs(dueIn)}日超過`);
+      else if (dueIn === 0) add(45, "今日が締切");
+      else if (dueIn === 1) add(38, "締切まで1日");
+      else if (dueIn <= 3) add(30, `締切まで${dueIn}日`);
+      else if (dueIn <= 7) add(20, `締切まで${dueIn}日`);
+      else if (dueIn <= 14) add(10, `締切まで${dueIn}日`);
+    }
+
+    add({ high: 20, normal: 10, low: 3 }[task.priority] ?? 10, task.priority === "high" ? "重要度が高い" : "重要度を反映");
+    if (task.date === summary.today || task.doTodayDate === summary.today) add(15, "今日やる指定");
+    else if (!task.deadline) add(-8, "今日指定・締切なし");
+
+    const shortageIndex = (summary.recentInsufficientCategories || []).findIndex(item => item.category === task.category);
+    if (shortageIndex >= 0) add([15, 10, 5][shortageIndex], `${task.category}が最近不足`);
+
+    const available = Number(summary.availableMinutes || 25);
+    const estimate = Number(task.estimatedMinutes || 25);
+    if (estimate <= available) add(15, `${available}分以内で進めやすい`);
+    else add(-Math.min(18, Math.ceil((estimate - available) / 5) * 3), `見積${estimate}分で時間超過`);
+
+    if (summary.userEnergy === "tired") {
+      if (task.energyRequired === "low" || task.difficulty === "light") add(10, "疲れていても着手しやすい");
+      if (task.energyRequired === "high" || task.difficulty === "hard") add(-18, "今の体力には重い");
+    } else if (summary.userEnergy === "energetic" && (task.energyRequired === "high" || task.difficulty === "hard")) {
+      add(7, "元気な時に進めたい内容");
+    }
+
+    if (summary.todayLastCategory && summary.todayLastCategory === task.category && dueIn !== null && dueIn > 3) {
+      add(-10, "直前と同じ分野");
+    }
+
+    const feedback = loadFeedback();
+    const learned = Number(feedback.taskWeights[task.id] || 0) + Number(feedback.categoryWeights[task.category] || 0);
+    if (learned) add(learned, learned > 0 ? "過去に採用した傾向" : "過去に見送った傾向");
+
+    return {
+      task,
+      score: Math.round(score),
+      breakdown: breakdown.sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+    };
+  }
+
+  function rankedTasks(summary) {
+    return [...(summary.incompleteTasks || [])]
+      .map(task => scoreTask(task, summary))
+      .sort((a, b) => b.score - a.score || String(a.task.title).localeCompare(String(b.task.title), "ja"));
+  }
+
   function sortedActionableTasks(summary) {
-    const priorityScore = { high: 0, normal: 1, low: 2 };
-    return [...(summary.actionableIncompleteTasks || [])].sort((a, b) => {
-      const riskDiff = getDeadlineRisk(a, summary.today).score - getDeadlineRisk(b, summary.today).score;
-      if (riskDiff) return riskDiff;
-      return (priorityScore[a.priority] ?? 1) - (priorityScore[b.priority] ?? 1);
-    });
+    return rankedTasks(summary).map(result => ({
+      ...result.task,
+      recommendationScore: result.score,
+      scoreBreakdown: result.breakdown
+    }));
   }
 
   function priorityTask(summary) {
     return sortedActionableTasks(summary)[0] || null;
+  }
+
+  function recommendationSet(summary) {
+    const ranked = sortedActionableTasks(summary);
+    const available = Number(summary.availableMinutes || 25);
+    const primary = ranked[0] || null;
+    const quick = ranked
+      .filter(task => task.id !== primary?.id && Number(task.estimatedMinutes || 25) <= available)
+      .sort((a, b) => Number(a.estimatedMinutes || 25) - Number(b.estimatedMinutes || 25) || b.recommendationScore - a.recommendationScore)[0]
+      || ranked.find(task => task.id !== primary?.id)
+      || null;
+    const insufficientCategories = new Set((summary.recentInsufficientCategories || []).map(item => item.category));
+    const balance = ranked.find(task => task.id !== primary?.id && task.id !== quick?.id && insufficientCategories.has(task.category))
+      || ranked.find(task => task.id !== primary?.id && task.id !== quick?.id)
+      || null;
+    return [
+      { type: "priority", label: "最優先", task: primary },
+      { type: "quick", label: "短時間", task: quick },
+      { type: "balance", label: "不足分野", task: balance }
+    ].filter(item => item.task);
   }
 
   function createBaseLocalAdvice(summary, mode = "advice") {
@@ -313,7 +473,62 @@
     };
   }
 
+  function createSmartLocalAdvice(summary, preferredTaskId = null) {
+    const recommendations = recommendationSet(summary);
+    const preferredTask = preferredTaskId
+      ? sortedActionableTasks(summary).find(candidate => candidate.id === preferredTaskId)
+      : null;
+    const task = preferredTask || recommendations[0]?.task || null;
+    const available = Number(summary.availableMinutes || 25);
+    const total = Number(summary.todayFocusMinutes || 0);
+    const hour = Number(summary.currentHour || 0);
+
+    if (!task) {
+      return {
+        summary: "提案できる未完了タスクがありません。新しく増やす前に、今日の目的を1つだけ決めましょう。",
+        nextAction: "今日やることを1つ登録する",
+        reason: "候補になる未完了タスクがないためです。",
+        timeEstimate: "5分",
+        skip: "目的のないタスク追加",
+        tomorrow: "今日登録した最初のタスク",
+        tone: "light",
+        encouragement: "やることを1つ決めれば十分な前進です。",
+        taskId: null,
+        score: 0,
+        scoreBreakdown: []
+      };
+    }
+
+    let minutes = Math.min(available, Number(task.estimatedMinutes || available));
+    if (summary.userEnergy === "tired") minutes = Math.min(minutes, 10);
+    if (hour >= 22 || total >= 90) minutes = Math.min(minutes, 10);
+    minutes = Math.max(5, minutes);
+
+    const positives = (task.scoreBreakdown || []).filter(item => item.value > 0).slice(0, 3);
+    const reason = positives.length
+      ? `${positives.map(item => item.label).join("・")}を点数化した結果、現在の最上位です。`
+      : "現在のタスク、使える時間、体力を合わせて比較した結果です。";
+    const nextStep = task.nextStep ? `「${task.title}」で、${task.nextStep}` : `「${task.title}」を進める`;
+    const second = recommendations.find(item => item.task.id !== task.id)?.task;
+    const lowRanked = sortedActionableTasks(summary).slice(-1)[0];
+
+    return {
+      summary: `今日は${total}分集中済みです。${summary.incompleteTasks.length}件を比較し、今の条件に最も合う1件を選びました。`,
+      nextAction: nextStep,
+      reason,
+      timeEstimate: `${minutes}分`,
+      skip: lowRanked && lowRanked.id !== task.id ? `今は「${lowRanked.title}」を優先しなくてよい` : "新しいタスクを増やすこと",
+      tomorrow: second ? second.title : "今回の結果を見てから決める",
+      tone: summary.userEnergy === "tired" || total >= 90 ? "light" : summary.userEnergy === "energetic" ? "push" : "normal",
+      encouragement: `推薦スコア${task.recommendationScore}点。まず${minutes}分だけ試し、合わなければ提案を調整できます。`,
+      taskId: task.id,
+      score: task.recommendationScore,
+      scoreBreakdown: task.scoreBreakdown || []
+    };
+  }
+
   function createLocalAdvice(summary, mode = "advice") {
+    if (mode === "advice") return createSmartLocalAdvice(summary);
     const advice = createBaseLocalAdvice(summary, mode);
     const energy = summary.userEnergy || "normal";
     const currentMinutes = Number(String(advice.timeEstimate).match(/\d+/)?.[0] || 0);
@@ -396,12 +611,28 @@
             <button type="button" data-ai-energy="tired">疲れた</button>
           </div>
         </div>
+        <div class="ai-secretary-availability" aria-label="今使える時間">
+          <span>今使える時間</span>
+          <div>
+            <button type="button" data-ai-minutes="10">10分</button>
+            <button type="button" data-ai-minutes="25">25分</button>
+            <button type="button" data-ai-minutes="45">45分</button>
+          </div>
+        </div>
         <div class="ai-secretary-focus">
           <span class="ai-secretary-label">NEXT ACTION</span>
           <div class="ai-secretary-action-row"><strong id="aiSecretaryNext"></strong><span class="ai-secretary-time" id="aiSecretaryTime"></span></div>
           <p class="ai-secretary-reason" id="aiSecretaryReason"></p>
+          <details class="ai-secretary-score">
+            <summary>選定理由の点数 <strong id="aiSecretaryScore"></strong></summary>
+            <div id="aiSecretaryScoreBreakdown"></div>
+          </details>
         </div>
         <button class="ai-secretary-start" id="aiSecretaryStartBtn" type="button">この提案で開始</button>
+        <section class="ai-secretary-candidates" aria-labelledby="aiSecretaryCandidateTitle">
+          <div class="ai-secretary-priority-head"><strong id="aiSecretaryCandidateTitle">別の候補</strong><span>タップで切替</span></div>
+          <div id="aiSecretaryCandidateList"></div>
+        </section>
         <section class="ai-secretary-priorities" aria-labelledby="aiSecretaryPriorityTitle">
           <div class="ai-secretary-priority-head"><strong id="aiSecretaryPriorityTitle">今日の3つ</strong><span>締切リスク</span></div>
           <div id="aiSecretaryPriorityList"></div>
@@ -411,8 +642,26 @@
           <div class="ai-secretary-mini"><span>明日に回していい</span><p id="aiSecretaryTomorrow"></p></div>
         </div>
         <p class="ai-secretary-encouragement" id="aiSecretaryEncouragement"></p>
+        <div class="ai-secretary-feedback" aria-label="提案の評価">
+          <span>この提案はどうでしたか？</span>
+          <div>
+            <button type="button" data-ai-feedback="accepted">採用</button>
+            <button type="button" data-ai-feedback="postponed">後回し</button>
+            <button type="button" data-ai-feedback="poor">微妙</button>
+          </div>
+        </div>
+        <details class="ai-secretary-profile" id="aiSecretaryProfile">
+          <summary>提案の精度設定 <span id="aiSecretaryProfileTask"></span></summary>
+          <div class="ai-secretary-profile-grid">
+            <label>予想時間<select id="aiTaskEstimate"><option value="10">10分</option><option value="25">25分</option><option value="45">45分</option><option value="60">60分</option></select></label>
+            <label>難しさ<select id="aiTaskDifficulty"><option value="light">軽い</option><option value="normal">普通</option><option value="hard">重い</option></select></label>
+            <label>必要な体力<select id="aiTaskEnergy"><option value="low">少ない</option><option value="normal">普通</option><option value="high">多い</option></select></label>
+            <label class="wide">次の具体的な一手<input id="aiTaskNextStep" maxlength="120" placeholder="例：問題集の第3章を開く" /></label>
+          </div>
+          <button type="button" class="ai-secretary-save-profile" id="aiSecretarySaveProfile">このタスク設定を保存</button>
+        </details>
         <div class="ai-secretary-actions">
-          <button type="button" data-ai-secretary-mode="advice">AI書記に聞く</button>
+          <button type="button" data-ai-secretary-mode="advice">ローカル書記に聞く</button>
           <button type="button" data-ai-secretary-mode="review">今日の振り返り</button>
           <button type="button" data-ai-secretary-mode="tomorrow">明日の作戦</button>
         </div>
@@ -427,6 +676,82 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
+  }
+
+  function renderAvailableMinutes(minutes) {
+    document.querySelectorAll("[data-ai-minutes]").forEach(button => {
+      const active = Number(button.dataset.aiMinutes) === Number(minutes);
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderScore(advice) {
+    const score = document.getElementById("aiSecretaryScore");
+    const list = document.getElementById("aiSecretaryScoreBreakdown");
+    if (score) score.textContent = `${Number(advice.score || 0)}点`;
+    if (!list) return;
+    list.innerHTML = "";
+    const rows = Array.isArray(advice.scoreBreakdown) ? advice.scoreBreakdown.slice(0, 7) : [];
+    if (!rows.length) {
+      list.textContent = "振り返り・明日の作戦では点数比較を行いません。";
+      return;
+    }
+    rows.forEach(row => {
+      const item = document.createElement("div");
+      const label = document.createElement("span");
+      const value = document.createElement("strong");
+      label.textContent = row.label;
+      value.textContent = `${row.value > 0 ? "+" : ""}${row.value}`;
+      value.className = row.value >= 0 ? "positive" : "negative";
+      item.append(label, value);
+      list.appendChild(item);
+    });
+  }
+
+  function renderCandidates(summary) {
+    const list = document.getElementById("aiSecretaryCandidateList");
+    if (!list) return;
+    list.innerHTML = "";
+    const candidates = recommendationSet(summary);
+    if (!candidates.length) {
+      list.textContent = "候補になる未完了タスクはありません。";
+      return;
+    }
+    candidates.forEach(candidate => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.aiCandidate = candidate.task.id;
+      button.className = candidate.task.id === currentSuggestedTask?.id ? "active" : "";
+      const type = document.createElement("span");
+      const title = document.createElement("strong");
+      const meta = document.createElement("small");
+      type.textContent = candidate.label;
+      title.textContent = candidate.task.title;
+      meta.textContent = `${candidate.task.recommendationScore}点・見積${candidate.task.estimatedMinutes}分`;
+      button.append(type, title, meta);
+      list.appendChild(button);
+    });
+  }
+
+  function renderTaskProfile(task) {
+    const details = document.getElementById("aiSecretaryProfile");
+    const title = document.getElementById("aiSecretaryProfileTask");
+    if (!details) return;
+    details.classList.toggle("disabled", !task);
+    if (title) title.textContent = task ? task.title : "タスクなし";
+    const estimate = document.getElementById("aiTaskEstimate");
+    const difficulty = document.getElementById("aiTaskDifficulty");
+    const energy = document.getElementById("aiTaskEnergy");
+    const nextStep = document.getElementById("aiTaskNextStep");
+    if (!task) return;
+    if (estimate) {
+      const supported = [10, 25, 45, 60];
+      estimate.value = String(supported.includes(Number(task.estimatedMinutes)) ? Number(task.estimatedMinutes) : 25);
+    }
+    if (difficulty) difficulty.value = task.difficulty || "normal";
+    if (energy) energy.value = task.energyRequired || "normal";
+    if (nextStep) nextStep.value = task.nextStep || "";
   }
 
   function renderPriorities(summary) {
@@ -453,6 +778,10 @@
 
   function resolveSuggestedTask(advice, summary) {
     const tasks = sortedActionableTasks(summary);
+    if (advice?.taskId) {
+      const exact = tasks.find(task => task.id === advice.taskId);
+      if (exact) return exact;
+    }
     const text = String(advice?.nextAction || "");
     return tasks.find(task => text.includes(task.title)) || tasks[0] || null;
   }
@@ -483,6 +812,7 @@
     const minutes = adviceMinutes(currentAdvice);
     const confirmed = confirm(`「${currentSuggestedTask.title}」を選び、${minutes}分の集中を開始しますか？`);
     if (!confirmed) return;
+    recordFeedback("accepted", currentSuggestedTask);
     if (typeof window.startTaskToday === "function") window.startTaskToday(currentSuggestedTask.id);
     else if (typeof window.setCurrentTask === "function") window.setCurrentTask(currentSuggestedTask.id);
     if (typeof window.launchFocus === "function") window.launchFocus(minutes);
@@ -495,6 +825,48 @@
     const advice = createLocalAdvice(summary, currentMode);
     renderAdvice(advice, "体力反映", currentMode, summary);
     saveAdvice(advice, "体力反映", currentMode);
+  }
+
+  function setAvailableMinutes(minutes) {
+    const value = Number(minutes);
+    if (![10, 25, 45].includes(value)) return;
+    savePreferences({ availableMinutes: value });
+    const summary = buildAiSecretarySummary();
+    const advice = createLocalAdvice(summary, currentMode);
+    renderAdvice(advice, "時間反映", currentMode, summary);
+    saveAdvice(advice, "時間反映", currentMode);
+  }
+
+  function selectCandidate(taskId) {
+    const summary = buildAiSecretarySummary();
+    const advice = createSmartLocalAdvice(summary, taskId);
+    renderAdvice(advice, "候補切替", "advice", summary);
+    saveAdvice(advice, "候補切替", "advice");
+  }
+
+  function applySuggestionFeedback(action) {
+    if (!currentSuggestedTask) return;
+    recordFeedback(action, currentSuggestedTask);
+    const labels = { accepted: "採用を学習", postponed: "後回しを学習", poor: "微妙を学習" };
+    const summary = buildAiSecretarySummary();
+    const advice = createLocalAdvice(summary, "advice");
+    renderAdvice(advice, labels[action] || "学習反映", "advice", summary);
+    saveAdvice(advice, labels[action] || "学習反映", "advice");
+  }
+
+  function saveCurrentTaskProfile() {
+    if (!currentSuggestedTask) return;
+    saveTaskMetadata(currentSuggestedTask.id, {
+      estimatedMinutes: document.getElementById("aiTaskEstimate")?.value,
+      difficulty: document.getElementById("aiTaskDifficulty")?.value,
+      energyRequired: document.getElementById("aiTaskEnergy")?.value,
+      nextStep: document.getElementById("aiTaskNextStep")?.value
+    });
+    const summary = buildAiSecretarySummary();
+    const advice = createLocalAdvice(summary, "advice");
+    renderAdvice(advice, "設定反映", "advice", summary);
+    saveAdvice(advice, "設定反映", "advice");
+    document.getElementById("aiSecretaryProfile")?.removeAttribute("open");
   }
 
   function renderAdvice(advice, source, mode, summary = buildAiSecretarySummary()) {
@@ -519,8 +891,12 @@
     const status = document.getElementById("aiSecretaryStatus");
     if (status) status.textContent = `${MODE_LABELS[mode] || MODE_LABELS.advice}・${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`;
     renderEnergy(summary.userEnergy || "normal");
+    renderAvailableMinutes(summary.availableMinutes || 25);
     renderPriorities(summary);
     updateStartButton(advice, summary, mode);
+    renderScore(advice);
+    renderCandidates(summary);
+    renderTaskProfile(currentSuggestedTask);
   }
 
   function saveAdvice(advice, source, mode) {
@@ -541,16 +917,17 @@
 
     let advice = fallback;
     let source = "ローカル提案";
-    try {
-      const remote = await requestAiAdvice(summary, mode);
-      advice = sanitizeAdvice(remote, fallback);
-      source = "AI提案";
-    } catch (error) {
-      console.info("AI書記: API未接続または失敗のためローカル提案を表示します。", error);
-    } finally {
-      card?.classList.remove("is-loading");
-      buttons.forEach(button => { button.disabled = false; });
+    if (!LOCAL_ONLY) {
+      try {
+        const remote = await requestAiAdvice(summary, mode);
+        advice = sanitizeAdvice(remote, fallback);
+        source = "AI提案";
+      } catch (error) {
+        console.info("AI書記: API未接続または失敗のためローカル提案を表示します。", error);
+      }
     }
+    card?.classList.remove("is-loading");
+    buttons.forEach(button => { button.disabled = false; });
     renderAdvice(advice, source, mode, summary);
     saveAdvice(advice, source, mode);
   }
@@ -565,7 +942,7 @@
 
     let initial = null;
     try { initial = JSON.parse(localStorage.getItem(ADVICE_STORAGE_KEY) || "null"); } catch (_) {}
-    if (initial?.advice) {
+    if (initial?.advice && !LOCAL_ONLY) {
       const summary = buildAiSecretarySummary();
       renderAdvice(initial.advice, initial.source || "保存済み", initial.mode || "advice", summary);
     } else {
@@ -579,6 +956,17 @@
     card.querySelectorAll("[data-ai-energy]").forEach(button => {
       button.addEventListener("click", () => setEnergy(button.dataset.aiEnergy || "normal"));
     });
+    card.querySelectorAll("[data-ai-minutes]").forEach(button => {
+      button.addEventListener("click", () => setAvailableMinutes(button.dataset.aiMinutes));
+    });
+    card.querySelectorAll("[data-ai-feedback]").forEach(button => {
+      button.addEventListener("click", () => applySuggestionFeedback(button.dataset.aiFeedback));
+    });
+    document.getElementById("aiSecretaryCandidateList")?.addEventListener("click", event => {
+      const button = event.target.closest("[data-ai-candidate]");
+      if (button) selectCandidate(button.dataset.aiCandidate);
+    });
+    document.getElementById("aiSecretarySaveProfile")?.addEventListener("click", saveCurrentTaskProfile);
     document.getElementById("aiSecretaryStartBtn")?.addEventListener("click", startSuggestedTask);
   }
 
@@ -587,6 +975,10 @@
     createLocalAdvice,
     ask: handleRequest,
     getTopTasks: summary => sortedActionableTasks(summary).slice(0, 3),
+    scoreTask,
+    getRecommendations: recommendationSet,
+    saveTaskMetadata,
+    recordFeedback,
     getDeadlineRisk,
     startSuggestion: startSuggestedTask
   };

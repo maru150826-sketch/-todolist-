@@ -1,4 +1,4 @@
-const CACHE_NAME = "taro-focus-rpg-20260621-ai-secretary-3";
+const CACHE_NAME = "taro-focus-rpg-20260621-local-secretary-smart-1";
 const APP_FILES = [
   "./",
   "./index.html",
