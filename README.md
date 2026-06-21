@@ -17,6 +17,8 @@
 
 ```text
 index.html
+aiSecretary.js
+aiSecretary.css
 log.html
 rpg.html
 manifest.json
@@ -25,6 +27,9 @@ icon-192.png
 icon-512.png
 assets/
   rpg/
+supabase/
+  functions/
+    ai-secretary/
 ```
 
 フォルダ構成を変えると画像やRPG画面が表示されなくなるため、そのままアップロードしてください。
@@ -44,3 +49,8 @@ assets/
 - カレンダー：日別・週別の学習履歴
 - RPG：IT、TOEIC、HSKの目標、ボス戦、JRPG風スプライト
 - 激励動画：本体画面・RPG画面のどちらからでも再生可能
+- AI書記：既存の集中時間・タスク・カテゴリ別記録から、今やることを提案
+
+## AI書記
+
+API未接続でもローカルルールで動作します。OpenAI APIを使う場合は、`AI_SECRETARY_SETUP.md`の手順でSupabase Edge Functionを公開してください。OpenAI APIキーを`index.html`や`aiSecretary.js`へ書かないでください。

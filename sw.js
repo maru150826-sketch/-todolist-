@@ -1,7 +1,9 @@
-const CACHE_NAME = "taro-focus-rpg-20260620-cjk-skill-cards-1";
+const CACHE_NAME = "taro-focus-rpg-20260621-ai-secretary-1";
 const APP_FILES = [
   "./",
   "./index.html",
+  "./aiSecretary.js",
+  "./aiSecretary.css",
   "./log.html",
   "./rpg.html",
   "./manifest.json",
