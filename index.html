@@ -876,6 +876,12 @@
       opacity: .92;
     }
 
+    .sleep-link {
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: transparent;
+    }
+
     /* ===== 見やすさ調整：タスク入力と手動ログの背景色を分離 ===== */
     .add-task {
       background: rgba(56, 189, 248, .10);
@@ -1070,7 +1076,7 @@
 
     .top-actions {
       display: grid;
-      grid-template-columns: repeat(5, auto);
+      grid-template-columns: repeat(6, auto);
       gap: 8px;
       align-items: center;
       justify-content: end;
@@ -2530,6 +2536,7 @@
         <button class="ghost active-tab" id="showDashboardTab" type="button">本体</button>
         <button class="log-link" id="showCalendarTab" type="button">カレンダー</button>
         <button class="ghost" id="showRpgTab" type="button">RPG</button>
+        <a class="log-link sleep-link" href="sleep.html">睡眠</a>
         <button class="ghost" id="openMotivationVideoBtn" type="button">激励動画</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
         <div class="pwa-tools">
