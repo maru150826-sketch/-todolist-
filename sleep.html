@@ -128,6 +128,22 @@
     .field textarea { min-height: 92px; resize: vertical; }
     .calculated { display: flex; align-items: center; min-height: 46px; padding: 10px 12px; border: 1px solid rgba(103, 232, 249, .2); border-radius: 11px; background: rgba(8, 145, 178, .09); color: var(--cyan); font-size: 15px; font-weight: 800; }
 
+    .draft-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid rgba(103, 232, 249, .25);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(8, 145, 178, .16), rgba(109, 40, 217, .12));
+    }
+    .draft-card[hidden] { display: none; }
+    .draft-card strong { display: block; font-size: 13px; }
+    .draft-card span { display: block; margin-top: 2px; color: #cbd5e1; font-size: 11px; }
+    .draft-actions { display: flex; flex-wrap: wrap; gap: 7px; justify-content: flex-end; }
+
     .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .check { display: flex; align-items: center; gap: 9px; min-height: 46px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 11px; background: rgba(15, 23, 42, .62); color: #cbd5e1; font-size: 11px; }
     .check input { width: 20px; height: 20px; accent-color: #22d3ee; }
@@ -184,6 +200,8 @@
       .field.wide { grid-column: auto; }
       .checks { grid-template-columns: 1fr; }
       .form-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .draft-card { align-items: stretch; flex-direction: column; }
+      .draft-actions { display: grid; grid-template-columns: 1fr 1fr; }
       .button.primary { grid-column: 1 / -1; grid-row: 1; }
       .log-head { flex-direction: column; }
       .log-actions { width: 100%; }
@@ -241,6 +259,16 @@
 
     <section class="panel" id="inputPanel">
       <div class="panel-head"><div><h2 id="formTitle">睡眠を記録</h2><div class="muted">日付は起床した日として保存します</div></div></div>
+      <div class="draft-card" id="draftNotice" hidden>
+        <div>
+          <strong>寝る前の入力を保存中</strong>
+          <span id="draftSummary">起床時間を入れると記録できます。</span>
+        </div>
+        <div class="draft-actions">
+          <button class="button" type="button" id="resumeDraftBtn">続きを入力</button>
+          <button class="button danger" type="button" id="discardDraftBtn">下書きを破棄</button>
+        </div>
+      </div>
       <form id="sleepForm" novalidate>
         <div class="form-grid">
           <div class="field"><label for="sleepDate">日付</label><input type="date" id="sleepDate" required /></div>
@@ -263,6 +291,7 @@
         </div>
         <div class="form-actions">
           <button class="button" type="button" id="cancelEditBtn" hidden>編集をやめる</button>
+          <button class="button" type="button" id="saveDraftBtn">就寝だけ保存</button>
           <button class="button primary" type="submit" id="saveLogBtn">記録する</button>
         </div>
       </form>
@@ -282,8 +311,10 @@
 
       const LOGS_KEY = "sleepLogs";
       const SETTINGS_KEY = "sleepSettings";
+      const DRAFT_KEY = "sleepDraft";
       const DEFAULT_TARGET = 450;
       let editingId = null;
+      let draftTimer = null;
 
       const $ = id => document.getElementById(id);
 
@@ -320,6 +351,24 @@
         };
       }
 
+      function normalizeDraft(draft) {
+        return {
+          id: String(draft.id || uniqueId()),
+          date: String(draft.date || localDateKey()),
+          bedTime: String(draft.bedTime || ""),
+          wakeTime: String(draft.wakeTime || ""),
+          quality: Math.max(1, Math.min(5, Number(draft.quality) || 3)),
+          morningSleepiness: Math.max(1, Math.min(5, Number(draft.morningSleepiness) || 3)),
+          daytimeSleepiness: Math.max(1, Math.min(5, Number(draft.daytimeSleepiness) || 3)),
+          alcohol: Boolean(draft.alcohol),
+          lateCaffeine: Boolean(draft.lateCaffeine),
+          training: Boolean(draft.training),
+          nightPhone: Boolean(draft.nightPhone),
+          memo: String(draft.memo || "").slice(0, 500),
+          savedAt: String(draft.savedAt || new Date().toISOString())
+        };
+      }
+
       function loadSleepLogs() {
         try {
           const parsed = JSON.parse(localStorage.getItem(LOGS_KEY) || "[]");
@@ -332,6 +381,26 @@
 
       function saveSleepLogs(logs) {
         localStorage.setItem(LOGS_KEY, JSON.stringify(logs.map(normalizeLog)));
+      }
+
+      function loadSleepDraft() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+          if (!parsed || typeof parsed !== "object") return null;
+          const draft = normalizeDraft(parsed);
+          return draft.bedTime ? draft : null;
+        } catch (error) {
+          console.warn("睡眠の下書きを読み込めませんでした。", error);
+          return null;
+        }
+      }
+
+      function saveSleepDraft(draft) {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(normalizeDraft(draft)));
+      }
+
+      function clearSleepDraft() {
+        localStorage.removeItem(DRAFT_KEY);
       }
 
       function loadSleepSettings() {
@@ -362,6 +431,12 @@
         if (bed === null || wake === null || bed === wake) return null;
         const duration = wake > bed ? wake - bed : wake + 1440 - bed;
         return duration > 0 && duration <= 1200 ? duration : null;
+      }
+
+      function suggestedWakeDateForBedTime(bedTime) {
+        const bed = timeToMinutes(bedTime);
+        if (bed !== null && bed >= 18 * 60) return addDays(localDateKey(), 1);
+        return localDateKey();
       }
 
       function formatMinutes(minutes, options = {}) {
@@ -476,15 +551,54 @@
         return duration;
       }
 
+      function draftFromForm() {
+        const bedTime = $("bedTime").value;
+        return normalizeDraft({
+          id: loadSleepDraft()?.id || uniqueId(),
+          date: $("sleepDate").value || suggestedWakeDateForBedTime(bedTime),
+          bedTime,
+          wakeTime: $("wakeTime").value,
+          quality: $("quality").value,
+          morningSleepiness: $("morningSleepiness").value,
+          daytimeSleepiness: $("daytimeSleepiness").value,
+          alcohol: $("alcohol").checked,
+          lateCaffeine: $("lateCaffeine").checked,
+          training: $("training").checked,
+          nightPhone: $("nightPhone").checked,
+          memo: $("memo").value,
+          savedAt: new Date().toISOString()
+        });
+      }
+
+      function saveDraftFromForm(showMessage = true) {
+        if (editingId) return;
+        const draft = draftFromForm();
+        if (!draft.bedTime) {
+          if (showMessage) alert("就寝時間を入れてから保存してください。");
+          return;
+        }
+        if (!$("sleepDate").value) $("sleepDate").value = draft.date;
+        saveSleepDraft(draft);
+        renderDraftNotice();
+        if (showMessage) alert("就寝時間を保存しました。朝起きたら起床時間を入れて記録できます。");
+      }
+
+      function scheduleDraftAutosave() {
+        if (editingId || !$("bedTime").value || $("wakeTime").value) return;
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(() => saveDraftFromForm(false), 700);
+      }
+
       function renderSummary(logs, settings) {
         const today = localDateKey();
+        const draft = loadSleepDraft();
         const stats = calculateSleepStats(logs, settings.targetSleepMinutes, today);
         const { todayLog, weekLogs, monthLogs, weekAverage, monthAverage, debt, shortest, longest } = stats;
         const condition = conditionFor(todayLog);
         const advice = adviceFor(todayLog, logs, settings.targetSleepMinutes, today);
 
-        $("todaySleep").textContent = todayLog ? formatMinutes(todayLog.sleepMinutes) : "未記録";
-        $("todaySleepSub").textContent = todayLog ? `${todayLog.bedTime} → ${todayLog.wakeTime}・質 ${todayLog.quality}/5` : "入力すると表示されます";
+        $("todaySleep").textContent = todayLog ? formatMinutes(todayLog.sleepMinutes) : draft ? "就寝保存中" : "未記録";
+        $("todaySleepSub").textContent = todayLog ? `${todayLog.bedTime} → ${todayLog.wakeTime}・質 ${todayLog.quality}/5` : draft ? `${draft.bedTime} → 起床待ち` : "入力すると表示されます";
         $("weekAverage").textContent = weekAverage === null ? "--" : formatMinutes(weekAverage);
         $("monthAverage").textContent = `30日平均 ${monthAverage === null ? "--" : formatMinutes(monthAverage)}`;
         $("sleepDebt").textContent = debt === null ? "--" : formatMinutes(debt, { signed: true });
@@ -544,12 +658,21 @@
         }).join("");
       }
 
+      function renderDraftNotice() {
+        const draft = loadSleepDraft();
+        $("draftNotice").hidden = !draft;
+        if (!draft) return;
+        const wakeText = draft.wakeTime ? `起床 ${draft.wakeTime}` : "起床時間は未入力";
+        $("draftSummary").textContent = `${dateLabel(draft.date)}・就寝 ${draft.bedTime}・${wakeText}`;
+      }
+
       function render() {
         const logs = loadSleepLogs();
         const settings = loadSleepSettings();
         renderSummary(logs, settings);
         renderChart(logs, settings);
         renderLogs(logs);
+        renderDraftNotice();
       }
 
       function resetForm() {
@@ -585,6 +708,27 @@
         $("inputPanel").scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      function fillDraftForm(draft) {
+        if (!draft) return;
+        editingId = null;
+        $("sleepDate").value = draft.date;
+        $("bedTime").value = draft.bedTime;
+        $("wakeTime").value = draft.wakeTime;
+        $("quality").value = String(draft.quality);
+        $("morningSleepiness").value = String(draft.morningSleepiness);
+        $("daytimeSleepiness").value = String(draft.daytimeSleepiness);
+        $("alcohol").checked = draft.alcohol;
+        $("lateCaffeine").checked = draft.lateCaffeine;
+        $("training").checked = draft.training;
+        $("nightPhone").checked = draft.nightPhone;
+        $("memo").value = draft.memo;
+        $("formTitle").textContent = "睡眠ログを確定";
+        $("saveLogBtn").textContent = "起床時間を入れて記録";
+        $("cancelEditBtn").hidden = true;
+        updateDurationPreview();
+        $("inputPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
       function submitLog(event) {
         event.preventDefault();
         const sleepMinutes = updateDurationPreview();
@@ -613,6 +757,7 @@
         const filtered = logs.filter(item => item.id !== editingId && item.date !== log.date);
         filtered.push(log);
         saveSleepLogs(filtered);
+        clearSleepDraft();
         resetForm();
         render();
       }
@@ -628,10 +773,21 @@
         $("targetHours").value = String(Math.floor(settings.targetSleepMinutes / 60));
         $("targetMinutes").value = String(settings.targetSleepMinutes % 60);
         resetForm();
+        const draft = loadSleepDraft();
+        if (draft) fillDraftForm(draft);
         render();
 
         $("bedTime").addEventListener("input", updateDurationPreview);
+        $("bedTime").addEventListener("input", scheduleDraftAutosave);
         $("wakeTime").addEventListener("input", updateDurationPreview);
+        $("saveDraftBtn").addEventListener("click", () => saveDraftFromForm(true));
+        $("resumeDraftBtn").addEventListener("click", () => fillDraftForm(loadSleepDraft()));
+        $("discardDraftBtn").addEventListener("click", () => {
+          if (!confirm("保存中の就寝時間を破棄しますか？")) return;
+          clearSleepDraft();
+          resetForm();
+          render();
+        });
         $("sleepForm").addEventListener("submit", submitLog);
         $("cancelEditBtn").addEventListener("click", resetForm);
         $("targetHours").addEventListener("change", changeTarget);
@@ -652,7 +808,7 @@
         });
       }
 
-      window.SleepStore = { loadSleepLogs, saveSleepLogs, loadSleepSettings, saveSleepSettings, calculateSleepMinutes, calculateSleepStats, conditionFor, adviceFor };
+      window.SleepStore = { loadSleepLogs, saveSleepLogs, loadSleepSettings, saveSleepSettings, loadSleepDraft, saveSleepDraft, clearSleepDraft, calculateSleepMinutes, calculateSleepStats, conditionFor, adviceFor };
       if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
       else initialize();
     })();
