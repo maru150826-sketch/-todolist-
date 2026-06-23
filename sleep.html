@@ -58,7 +58,7 @@
       font-weight: 700;
     }
 
-    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
     .stat, .panel {
       border: 1px solid var(--line);
       background: var(--panel);
@@ -69,6 +69,7 @@
     .stat strong { display: block; margin-top: 4px; font-size: clamp(20px, 4vw, 30px); line-height: 1.2; overflow-wrap: anywhere; }
     .stat small { display: block; min-height: 18px; margin-top: 5px; color: #cbd5e1; font-size: 10px; }
     .stat.condition strong { color: var(--cyan); }
+    .stat.score strong { color: #fde68a; }
     .stat.debt.negative strong { color: var(--danger); }
     .stat.debt.positive strong { color: var(--good); }
 
@@ -84,6 +85,23 @@
     .advice-card p { margin: 8px 0 0; color: #cbd5e1; font-size: 12px; }
     .advice-card.training { border-color: rgba(139, 92, 246, .2); }
     .advice-card.training .eyebrow { color: #c4b5fd; }
+
+    .sleep-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(251, 191, 36, .28);
+      border-radius: 15px;
+      background: linear-gradient(135deg, rgba(120, 53, 15, .3), rgba(127, 29, 29, .18));
+      color: #fef3c7;
+      box-shadow: inset 0 1px rgba(255, 255, 255, .05);
+    }
+    .sleep-alert[hidden] { display: none; }
+    .sleep-alert strong { display: block; font-size: 13px; }
+    .sleep-alert span { color: #fde68a; font-size: 11px; }
+    .sleep-alert-icon { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; border-radius: 12px; background: rgba(251, 191, 36, .16); font-weight: 900; }
 
     .goal-control { display: flex; align-items: center; gap: 7px; }
     .goal-control label { color: var(--muted); font-size: 11px; }
@@ -127,6 +145,42 @@
     .field input:focus, .field select:focus, .field textarea:focus { border-color: rgba(103, 232, 249, .55); box-shadow: 0 0 0 3px rgba(34, 211, 238, .08); }
     .field textarea { min-height: 92px; resize: vertical; }
     .calculated { display: flex; align-items: center; min-height: 46px; padding: 10px 12px; border: 1px solid rgba(103, 232, 249, .2); border-radius: 11px; background: rgba(8, 145, 178, .09); color: var(--cyan); font-size: 15px; font-weight: 800; }
+
+    .mode-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .mode-button {
+      min-height: 46px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(15, 23, 42, .72);
+      color: #cbd5e1;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .mode-button.active {
+      border-color: rgba(103, 232, 249, .5);
+      background: linear-gradient(135deg, rgba(8, 145, 178, .45), rgba(109, 40, 217, .42));
+      color: #fff;
+      box-shadow: 0 0 22px rgba(34, 211, 238, .12);
+    }
+    .mode-help { margin: -4px 0 13px; color: var(--muted); font-size: 11px; }
+    #inputPanel.mode-night [data-field="wakeTime"],
+    #inputPanel.mode-night [data-field="duration"],
+    #inputPanel.mode-night [data-field="quality"],
+    #inputPanel.mode-night [data-field="morningSleepiness"],
+    #inputPanel.mode-night [data-field="daytimeSleepiness"],
+    #inputPanel.mode-night [data-field="memo"] { display: none; }
+    #inputPanel.mode-morning [data-field="date"],
+    #inputPanel.mode-morning [data-field="bedTime"],
+    #inputPanel.mode-morning [data-field="checks"],
+    #inputPanel.mode-morning [data-field="memo"] { display: none; }
+    .night-primary {
+      min-height: 56px;
+      font-size: 16px;
+      box-shadow: 0 12px 28px rgba(8, 145, 178, .18);
+    }
+    .habit-note { display: none; margin-top: 8px; color: #a5f3fc; font-size: 10px; }
+    .habit-note.show { display: block; }
 
     .draft-card {
       display: flex;
@@ -208,6 +262,7 @@
       .log-actions button { flex: 1; }
       .goal-control { width: 100%; }
       .goal-control select { flex: 1; }
+      .mode-switch { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -223,9 +278,15 @@
 
     <section class="stats" aria-label="睡眠サマリー">
       <article class="stat"><span>今日の睡眠</span><strong id="todaySleep">未記録</strong><small id="todaySleepSub">入力すると表示されます</small></article>
+      <article class="stat score"><span>睡眠スコア</span><strong id="sleepScore">--</strong><small id="sleepScoreSub">記録待ち</small></article>
       <article class="stat"><span>直近7日平均</span><strong id="weekAverage">--</strong><small id="monthAverage">30日平均 --</small></article>
       <article class="stat debt" id="debtCard"><span>睡眠負債・直近7日</span><strong id="sleepDebt">--</strong><small id="debtMessage">記録待ち</small></article>
       <article class="stat condition"><span>今日のコンディション</span><strong id="conditionGrade">--</strong><small id="conditionMessage">今日の記録が必要です</small></article>
+    </section>
+
+    <section class="sleep-alert" id="sleepAlert" hidden>
+      <div class="sleep-alert-icon">!</div>
+      <div><strong id="sleepAlertTitle">睡眠不足アラート</strong><span id="sleepAlertText">今日は早寝を優先してください。</span></div>
     </section>
 
     <section class="panel condition-panel" aria-label="今日の助言">
@@ -259,6 +320,12 @@
 
     <section class="panel" id="inputPanel">
       <div class="panel-head"><div><h2 id="formTitle">睡眠を記録</h2><div class="muted">日付は起床した日として保存します</div></div></div>
+      <div class="mode-switch" role="group" aria-label="入力モード">
+        <button class="mode-button" type="button" data-mode="night" id="nightModeBtn">夜・寝る前</button>
+        <button class="mode-button" type="button" data-mode="morning" id="morningModeBtn">朝・起床後</button>
+        <button class="mode-button" type="button" data-mode="full" id="fullModeBtn">全部入力</button>
+      </div>
+      <p class="mode-help" id="modeHelp">寝る前は就寝時間だけ保存できます。</p>
       <div class="draft-card" id="draftNotice" hidden>
         <div>
           <strong>寝る前の入力を保存中</strong>
@@ -271,14 +338,14 @@
       </div>
       <form id="sleepForm" novalidate>
         <div class="form-grid">
-          <div class="field"><label for="sleepDate">日付</label><input type="date" id="sleepDate" required /></div>
-          <div class="field"><label for="bedTime">就寝時間</label><input type="time" id="bedTime" required /></div>
-          <div class="field"><label for="wakeTime">起床時間</label><input type="time" id="wakeTime" required /></div>
-          <div class="field"><span>睡眠時間</span><div class="calculated" id="calculatedSleep">--</div></div>
-          <div class="field"><label for="quality">睡眠の質</label><select id="quality"><option value="1">1・悪い</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・良い</option></select></div>
-          <div class="field"><label for="morningSleepiness">起床時の眠気</label><select id="morningSleepiness"><option value="1">1・少ない</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・強い</option></select></div>
-          <div class="field"><label for="daytimeSleepiness">昼間の眠気</label><select id="daytimeSleepiness"><option value="1">1・少ない</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・強い</option></select></div>
-          <div class="field wide">
+          <div class="field" data-field="date"><label for="sleepDate">日付</label><input type="date" id="sleepDate" required /></div>
+          <div class="field" data-field="bedTime"><label for="bedTime">就寝時間</label><input type="time" id="bedTime" required /></div>
+          <div class="field" data-field="wakeTime"><label for="wakeTime">起床時間</label><input type="time" id="wakeTime" required /></div>
+          <div class="field" data-field="duration"><span>睡眠時間</span><div class="calculated" id="calculatedSleep">--</div></div>
+          <div class="field" data-field="quality"><label for="quality">睡眠の質</label><select id="quality"><option value="1">1・悪い</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・良い</option></select></div>
+          <div class="field" data-field="morningSleepiness"><label for="morningSleepiness">起床時の眠気</label><select id="morningSleepiness"><option value="1">1・少ない</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・強い</option></select></div>
+          <div class="field" data-field="daytimeSleepiness"><label for="daytimeSleepiness">昼間の眠気</label><select id="daytimeSleepiness"><option value="1">1・少ない</option><option value="2">2</option><option value="3" selected>3・普通</option><option value="4">4</option><option value="5">5・強い</option></select></div>
+          <div class="field wide" data-field="checks">
             <span>チェック</span>
             <div class="checks">
               <label class="check"><input type="checkbox" id="alcohol" />酒を飲んだ</label>
@@ -286,8 +353,9 @@
               <label class="check"><input type="checkbox" id="training" />筋トレした</label>
               <label class="check"><input type="checkbox" id="nightPhone" />寝る前にスマホを長く見た</label>
             </div>
+            <div class="habit-note" id="habitNote">前回の寝る前チェックを反映しました。</div>
           </div>
-          <div class="field wide"><label for="memo">メモ</label><textarea id="memo" maxlength="500" placeholder="例：寝る前にスマホを見すぎた"></textarea></div>
+          <div class="field wide" data-field="memo"><label for="memo">メモ</label><textarea id="memo" maxlength="500" placeholder="例：寝る前にスマホを見すぎた"></textarea></div>
         </div>
         <div class="form-actions">
           <button class="button" type="button" id="cancelEditBtn" hidden>編集をやめる</button>
@@ -315,6 +383,7 @@
       const DEFAULT_TARGET = 450;
       let editingId = null;
       let draftTimer = null;
+      let currentMode = "full";
 
       const $ = id => document.getElementById(id);
 
@@ -425,6 +494,10 @@
         return hours * 60 + minutes;
       }
 
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, Number(value) || 0));
+      }
+
       function calculateSleepMinutes(bedTime, wakeTime) {
         const bed = timeToMinutes(bedTime);
         const wake = timeToMinutes(wakeTime);
@@ -494,11 +567,49 @@
         return { grade: "C", message: "今日は軽めに調整してください。" };
       }
 
+      // 睡眠スコアはCDCの睡眠時間・質・眠気・睡眠日誌項目と、PSQIの考え方を参考にした生活改善用スコアです。
+      function sleepScoreFor(log, logs, targetSleepMinutes, today = localDateKey()) {
+        if (!log) return null;
+        const durationRatio = clamp(log.sleepMinutes / Math.max(1, targetSleepMinutes), 0, 1.12);
+        const durationScore = durationRatio >= 1 ? 42 : Math.round(42 * durationRatio);
+        const qualityScore = Math.round((clamp(log.quality, 1, 5) - 1) / 4 * 24);
+        const morningScore = Math.round((5 - clamp(log.morningSleepiness, 1, 5)) / 4 * 12);
+        const daytimeScore = Math.round((5 - clamp(log.daytimeSleepiness, 1, 5)) / 4 * 12);
+        const habitPenalty =
+          (log.alcohol ? 4 : 0) +
+          (log.lateCaffeine ? 3 : 0) +
+          (log.nightPhone ? 3 : 0);
+        const shortagePenalty = hasThreeDayShortage(logs, targetSleepMinutes, today) ? 8 : 0;
+        const score = clamp(durationScore + qualityScore + morningScore + daytimeScore + 10 - habitPenalty - shortagePenalty, 0, 100);
+        const label = score >= 90 ? "最高" : score >= 75 ? "良い" : score >= 60 ? "普通" : score >= 40 ? "注意" : "回復優先";
+        return { score: Math.round(score), label };
+      }
+
       function hasThreeDayShortage(logs, target, today) {
         return [0, 1, 2].every(offset => {
           const log = logs.find(item => item.date === addDays(today, -offset));
           return log && log.sleepMinutes < target;
         });
+      }
+
+      function hasRecentThreeShortage(logs, target) {
+        const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+        return sorted.length === 3 && sorted.every(log => log.sleepMinutes < target);
+      }
+
+      function sleepAlertFor(logs, target, today = localDateKey()) {
+        const shortage = hasThreeDayShortage(logs, target, today) || hasRecentThreeShortage(logs, target);
+        if (shortage) return {
+          title: "3日連続で睡眠不足",
+          text: "今日は勉強量を増やすより、早寝を最優先にしてください。"
+        };
+        const weekLogs = logsInRange(logs, 7, today);
+        const debt = weekLogs.length ? weekLogs.reduce((sum, log) => sum + (log.sleepMinutes - target), 0) : null;
+        if (debt !== null && debt <= -300) return {
+          title: "睡眠負債が大きいです",
+          text: `直近7日で${formatMinutes(debt, { signed: true })}。今日は復習中心にして早く寝る日です。`
+        };
+        return null;
       }
 
       function adviceFor(log, logs, target, today) {
@@ -553,9 +664,10 @@
 
       function draftFromForm() {
         const bedTime = $("bedTime").value;
+        const draftDate = currentMode === "night" ? suggestedWakeDateForBedTime(bedTime) : ($("sleepDate").value || suggestedWakeDateForBedTime(bedTime));
         return normalizeDraft({
           id: loadSleepDraft()?.id || uniqueId(),
-          date: $("sleepDate").value || suggestedWakeDateForBedTime(bedTime),
+          date: draftDate,
           bedTime,
           wakeTime: $("wakeTime").value,
           quality: $("quality").value,
@@ -570,6 +682,43 @@
         });
       }
 
+      function latestHabitLog(logs = loadSleepLogs()) {
+        return [...logs].sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+      }
+
+      function applyHabitDefaults() {
+        const latest = latestHabitLog();
+        $("habitNote").classList.remove("show");
+        if (!latest) return;
+        $("alcohol").checked = latest.alcohol;
+        $("lateCaffeine").checked = latest.lateCaffeine;
+        $("training").checked = latest.training;
+        $("nightPhone").checked = latest.nightPhone;
+        if (latest.alcohol || latest.lateCaffeine || latest.training || latest.nightPhone) $("habitNote").classList.add("show");
+      }
+
+      function shouldStartInNightMode(date = new Date()) {
+        const hour = date.getHours();
+        return hour >= 18 || hour < 5;
+      }
+
+      function setInputMode(mode) {
+        currentMode = mode;
+        $("inputPanel").classList.toggle("mode-night", mode === "night");
+        $("inputPanel").classList.toggle("mode-morning", mode === "morning");
+        $("inputPanel").classList.toggle("mode-full", mode === "full");
+        document.querySelectorAll(".mode-button").forEach(button => button.classList.toggle("active", button.dataset.mode === mode));
+        $("saveDraftBtn").hidden = mode !== "night";
+        $("saveDraftBtn").classList.toggle("primary", mode === "night");
+        $("saveDraftBtn").classList.toggle("night-primary", mode === "night");
+        $("saveLogBtn").hidden = mode === "night";
+        $("modeHelp").textContent = mode === "night"
+          ? "寝る前は就寝時間だけ保存。チェックは前回分を自動で引き継ぎます。"
+          : mode === "morning"
+            ? "朝は起床時間・睡眠の質・眠気だけで確定できます。"
+            : "過去分や細かい修正をまとめて入力できます。";
+      }
+
       function saveDraftFromForm(showMessage = true) {
         if (editingId) return;
         const draft = draftFromForm();
@@ -577,7 +726,7 @@
           if (showMessage) alert("就寝時間を入れてから保存してください。");
           return;
         }
-        if (!$("sleepDate").value) $("sleepDate").value = draft.date;
+        $("sleepDate").value = draft.date;
         saveSleepDraft(draft);
         renderDraftNotice();
         if (showMessage) alert("就寝時間を保存しました。朝起きたら起床時間を入れて記録できます。");
@@ -596,9 +745,13 @@
         const { todayLog, weekLogs, monthLogs, weekAverage, monthAverage, debt, shortest, longest } = stats;
         const condition = conditionFor(todayLog);
         const advice = adviceFor(todayLog, logs, settings.targetSleepMinutes, today);
+        const sleepScore = sleepScoreFor(todayLog, logs, settings.targetSleepMinutes, today);
+        const alert = sleepAlertFor(logs, settings.targetSleepMinutes, today);
 
         $("todaySleep").textContent = todayLog ? formatMinutes(todayLog.sleepMinutes) : draft ? "就寝保存中" : "未記録";
         $("todaySleepSub").textContent = todayLog ? `${todayLog.bedTime} → ${todayLog.wakeTime}・質 ${todayLog.quality}/5` : draft ? `${draft.bedTime} → 起床待ち` : "入力すると表示されます";
+        $("sleepScore").textContent = sleepScore ? `${sleepScore.score}` : "--";
+        $("sleepScoreSub").textContent = sleepScore ? `${sleepScore.label}・100点満点` : "記録待ち";
         $("weekAverage").textContent = weekAverage === null ? "--" : formatMinutes(weekAverage);
         $("monthAverage").textContent = `30日平均 ${monthAverage === null ? "--" : formatMinutes(monthAverage)}`;
         $("sleepDebt").textContent = debt === null ? "--" : formatMinutes(debt, { signed: true });
@@ -611,6 +764,11 @@
         $("studyAdviceText").textContent = advice.studyText;
         $("trainingAdviceTitle").textContent = advice.trainingTitle;
         $("trainingAdviceText").textContent = advice.trainingText;
+        $("sleepAlert").hidden = !alert;
+        if (alert) {
+          $("sleepAlertTitle").textContent = alert.title;
+          $("sleepAlertText").textContent = alert.text;
+        }
 
         $("rangeSummary").innerHTML = [
           `記録 ${monthLogs.length}日`,
@@ -682,10 +840,12 @@
         $("quality").value = "3";
         $("morningSleepiness").value = "3";
         $("daytimeSleepiness").value = "3";
+        applyHabitDefaults();
         $("formTitle").textContent = "睡眠を記録";
         $("saveLogBtn").textContent = "記録する";
         $("cancelEditBtn").hidden = true;
         updateDurationPreview();
+        setInputMode(shouldStartInNightMode() ? "night" : "full");
       }
 
       function fillForm(log) {
@@ -705,6 +865,7 @@
         $("saveLogBtn").textContent = "更新する";
         $("cancelEditBtn").hidden = false;
         updateDurationPreview();
+        setInputMode("full");
         $("inputPanel").scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
@@ -726,6 +887,7 @@
         $("saveLogBtn").textContent = "起床時間を入れて記録";
         $("cancelEditBtn").hidden = true;
         updateDurationPreview();
+        setInputMode("morning");
         $("inputPanel").scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
@@ -780,6 +942,10 @@
         $("bedTime").addEventListener("input", updateDurationPreview);
         $("bedTime").addEventListener("input", scheduleDraftAutosave);
         $("wakeTime").addEventListener("input", updateDurationPreview);
+        document.querySelectorAll(".mode-button").forEach(button => button.addEventListener("click", () => {
+          if (button.dataset.mode === "night" && !editingId && !$("bedTime").value) applyHabitDefaults();
+          setInputMode(button.dataset.mode);
+        }));
         $("saveDraftBtn").addEventListener("click", () => saveDraftFromForm(true));
         $("resumeDraftBtn").addEventListener("click", () => fillDraftForm(loadSleepDraft()));
         $("discardDraftBtn").addEventListener("click", () => {
@@ -808,7 +974,7 @@
         });
       }
 
-      window.SleepStore = { loadSleepLogs, saveSleepLogs, loadSleepSettings, saveSleepSettings, loadSleepDraft, saveSleepDraft, clearSleepDraft, calculateSleepMinutes, calculateSleepStats, conditionFor, adviceFor };
+      window.SleepStore = { loadSleepLogs, saveSleepLogs, loadSleepSettings, saveSleepSettings, loadSleepDraft, saveSleepDraft, clearSleepDraft, calculateSleepMinutes, calculateSleepStats, conditionFor, adviceFor, sleepScoreFor, sleepAlertFor };
       if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
       else initialize();
     })();

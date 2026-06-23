@@ -1,4 +1,4 @@
-const CACHE_NAME = "taro-focus-rpg-20260623-sleep-draft-1";
+const CACHE_NAME = "taro-focus-rpg-20260623-sleep-mode-score-1";
 const APP_FILES = [
   "./",
   "./index.html",
