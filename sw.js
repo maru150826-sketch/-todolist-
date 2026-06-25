@@ -1,9 +1,7 @@
-const CACHE_NAME = "taro-focus-rpg-20260623-sleep-mode-score-1";
+const CACHE_NAME = "taro-focus-rpg-20260625-ui-help-no-ai-1";
 const APP_FILES = [
   "./",
   "./index.html",
-  "./aiSecretary.js",
-  "./aiSecretary.css",
   "./sleep.html",
   "./log.html",
   "./rpg.html",

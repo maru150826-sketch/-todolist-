@@ -5,7 +5,6 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>集中ダッシュボード</title>
-  <link rel="stylesheet" href="aiSecretary.css" />
   <style>
     :root {
       --bg: #0f172a;
@@ -243,6 +242,71 @@
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 14px;
       background: rgba(255,255,255,.04);
+    }
+
+    .compact-help-details,
+    .quick-help-inline {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      margin: 12px 0 16px;
+      overflow: hidden;
+    }
+
+    .quick-help-inline {
+      margin: 0;
+      background: rgba(15,23,42,.36);
+    }
+
+    .compact-help-details summary,
+    .quick-help-inline summary {
+      min-height: 42px;
+      padding: 10px 12px;
+      cursor: pointer;
+      color: #dbeafe;
+      font-weight: 900;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .compact-help-details summary::-webkit-details-marker,
+    .quick-help-inline summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .compact-help-details summary::after,
+    .quick-help-inline summary::after {
+      content: "開く";
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .compact-help-details[open] summary::after,
+    .quick-help-inline[open] summary::after {
+      content: "閉じる";
+    }
+
+    .compact-help-details ul,
+    .quick-help-inline ul {
+      margin: 0;
+      padding: 0 14px 12px 30px;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .quick-hint {
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .quick-task-row {
@@ -2564,6 +2628,16 @@
           </div>
         </section>
 
+        <details class="compact-help-details">
+          <summary>使い方</summary>
+          <ul>
+            <li>今からやるタスクを選ぶ</li>
+            <li>タイマーを開始する</li>
+            <li>終わったら記録を確認する</li>
+            <li>睡眠やRPGは上部メニューから確認する</li>
+          </ul>
+        </details>
+
         <section class="main-task">
           <div class="main-task-label">この25分でやること</div>
           <div class="main-task-title" id="currentTaskTitle">今日のタスクはまだありません</div>
@@ -2604,31 +2678,10 @@
 
         <div class="quote" id="quoteBox"></div>
 
-        <div class="company-moved-note">株式会社たろちゃんの株価・市場ランク・中期経営計画・成長イベントは「カレンダー」で確認できます。</div>
-        <section style="margin-top:18px;">
-          <h2>手動ログ</h2>
-          <div class="small" style="margin-bottom:10px;">ジム・読書・移動中の勉強など、ポモドーロを使わない活動を時間だけ記録します。</div>
-          <div class="manual-log">
-            <input type="date" id="manualDateInput" title="日付" />
-            <select id="manualCategoryInput">
-              <option value="TOEIC">TOEIC</option>
-              <option value="中国語">中国語</option>
-              <option value="ITパスポート">ITパスポート</option>
-              <option value="大学課題">大学課題</option>
-              <option value="筋トレ">筋トレ</option>
-              <option value="読書">読書</option>
-              <option value="その他">その他</option>
-            </select>
-            <input type="number" id="manualMinutesInput" min="1" max="600" placeholder="分" />
-            <input id="manualTitleInput" placeholder="例：ジム 胸・背中 / TOEIC精読" />
-            <button id="addManualLogBtn" class="ok">記録</button>
-            <textarea class="manual-log-note" id="manualNoteInput" placeholder="メモ任意：何をやったか、重量、気づきなど"></textarea>
-          </div>
-        </section>
-
         <section style="margin-top:18px;">
           <h2>今日のタスク</h2>
           <div class="quick-task-box">
+            <div class="quick-hint">よく使うタスクをワンタップで追加できます</div>
             <div class="quick-task-row">
               <input id="quickTaskInput" placeholder="クイック入力：例 TOEIC単語100問 / ジム胸肩 / IT過去問 / 大学レポート" />
               <button id="quickAddTaskBtn" class="ok">今日に追加</button>
@@ -2641,7 +2694,14 @@
             <button type="button" onclick="setQuickTaskText('新聞')">新聞</button>
             <button type="button" onclick="setQuickTaskText('ITパスポート')">ITパスポート</button>
           </div>
-            <div class="small">クイック入力は、文字からカテゴリを自動判定します。細かく設定したい場合は下の通常入力を使ってください。</div>
+            <details class="quick-help-inline">
+              <summary>クイック追加とは？</summary>
+              <ul>
+                <li>よく使うタスクをすぐ出すためのボタン</li>
+                <li>毎回入力したくない項目だけ残す</li>
+                <li>不要な項目は増やさない</li>
+              </ul>
+            </details>
           </div>
 
           <div class="add-task">
@@ -2672,10 +2732,24 @@
           </div>
           <div class="task-list" id="taskList"></div>
         </section>
+
         <section style="margin-top:18px;">
-          <h2>クイック追加の使い方</h2>
-          <div class="repeat-removed-note">
-            くり返し設定は増殖の原因になるため廃止しました。毎週やるものは、必要な日にクイック追加で入れてください。
+          <h2>手動ログ</h2>
+          <div class="manual-log">
+            <input type="date" id="manualDateInput" title="日付" />
+            <select id="manualCategoryInput">
+              <option value="TOEIC">TOEIC</option>
+              <option value="中国語">中国語</option>
+              <option value="ITパスポート">ITパスポート</option>
+              <option value="大学課題">大学課題</option>
+              <option value="筋トレ">筋トレ</option>
+              <option value="読書">読書</option>
+              <option value="その他">その他</option>
+            </select>
+            <input type="number" id="manualMinutesInput" min="1" max="600" placeholder="分" />
+            <input id="manualTitleInput" placeholder="例：ジム 胸・背中 / TOEIC精読" />
+            <button id="addManualLogBtn" class="ok">記録</button>
+            <textarea class="manual-log-note" id="manualNoteInput" placeholder="メモ任意：何をやったか、重量、気づきなど"></textarea>
           </div>
         </section>
       
@@ -6609,6 +6683,5 @@ ${issue}
     startInitialSupabaseSync();
     startInitialTaskSync();
   </script>
-  <script src="aiSecretary.js"></script>
 </body>
 </html>
