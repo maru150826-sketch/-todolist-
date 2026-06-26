@@ -511,6 +511,26 @@
       text-decoration: line-through;
     }
 
+    .task.top-three-task {
+      border-color: rgba(251,191,36,.42);
+      background:
+        linear-gradient(90deg, rgba(251,191,36,.12), rgba(255,255,255,.045));
+      box-shadow: 0 0 0 1px rgba(251,191,36,.08);
+    }
+
+    .top-three-badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin: 0 0 5px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(251,191,36,.16);
+      color: #fde68a;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
     .task-title {
       font-weight: 800;
       line-height: 1.35;
@@ -2394,6 +2414,39 @@
 
     .study-launchpad h2 { margin: 0 0 6px; font-size: 1.05rem; }
     .launch-task { margin-top: 8px; color: var(--text); font-weight: 800; }
+    .morning-plan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .morning-plan-item {
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 13px;
+      background: rgba(15,23,42,.42);
+      padding: 9px 10px;
+    }
+    .morning-plan-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .morning-plan-item b {
+      display: block;
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    .sleep-link-note {
+      margin-top: 8px;
+      color: #bae6fd;
+      font-size: 12px;
+      line-height: 1.45;
+    }
     .launch-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .launch-progress {
       height: 7px;
@@ -2414,6 +2467,7 @@
       .study-launchpad { grid-template-columns: 1fr; }
       .launch-actions { justify-content: stretch; }
       .launch-actions button { flex: 1; }
+      .morning-plan-grid { grid-template-columns: 1fr; }
     }
 
     /* ===== 集中中の視線固定 ===== */
@@ -2621,6 +2675,12 @@
             <div class="small" id="launchMessage">今日の状況を確認しています。</div>
             <div class="launch-task" id="launchTask">最初のタスクを選びます。</div>
             <div class="launch-progress" aria-hidden="true"><div id="launchProgressBar"></div></div>
+            <div class="morning-plan-grid" aria-label="朝の作戦">
+              <div class="morning-plan-item"><span>今日の3つ</span><b id="morningTopTasks">確認中</b></div>
+              <div class="morning-plan-item"><span>睡眠</span><b id="morningSleepStatus">未連携</b></div>
+              <div class="morning-plan-item"><span>おすすめ</span><b id="morningFocusPlan">25分集中</b></div>
+            </div>
+            <div class="sleep-link-note" id="sleepFocusNote">睡眠ログがあると集中時間のおすすめを調整します。</div>
           </div>
           <div class="launch-actions">
             <button class="ok" id="launchFocusBtn" type="button">このタスクで開始</button>
@@ -3043,7 +3103,8 @@
       startedAt: null,
       accumulatedSeconds: 0,
       endAt: null,
-      intervalId: null
+      intervalId: null,
+      totalSeconds: null
     };
 
     let alarm = {
@@ -3292,15 +3353,59 @@
       return state.sessions.filter(s => s.date === todayKey());
     }
 
+    function loadLatestSleepLog() {
+      try {
+        const logs = JSON.parse(localStorage.getItem("sleepLogs") || "[]");
+        if (!Array.isArray(logs)) return null;
+        const today = todayKey();
+        const latest = logs
+          .filter(log => log && log.date && Number(log.sleepMinutes) > 0)
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0] || null;
+        if (!latest) return null;
+        return latest.date === today ? latest : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function sleepConditionForFocus(log) {
+      if (!log) return { label: "未記録", minutes: 25, tone: "normal", note: "睡眠ログがあると集中時間を調整します。" };
+      const sleepMinutes = Number(log.sleepMinutes || 0);
+      const quality = Number(log.quality || 3);
+      const sleepiness = Math.max(Number(log.morningSleepiness || 3), Number(log.daytimeSleepiness || 3));
+      if (sleepMinutes < 300 || sleepiness >= 5) return { label: "回復優先", minutes: 10, tone: "tired", note: "今日は10分から。新規より復習向きです。" };
+      if (sleepMinutes < 390 || quality <= 2 || sleepiness >= 4) return { label: "軽め", minutes: 15, tone: "light", note: "今日は15分で区切ると続きやすいです。" };
+      if (sleepMinutes >= 450 && quality >= 4 && sleepiness <= 2) return { label: "良好", minutes: 25, tone: "good", note: "25分集中で新しい範囲にも入りやすいです。" };
+      return { label: "通常", minutes: 25, tone: "normal", note: "25分集中でいつも通り進められます。" };
+    }
+
+    function sortedTodayTaskList() {
+      const today = todayKey();
+      return todayTasks().sort((a, b) => {
+        const aDone = a.done ? 1 : 0;
+        const bDone = b.done ? 1 : 0;
+        if (aDone !== bDone) return aDone - bDone;
+        const priorityRank = { high: 0, normal: 1, low: 2 };
+        const aDueToday = !a.done && a.deadline === today ? 0 : 1;
+        const bDueToday = !b.done && b.deadline === today ? 0 : 1;
+        if (aDueToday !== bDueToday) return aDueToday - bDueToday;
+        const pa = priorityRank[a.priority] ?? 1;
+        const pb = priorityRank[b.priority] ?? 1;
+        if (pa !== pb) return pa - pb;
+        const ao = Number.isFinite(a.order) ? a.order : 999999;
+        const bo = Number.isFinite(b.order) ? b.order : 999999;
+        return ao - bo;
+      });
+    }
+
+    function todayTopThreeTasks() {
+      return sortedTodayTaskList().filter(task => !task.done).slice(0, 3);
+    }
+
     function getSuggestedTask() {
       normalizeTaskOrders(todayKey());
-      const candidates = todayTasks()
+      const candidates = sortedTodayTaskList()
         .filter(t => !t.done)
-        .sort((a, b) => {
-          const ao = Number.isFinite(a.order) ? a.order : 999999;
-          const bo = Number.isFinite(b.order) ? b.order : 999999;
-          return ao - bo;
-        });
 
       return candidates[0] || null;
     }
@@ -3546,7 +3651,10 @@
         return;
       }
 
+      const topThreeList = todayTopThreeTasks();
+      const topThreeIds = new Set(topThreeList.map(task => task.id));
       list.innerHTML = tasks.map(task => {
+        const topIndex = topThreeList.findIndex(item => item.id === task.id);
         const selected = task.id === state.currentTaskId ? "今やる" : "これをやる";
         const priorityText = task.priority === "high" ? "最重要" : task.priority === "normal" ? "普通" : "軽め";
         const repeatText = task.repeat && task.repeat !== "none" ? ` / ${repeatLabel(task.repeat)}` : "";
@@ -3554,9 +3662,10 @@
         const pinnedTodayFromOtherDate = !task.done && task.doTodayDate === today && task.date !== today;
         const taskDateText = task.date && task.date !== today ? ` / タスク日 ${task.date}` : "";
         return `
-          <div class="task ${task.done ? "done" : ""} ${dueTodayFromOtherDate ? "due-today-task" : ""} ${pinnedTodayFromOtherDate ? "pinned-today-task" : ""}" draggable="true" data-task-id="${task.id}">
+          <div class="task ${task.done ? "done" : ""} ${topThreeIds.has(task.id) ? "top-three-task" : ""} ${dueTodayFromOtherDate ? "due-today-task" : ""} ${pinnedTodayFromOtherDate ? "pinned-today-task" : ""}" draggable="true" data-task-id="${task.id}">
             <input type="checkbox" ${task.done ? "checked" : ""} onchange="toggleDone('${task.id}')" />
             <div>
+              ${topIndex >= 0 ? `<div class="top-three-badge">今日の3つ #${topIndex + 1}</div>` : ""}
               <div class="task-title">${escapeHtml(task.title)}</div>
               <div class="task-meta">${escapeHtml(task.category)} / ${priorityText}${repeatText}${taskDateText}</div>
               ${pinnedTodayFromOtherDate ? `<div class="today-pin-badge">今日やるに追加済み</div>` : ""}
@@ -5301,6 +5410,9 @@ ${issue}
       const completed = todayTasks().filter(item => item.done).length;
       const total = todayTasks().length;
       const percent = Math.min(100, Math.round((focusedMinutes / 100) * 100));
+      const sleepLog = loadLatestSleepLog();
+      const sleepPlan = sleepConditionForFocus(sleepLog);
+      const topTasks = todayTopThreeTasks();
 
       $("launchMessage").textContent = focusedMinutes > 0
         ? `今日は${formatMinutes(focusedMinutes)}集中済み。完了 ${completed}/${total}件。`
@@ -5311,6 +5423,15 @@ ${issue}
       $("launchProgressBar").style.width = `${percent}%`;
       $("launchFocusBtn").disabled = !task;
       $("launchQuickBtn").disabled = !task;
+      $("morningTopTasks").textContent = topTasks.length
+        ? topTasks.map((item, index) => `${index + 1}. ${item.title}`).join(" / ")
+        : "未設定";
+      $("morningSleepStatus").textContent = sleepLog
+        ? `${sleepPlan.label}・${formatMinutes(Number(sleepLog.sleepMinutes || 0))}`
+        : "未記録";
+      $("morningFocusPlan").textContent = `${sleepPlan.minutes}分集中`;
+      $("sleepFocusNote").textContent = sleepPlan.note;
+      if ($("launchFocusBtn")) $("launchFocusBtn").textContent = `${sleepPlan.minutes}分で開始`;
     }
 
     function launchFocus(minutes = null) {
@@ -5322,6 +5443,9 @@ ${issue}
       }
 
       setCurrentTask(task.id);
+      if (minutes === null) {
+        minutes = sleepConditionForFocus(loadLatestSleepLog()).minutes;
+      }
       if (minutes) {
         timer.mode = "focus";
         timer.running = false;
@@ -5476,7 +5600,8 @@ ${issue}
 
       if (timer.mode === "focus") {
         const rewardBefore = getFocusRewardSnapshot();
-        const session = recordFocusSession(state.settings.focusMin, "completed");
+        const completedMinutes = Math.max(1, Math.round((timer.totalSeconds || state.settings.focusMin * 60) / 60));
+        const session = recordFocusSession(completedMinutes, "completed");
         const rewardAfter = getFocusRewardSnapshot();
         showAlarm("集中終了", "1セット完了。休憩するか、次のセットに入ってください。");
         showFocusReward(rewardBefore, rewardAfter, session);
@@ -5484,6 +5609,7 @@ ${issue}
         timer.secondsLeft = state.settings.breakMin * 60;
         timer.startedAt = null;
         timer.accumulatedSeconds = 0;
+        timer.totalSeconds = null;
       } else {
         showAlarm("休憩終了", "戻れ。次のタスクに入る時間です。", "just_do_it");
         timer.mode = "focus";
@@ -5543,6 +5669,7 @@ ${issue}
       timer.startedAt = null;
       timer.accumulatedSeconds = 0;
       timer.endAt = null;
+      timer.totalSeconds = null;
       renderTimer();
     }
 
@@ -5577,6 +5704,7 @@ ${issue}
       }
 
       timer.endAt = null;
+      timer.totalSeconds = null;
       renderTimer();
     }
 
