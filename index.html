@@ -2743,7 +2743,7 @@
           <div class="quick-task-box">
             <div class="quick-hint">よく使うタスクをワンタップで追加できます</div>
             <div class="quick-task-row">
-              <input id="quickTaskInput" placeholder="クイック入力：例 TOEIC単語100問 / ジム胸肩 / IT過去問 / 大学レポート" />
+              <input id="quickTaskInput" placeholder="クイック入力：例 TOEIC単語100問 / ジム胸肩 / 大学レポート" />
               <button id="quickAddTaskBtn" class="ok">今日に追加</button>
             </div>
             <div class="quick-buttons">
@@ -2752,7 +2752,6 @@
             <button type="button" onclick="setQuickTaskText('大学の課題')">大学の課題</button>
             <button type="button" onclick="setQuickTaskText('ジム')">ジム</button>
             <button type="button" onclick="setQuickTaskText('新聞')">新聞</button>
-            <button type="button" onclick="setQuickTaskText('ITパスポート')">ITパスポート</button>
           </div>
             <details class="quick-help-inline">
               <summary>クイック追加とは？</summary>
@@ -2769,7 +2768,6 @@
             <select id="categoryInput">
               <option value="TOEIC">TOEIC</option>
               <option value="中国語">中国語</option>
-              <option value="ITパスポート">ITパスポート</option>
               <option value="大学課題">大学課題</option>
               <option value="筋トレ">筋トレ</option>
               <option value="読書">読書</option>
@@ -2800,7 +2798,6 @@
             <select id="manualCategoryInput">
               <option value="TOEIC">TOEIC</option>
               <option value="中国語">中国語</option>
-              <option value="ITパスポート">ITパスポート</option>
               <option value="大学課題">大学課題</option>
               <option value="筋トレ">筋トレ</option>
               <option value="読書">読書</option>
@@ -2852,7 +2849,7 @@
         <section class="panel" style="margin-top:18px;">
           <h2>今日の振り返り</h2>
           <div class="review">
-            <textarea id="reviewText" placeholder="例：今日はPart 7を逃げずにできた。明日は最初にITパスポートをやる。"></textarea>
+            <textarea id="reviewText" placeholder="例：今日はPart 7を逃げずにできた。明日は最初に英単語をやる。"></textarea>
             <button class="ok" id="saveReviewBtn">振り返り保存</button>
           </div>
         </section>
@@ -2887,7 +2884,6 @@
                 <option value="all">全カテゴリ</option>
                 <option value="TOEIC">TOEIC</option>
                 <option value="中国語">中国語</option>
-                <option value="ITパスポート">ITパスポート</option>
                 <option value="大学課題">大学課題</option>
                 <option value="筋トレ">筋トレ</option>
                 <option value="読書">読書</option>
@@ -3153,7 +3149,6 @@
         weeklyGoals: {
           TOEIC: 600,
           "中国語": 180,
-          "ITパスポート": 300,
           "大学課題": 180,
           "筋トレ": 240,
           "読書": 0,
@@ -3339,10 +3334,24 @@
     function shouldShowInTodayTasks(task) {
       const today = todayKey();
       if (!task) return false;
+      if (isRetiredItPassportTask(task)) return false;
       if (task.date === today) return true;
       if (!task.done && task.deadline === today) return true;
       if (!task.done && task.doTodayDate === today) return true;
       return false;
+    }
+
+    function isRetiredItPassportTask(task) {
+      if (!task) return false;
+      const category = String(task.category || "");
+      const title = String(task.title || task.taskTitle || "");
+      const text = `${category} ${title}`.toLowerCase();
+      return category === "ITパスポート"
+        || text.includes("itパスポート")
+        || text.includes("it passport")
+        || text.includes("it過去問")
+        || text.includes("情報技術")
+        || text.includes("情報処理技術者");
     }
 
     function todayTasks() {
@@ -3513,9 +3522,6 @@
       if (text.includes("ジム") || text.includes("筋トレ") || text.includes("ベンチ") || text.includes("スクワット") || text.includes("背中") || text.includes("胸") || text.includes("肩") || text.includes("脚") || text.includes("腕")) {
         return "筋トレ";
       }
-      if (text.includes("it") || text.includes("itパスポート") || text.includes("過去問") || text.includes("情報")) {
-        return "ITパスポート";
-      }
       if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) {
         return "大学課題";
       }
@@ -3528,7 +3534,7 @@
     function inferTaskPriority(category, title) {
       const text = title.toLowerCase();
       if (text.includes("最重要") || text.includes("締切") || text.includes("今日中") || text.includes("課題")) return "high";
-      if (category === "TOEIC" || category === "中国語" || category === "ITパスポート" || category === "大学課題") return "high";
+      if (category === "TOEIC" || category === "中国語" || category === "大学課題") return "high";
       if (category === "筋トレ") return "normal";
       return "normal";
     }
@@ -3783,6 +3789,7 @@
       const futureTasks = (state.tasks || [])
         .filter(task => task && !task.done)
         .filter(task => task.date && task.date > today)
+        .filter(task => !isRetiredItPassportTask(task))
         .filter(task => !isBlockedFutureTask(task))
         .sort((a, b) => {
           const dateOrder = String(a.date).localeCompare(String(b.date));
@@ -3859,7 +3866,6 @@
       const defaults = {
         TOEIC: 600,
         "中国語": 180,
-        "ITパスポート": 300,
         "大学課題": 180,
         "筋トレ": 240,
         "読書": 0,
@@ -3918,7 +3924,7 @@
 
       ensureWeeklyGoals();
 
-      const categories = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const categories = ["TOEIC", "中国語", "大学課題", "筋トレ", "読書", "その他"];
 
       const rows = categories
         .map(cat => {
@@ -3975,7 +3981,7 @@
       $("doneCount").textContent = String(done);
       $("streakCount").textContent = `${calculateStreak()}日`;
 
-      const categories = ["TOEIC", "中国語", "ITパスポート", "大学課題", "筋トレ", "読書", "その他"];
+      const categories = ["TOEIC", "中国語", "大学課題", "筋トレ", "読書", "その他"];
       const max = Math.max(60, ...categories.map(cat =>
         sessions.filter(s => s.category === cat).reduce((sum, s) => sum + s.minutes, 0)
       ));
@@ -4020,6 +4026,7 @@
 
       const debts = state.tasks
         .filter(t => !t.done)
+        .filter(t => !isRetiredItPassportTask(t))
         .filter(t => t.deadline)
         .filter(t => (t.date || today) <= today)
         .map(t => {
