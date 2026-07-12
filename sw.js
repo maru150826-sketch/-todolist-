@@ -1,4 +1,4 @@
-const CACHE_NAME = "taro-focus-rpg-20260708-no-itpassport-1";
+const CACHE_NAME = "taro-focus-rpg-20260712-thesis-quick-1";
 const APP_FILES = [
   "./",
   "./index.html",

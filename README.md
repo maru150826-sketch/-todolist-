@@ -17,6 +17,8 @@
 
 ```text
 index.html
+aiSecretary.js
+aiSecretary.css
 sleep.html
 log.html
 rpg.html
@@ -27,6 +29,8 @@ icon-512.png
 assets/
   rpg/
 supabase/
+  functions/
+    ai-secretary/
 ```
 
 フォルダ構成を変えると画像やRPG画面が表示されなくなるため、そのままアップロードしてください。
@@ -73,6 +77,9 @@ supabase/
 - 既存のITパスポート系タスクは削除せず、今日のタスク・今後のタスク・締切あり未完了タスクでは非表示
 - 既存のlocalStorageデータ構造は変更していません
 
+## AI書記
+
+現在の版では、AI書記はメイン画面では読み込んでいません。必要になった場合は `aiSecretary.js` と `aiSecretary.css` を再度 `index.html` に読み込ませることで復帰できます。
 
 過去版のAI書記は、料金のかからないローカル提案だけで動作します。OpenAI APIへ通信しません。
 

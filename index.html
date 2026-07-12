@@ -2635,17 +2635,6 @@
       }
     }
 
-    .goal-manager { display:grid; gap:12px; }
-    .goal-form { display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:8px; }
-    .goal-card { padding:12px; border:1px solid rgba(148,163,184,.25); border-radius:14px; background:rgba(15,23,42,.45); }
-    .goal-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
-    .goal-progress { height:9px; margin:9px 0; border-radius:999px; overflow:hidden; background:rgba(148,163,184,.2); }
-    .goal-progress > div { height:100%; background:linear-gradient(90deg,#38bdf8,#22c55e); }
-    .goal-alert { color:#fca5a5; font-weight:700; }
-    .auth-box { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .auth-box input { min-width:210px; }
-    @media (max-width:700px) { .goal-form { grid-template-columns:1fr 1fr; } .goal-form input:first-child { grid-column:1 / -1; } }
-
 </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -2668,12 +2657,6 @@
         <a class="log-link sleep-link" href="sleep.html">睡眠</a>
         <button class="ghost" id="openMotivationVideoBtn" type="button">激励動画</button>
         <div class="sync-status" id="syncStatus">同期：未実行。PC/スマホ間で履歴を合わせる時に押してください。</div>
-        <div class="auth-box">
-          <input id="authEmail" type="email" autocomplete="email" placeholder="同期用メールアドレス" />
-          <button class="ghost" id="authLoginBtn" type="button">ログインリンク送信</button>
-          <button class="ghost hidden" id="authLogoutBtn" type="button">ログアウト</button>
-          <span class="small" id="authStatus">未ログイン（端末内には保存されます）</span>
-        </div>
         <div class="pwa-tools">
         <button class="ghost" id="exportBtn" type="button">バックアップ</button>
         <button class="ghost" id="importBtn" type="button">復元</button>
@@ -2769,6 +2752,7 @@
             <button type="button" onclick="setQuickTaskText('大学の課題')">大学の課題</button>
             <button type="button" onclick="setQuickTaskText('ジム')">ジム</button>
             <button type="button" onclick="setQuickTaskText('新聞')">新聞</button>
+            <button type="button" onclick="setQuickTaskText('卒論')">卒論</button>
           </div>
             <details class="quick-help-inline">
               <summary>クイック追加とは？</summary>
@@ -2831,20 +2815,6 @@
     </main>
 
       <aside>
-        <section class="panel">
-          <h2>長期目標</h2>
-          <div class="small" style="margin-bottom:10px;">期限と目標タスク数を決めると、達成率と期限超過を自動表示します。</div>
-          <div class="goal-manager">
-            <div class="goal-form">
-              <input id="longGoalTitle" placeholder="例：TOEIC 800点" />
-              <input id="longGoalDeadline" type="date" title="期限" />
-              <input id="longGoalTarget" type="number" min="1" max="999" value="10" title="目標タスク数" />
-              <button id="addLongGoalBtn" type="button">追加</button>
-            </div>
-            <div id="longGoalList"></div>
-          </div>
-        </section>
-
         <section class="panel">
           <h2>今日の進捗</h2>
           <div class="stats">
@@ -3048,7 +3018,7 @@
 
     const SUPABASE_URL = "https://ghmitazvjjmeaydofflq.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdobWl0YXp2amptZWF5ZG9mZmxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2ODQ3MTMsImV4cCI6MjA5NjI2MDcxM30.1jIDXBidNrSHzUJTOPTp8hN5uImT6OpsVQoWVn6AVdM";
-    let SUPABASE_USER_ID = null;
+    const SUPABASE_USER_ID = "default-user";
     const MOTIVATION_VIDEOS = [
       { id: "fXVAaffCMh8", label: "ロッキー" },
       { id: "ZXsQAXx_ao0", label: "Just Do It" },
@@ -3176,7 +3146,6 @@
         currentTaskId: null,
         sessions: [],
         reviews: {},
-        longTermGoals: [],
         reviewMode: "daily",
         weeklyGoals: {
           TOEIC: 600,
@@ -3517,7 +3486,6 @@
         const task = {
           id: crypto.randomUUID(),
           templateId: null,
-          goalId: $("taskInput").dataset.goalId || null,
           title,
           category: $("categoryInput").value,
           priority: $("priorityInput").value,
@@ -3536,7 +3504,6 @@
       }
 
       $("taskInput").value = "";
-      delete $("taskInput").dataset.goalId;
       $("deadlineInput").value = "";
       $("repeatInput").value = "none";
       saveState();
@@ -3556,7 +3523,7 @@
       if (text.includes("ジム") || text.includes("筋トレ") || text.includes("ベンチ") || text.includes("スクワット") || text.includes("背中") || text.includes("胸") || text.includes("肩") || text.includes("脚") || text.includes("腕")) {
         return "筋トレ";
       }
-      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("ゼミ") || text.includes("授業")) {
+      if (text.includes("大学") || text.includes("課題") || text.includes("レポート") || text.includes("卒論") || text.includes("卒業論文") || text.includes("ゼミ") || text.includes("授業")) {
         return "大学課題";
       }
       if (text.includes("読書") || text.includes("本")) {
@@ -4002,7 +3969,6 @@
       const minutes = clamp(Number(minutesInput.value), 0, 6000);
 
       state.weeklyGoals[category] = minutes;
-      state.goalSettingsUpdatedAt = new Date().toISOString();
       minutesInput.value = "";
       saveState();
       renderWeeklyGoals();
@@ -5516,98 +5482,6 @@ ${issue}
       renderTimer();
       renderSettings();
       renderStudyLaunchpad();
-      renderLongTermGoals();
-    }
-
-    function addLongTermGoal() {
-      const title = $("longGoalTitle").value.trim();
-      if (!title) return alert("目標名を入力してください。");
-      const goal = {
-        id: crypto.randomUUID(), title,
-        deadline: $("longGoalDeadline").value || "",
-        target: Math.max(1, Number($("longGoalTarget").value || 1)),
-        createdAt: new Date().toISOString()
-      };
-      if (!Array.isArray(state.longTermGoals)) state.longTermGoals = [];
-      state.longTermGoals.push(goal);
-      state.goalSettingsUpdatedAt = new Date().toISOString();
-      $("longGoalTitle").value = "";
-      saveState();
-      renderLongTermGoals();
-    }
-
-    function deleteLongTermGoal(id) {
-      if (!confirm("この長期目標を削除しますか？ タスクや履歴は削除されません。")) return;
-      state.longTermGoals = (state.longTermGoals || []).filter(goal => goal.id !== id);
-      state.goalSettingsUpdatedAt = new Date().toISOString();
-      saveState();
-      renderLongTermGoals();
-    }
-
-    function renderLongTermGoals() {
-      const box = $("longGoalList");
-      if (!box) return;
-      const goals = Array.isArray(state.longTermGoals) ? state.longTermGoals : [];
-      if (!goals.length) {
-        box.innerHTML = '<div class="small">長期目標はまだありません。</div>';
-        return;
-      }
-      box.innerHTML = goals.map(goal => {
-        const linked = (state.tasks || []).filter(task => task.goalId === goal.id || String(task.title || "").includes(`[${goal.title}]`));
-        const done = linked.filter(task => task.done).length;
-        const target = Math.max(1, Number(goal.target || linked.length || 1));
-        const percent = Math.min(100, Math.round(done / target * 100));
-        const overdue = goal.deadline && goal.deadline < todayKey() && percent < 100;
-        return `<div class="goal-card">
-          <div class="goal-head"><strong>${escapeHtml(goal.title)}</strong><button class="danger" type="button" onclick="deleteLongTermGoal('${goal.id}')">削除</button></div>
-          <div class="goal-progress"><div style="width:${percent}%"></div></div>
-          <div class="small">達成 ${done}/${target}（${percent}%）${goal.deadline ? ` / 期限 ${goal.deadline}` : ""}</div>
-          ${overdue ? '<div class="goal-alert">期限を超過しています。今日のタスクへ分解してください。</div>' : ""}
-          <button class="ghost" type="button" onclick="prepareGoalTask('${goal.id}')">この目標のタスクを追加</button>
-        </div>`;
-      }).join("");
-    }
-
-    function prepareGoalTask(id) {
-      const goal = (state.longTermGoals || []).find(item => item.id === id);
-      if (!goal) return;
-      $("taskInput").value = `[${goal.title}] `;
-      $("taskInput").dataset.goalId = id;
-      $("taskInput").focus();
-      $("taskInput").scrollIntoView({ behavior:"smooth", block:"center" });
-    }
-
-    async function initializeAuth() {
-      if (!supabaseClient) return;
-      const applySession = async session => {
-        SUPABASE_USER_ID = session?.user?.id || null;
-        const loggedIn = Boolean(SUPABASE_USER_ID);
-        $("authStatus").textContent = loggedIn ? `ログイン中：${session.user.email || "認証済み"}` : "未ログイン（端末内には保存されます）";
-        $("authLoginBtn").classList.toggle("hidden", loggedIn);
-        $("authLogoutBtn").classList.toggle("hidden", !loggedIn);
-        if (loggedIn) await syncAllWithSupabase();
-      };
-      const { data } = await supabaseClient.auth.getSession();
-      await applySession(data.session);
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
-        setTimeout(() => applySession(session), 0);
-      });
-    }
-
-    async function sendLoginLink() {
-      if (!supabaseClient) return alert("Supabaseを読み込めませんでした。");
-      const email = $("authEmail").value.trim();
-      if (!email) return alert("メールアドレスを入力してください。");
-      $("authStatus").textContent = "ログインリンクを送信しています…";
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: location.href.split("#")[0] }
-      });
-      $("authStatus").textContent = error ? `送信失敗：${error.message}` : "メールを確認し、ログインリンクを開いてください。";
-    }
-
-    async function logout() {
-      if (supabaseClient) await supabaseClient.auth.signOut();
     }
 
     let wakeLock = null;
@@ -5989,7 +5863,7 @@ ${issue}
     }
 
     async function saveSessionToSupabase(session) {
-      if (!supabaseClient || !SUPABASE_USER_ID || !session || !session.id) return;
+      if (!supabaseClient || !session || !session.id) return;
 
       try {
         const row = normalizeSessionForCloud(session);
@@ -6006,7 +5880,7 @@ ${issue}
     }
 
     async function deleteSessionFromSupabase(sessionId) {
-      if (!supabaseClient || !SUPABASE_USER_ID || !sessionId) return;
+      if (!supabaseClient || !sessionId) return;
 
       try {
         const { error } = await supabaseClient
@@ -6076,8 +5950,8 @@ ${issue}
     }
 
     async function syncSessionsWithSupabase() {
-      if (!supabaseClient || !SUPABASE_USER_ID) {
-        setSyncStatus("同期：先にメールでログインしてください。", "warn");
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
         return;
       }
 
@@ -6100,8 +5974,8 @@ ${issue}
 
 
     async function syncAllWithSupabase() {
-      if (!supabaseClient || !SUPABASE_USER_ID) {
-        setSyncStatus("同期：先にメールでログインしてください。", "warn");
+      if (!supabaseClient) {
+        setSyncStatus("同期：Supabaseライブラリ未読込", "warn");
         return;
       }
 
@@ -6109,8 +5983,7 @@ ${issue}
       try {
         await syncSessionsWithSupabase();
         await syncTasksWithSupabase();
-        await syncGoalSettingsWithSupabase();
-        setSyncStatus("同期：完了。履歴・タスク・目標を同期しました。", "ok");
+        setSyncStatus("同期：完了。履歴とタスクを同期しました。", "ok");
       } catch (error) {
         console.error("Supabase一括同期エラー", error);
         if (typeof describeSupabaseError === "function") {
@@ -6119,33 +5992,6 @@ ${issue}
           setSyncStatus("同期：失敗", "warn");
         }
       }
-    }
-
-    async function syncGoalSettingsWithSupabase() {
-      if (!supabaseClient || !SUPABASE_USER_ID) return;
-      const { data: remote, error: readError } = await supabaseClient
-        .from("study_settings").select("*").eq("user_id", SUPABASE_USER_ID).maybeSingle();
-      if (readError) throw readError;
-      const localUpdated = new Date(state.goalSettingsUpdatedAt || 0).getTime();
-      const remoteUpdated = new Date(remote?.updated_at || 0).getTime();
-      if (remote && remoteUpdated > localUpdated) {
-        state.longTermGoals = Array.isArray(remote.long_term_goals) ? remote.long_term_goals : [];
-        state.weeklyGoals = { ...state.weeklyGoals, ...(remote.weekly_goals || {}) };
-        state.goalSettingsUpdatedAt = remote.updated_at;
-        saveState();
-        render();
-        return;
-      }
-      const now = new Date().toISOString();
-      const { error } = await supabaseClient.from("study_settings").upsert({
-        user_id: SUPABASE_USER_ID,
-        long_term_goals: state.longTermGoals || [],
-        weekly_goals: state.weeklyGoals || {},
-        updated_at: now
-      }, { onConflict:"user_id" });
-      if (error) throw error;
-      state.goalSettingsUpdatedAt = now;
-      saveState();
     }
 
     function startInitialTaskSync() {
@@ -6191,7 +6037,7 @@ ${issue}
     }
 
     async function saveTaskToSupabase(task) {
-      if (!supabaseClient || !SUPABASE_USER_ID || !task || !task.id) return;
+      if (!supabaseClient || !task || !task.id) return;
 
       try {
         touchTask(task);
@@ -6209,7 +6055,7 @@ ${issue}
     }
 
     async function markTaskDeletedInSupabase(task) {
-      if (!supabaseClient || !SUPABASE_USER_ID || !task || !task.id) return;
+      if (!supabaseClient || !task || !task.id) return;
 
       try {
         const now = new Date().toISOString();
@@ -6318,8 +6164,8 @@ ${issue}
     }
 
     async function syncTasksWithSupabase() {
-      if (!supabaseClient || !SUPABASE_USER_ID) {
-        setSyncStatus("タスク同期：先にメールでログインしてください。", "warn");
+      if (!supabaseClient) {
+        setSyncStatus("タスク同期：Supabaseライブラリ未読込", "warn");
         return;
       }
 
@@ -6929,9 +6775,6 @@ ${issue}
     $("longBreakBtn").addEventListener("click", () => setBreak(true));
     $("saveSettingsBtn").addEventListener("click", saveSettings);
     if ($("saveWeeklyGoalBtn")) $("saveWeeklyGoalBtn").addEventListener("click", saveWeeklyGoal);
-    if ($("addLongGoalBtn")) $("addLongGoalBtn").addEventListener("click", addLongTermGoal);
-    if ($("authLoginBtn")) $("authLoginBtn").addEventListener("click", sendLoginLink);
-    if ($("authLogoutBtn")) $("authLogoutBtn").addEventListener("click", logout);
     $("focusMin").addEventListener("change", autoApplySettings);
     $("breakMin").addEventListener("change", autoApplySettings);
     $("longBreakMin").addEventListener("change", autoApplySettings);
@@ -6973,7 +6816,8 @@ ${issue}
     disableRepeatInputs();
     render();
     cleanupRecurringEverywhere();
-    initializeAuth();
+    startInitialSupabaseSync();
+    startInitialTaskSync();
   </script>
 </body>
 </html>
